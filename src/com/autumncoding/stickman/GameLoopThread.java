@@ -5,12 +5,12 @@ import android.graphics.Canvas;
 import android.util.Log;
 
 public class GameLoopThread extends Thread {
-	private PlayingTableView playingTable;
+	private GameView playingTable;
 	private boolean isRunning = false;
 	static final long FPS = 30;
 	static final long ticksPS = 1000 / FPS;
 	
-	public GameLoopThread(PlayingTableView view) {
+	public GameLoopThread(GameView view) {
         this.playingTable = view;
 	}
 	

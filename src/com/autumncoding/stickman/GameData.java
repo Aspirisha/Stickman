@@ -30,11 +30,14 @@ public class GameData {
     public static final float joint_radius_touchable_square = joint_radius_touchable * joint_radius_touchable;
     public static final float max_circle_radius = 200;
     public static final float min_circle_radius = 10;
-    // paints:
+    
+    /*********** PAINTS ***************/
+    // untouched paints:
 	public static Paint line_paint;  // normal paint for stick line
 	public static Paint joint_paint;
 	public static Paint joint_touched_paint;
 	public static Paint line_touched_paint;
+	// touched paints:
 	public static Paint drop_paint;  // paint used to show that element is going to be dropped to the bin
 	public static Paint stretch_line_paint;
 	public static Paint invisible_paint;
@@ -62,6 +65,7 @@ public class GameData {
 		joint_paint = new Paint(line_paint);
 		joint_paint.setColor(Color.argb(220, 235, 216, 16));
 		joint_paint.setShadowLayer(2, 0, 0, 0x6A8F00);
+		joint_paint.setStyle(Paint.Style.FILL);
 		
 		joint_touched_paint = new Paint(joint_paint);
 		joint_touched_paint.setColor(Color.argb(220, 16, 216, 235));
@@ -85,7 +89,7 @@ public class GameData {
     	return instance;
     }
     
-    public synchronized int init(PlayingTableView playing_table) {
+    public synchronized int init(GameView playing_table) {
     	if (is_inited)
     		return 0;
     	

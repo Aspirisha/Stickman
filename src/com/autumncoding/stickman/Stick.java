@@ -370,7 +370,6 @@ public class Stick extends View implements DrawingPrimitive {
 
 	@Override
 	public float getDistToMe(float x_from, float y_from) {
-		
 		return (x2 - x_from) * (x2 - x_from) + (y2 - y_from) * (y2 - y_from);
 	}
 }

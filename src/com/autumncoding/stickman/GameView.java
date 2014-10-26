@@ -15,15 +15,13 @@ import android.view.SurfaceView;
 import com.autamncoding.stickman.R;
 
 
-public class PlayingTableView extends SurfaceView {
+public class GameView extends SurfaceView {
 	private GameData game_data;
 	private static final int INVALID_POINTER_ID = -1;
 	private int mActivePointerId = INVALID_POINTER_ID;
 	private SurfaceHolder holder;
 	private GameLoopThread gameLoopThread;
 	private TouchEventThread touch_thread;
-    private float mLastTouchX;
-    private float mLastTouchY;
     
     private Paint debug_paint;
     private float translate_x = 0;
@@ -37,17 +35,13 @@ public class PlayingTableView extends SurfaceView {
     
     private LinkedList<DrawingPrimitive> drawing_queue;
     private long prev_drawing_time = System.currentTimeMillis();
-    
-    private int layout_height;
-    private int layout_width;
-    
-    private long last_click_time;
+   
     
     public static Stick currently_touched_stick;
     public static CentralJoint currently_touched_joint;
     public static Circle currently_touched_circle;
     
-    public PlayingTableView(Context context) {
+    public GameView(Context context) {
     	super(context);
     	this.setBackgroundColor(Color.WHITE);
     	
@@ -85,7 +79,6 @@ public class PlayingTableView extends SurfaceView {
     	
     	setWillNotDraw(true);    	
     	
-    	last_click_time = System.currentTimeMillis();
     	holder.addCallback(new SurfaceHolder.Callback() {
     		
     		@Override
@@ -124,8 +117,6 @@ public class PlayingTableView extends SurfaceView {
     
     
     public void setMetrics() {
-    	layout_width = MainActivity.layout_width;
-    	layout_height = MainActivity.layout_height;
     	menu_central_joint.setPosition(MainActivity.layout_width - 20, MainActivity.layout_height - 20);
     	menu_stick.setPosition(MainActivity.layout_width - 140, MainActivity.layout_height - 20, MainActivity.layout_width - 40, MainActivity.layout_height - 20);
     	menu_circle.setPosition(MainActivity.layout_width - 180, MainActivity.layout_height - 20, 0);
@@ -135,58 +126,45 @@ public class PlayingTableView extends SurfaceView {
     @Override
     public boolean onTouchEvent(final MotionEvent ev) {
         // Let the ScaleGestureDetector inspect all events.    	
+    	int pointerIndex = -1;
     	
     	synchronized (getHolder()) {
     		switch (ev.getAction()) {
-    		case MotionEvent.ACTION_DOWN: {
-    			synchronized (game_data.getLocker()) {
-    				touch_thread.pushEvent(ev.getX(), ev.getY(), MotionEvent.ACTION_DOWN);
-    			}
-
+    		case MotionEvent.ACTION_DOWN: 
+    			touch_thread.pushEvent(ev.getX(), ev.getY(), MotionEvent.ACTION_DOWN);
     			mActivePointerId = ev.getPointerId(0);
     			break;
-    		}
 
-    		case MotionEvent.ACTION_MOVE: {
-    			final int pointerIndex = ev.findPointerIndex(mActivePointerId);
-
-    			synchronized (game_data.getLocker()) {
-    				touch_thread.pushEvent(ev.getX(pointerIndex), ev.getY(pointerIndex), MotionEvent.ACTION_MOVE);
-    			}
-    			
+    		case MotionEvent.ACTION_POINTER_DOWN: 
+    			touch_thread.pushEvent(ev.getX(), ev.getY(), MotionEvent.ACTION_POINTER_DOWN);
     			break;
-    		}
+    			
+    		case MotionEvent.ACTION_MOVE: 
+    			pointerIndex = ev.findPointerIndex(mActivePointerId);
+    			touch_thread.pushEvent(ev.getX(pointerIndex), ev.getY(pointerIndex), MotionEvent.ACTION_MOVE);   			
+    			break;
 
-    		case MotionEvent.ACTION_UP: {
+    		case MotionEvent.ACTION_UP: 
     			mActivePointerId = INVALID_POINTER_ID;
-    			
-    			synchronized (game_data.getLocker()) {
-    				touch_thread.pushEvent(0, 0, MotionEvent.ACTION_UP);
-    			}
-
+    			touch_thread.pushEvent(0, 0, MotionEvent.ACTION_UP);
     			break;
-
-    		}
 
     		case MotionEvent.ACTION_CANCEL: {
     			mActivePointerId = INVALID_POINTER_ID;
     			break;
     		}
 
-    		case MotionEvent.ACTION_POINTER_UP: {
-    			final int pointerIndex = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) 
-    					>> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-    					final int pointerId = ev.getPointerId(pointerIndex);
-    					if (pointerId == mActivePointerId) {
-    						// This was our active pointer going up. Choose a new
-    						// active pointer and adjust accordingly.
-    						final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-    						mLastTouchX = ev.getX(newPointerIndex) - translate_x;
-    						mLastTouchY = ev.getY(newPointerIndex) - translate_y;
-    						mActivePointerId = ev.getPointerId(newPointerIndex);
-    					}
+    		case MotionEvent.ACTION_POINTER_UP: 
+    			pointerIndex = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+    			touch_thread.pushEvent(ev.getX(pointerIndex), ev.getY(pointerIndex), MotionEvent.ACTION_MOVE);
+    			final int pointerId = ev.getPointerId(pointerIndex);
+    			if (pointerId == mActivePointerId) {
+    				// This was our active pointer going up. Choose a new
+    				// active pointer and adjust accordingly.
+    				final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+    				mActivePointerId = ev.getPointerId(newPointerIndex);
+    			}
     			break;
-    		}
     		
     		default:
     			Log.i("Default event", "default event happened");

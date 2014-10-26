@@ -1,18 +1,14 @@
 package com.autumncoding.stickman;
 
-import com.autamncoding.stickman.*;
-
-import android.os.Bundle;
 import android.app.Activity;
 import android.graphics.Rect;
+import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.View.OnTouchListener;
 import android.view.Window;
-import android.widget.LinearLayout;
+
+import com.autamncoding.stickman.R;
 
 public class MainActivity extends Activity {
 
@@ -25,9 +21,9 @@ public class MainActivity extends Activity {
 	int	m_viewCur = -1;
 	AppIntro m_app;
 	ViewIntro m_viewIntro;
-	GameHolder m_gameHolder;
+	GameView m_playingTable;
 	
-	@Override
+	@Override 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);		
 		 // Create application
@@ -61,8 +57,8 @@ public class MainActivity extends Activity {
 		if (m_viewCur == VIEW_GAME)
 		{
 			Log.d("THREE", "Switch to m_viewGame" );
-			m_gameHolder = new GameHolder(this);
-			m_gameHolder.post(new Runnable() {
+			m_playingTable = new GameView(this);
+			m_playingTable.post(new Runnable() {
 
 				@Override
 				public void run() {
@@ -88,10 +84,10 @@ public class MainActivity extends Activity {
 		            layout_height = screenHeight - (titleBarHeight + statusBarHeight);
 		            layout_width = screenWidth;
 		            Log.i("MY", "Layout Height = " + layout_height);   
-		            m_gameHolder.playingTable.setMetrics();
+		            m_playingTable.setMetrics();
 				}
 			});
-			setContentView(m_gameHolder);
+			setContentView(m_playingTable);
 			//m_gameHolder.start();
 		}
 	}

@@ -27,6 +27,7 @@ public class TouchEventThread extends Thread {
 	LinkedList<Integer> motion_events;
 	
 	private long startTime = 0;
+	private int pointers_on_screen = 0;
 	
 	public void setRunning(boolean run) {
         isRunning = run;
@@ -77,7 +78,6 @@ public class TouchEventThread extends Thread {
 	}
 	
 	synchronized private void processEvent() {
-		
 		int event = motion_events.pollFirst();
 		float x = x_touches.pollFirst();
 		float y = y_touches.pollFirst();
@@ -87,9 +87,9 @@ public class TouchEventThread extends Thread {
 			mLastTouchX = x;
 			mLastTouchY = y;
 			
-			PlayingTableView.currently_touched_stick = null;
-			PlayingTableView.currently_touched_joint = null;
-			PlayingTableView.currently_touched_circle = null;
+			GameView.currently_touched_stick = null;
+			GameView.currently_touched_joint = null;
+			GameView.currently_touched_circle = null;
 			boolean something_is_touched = false;
 			
 			for (DrawingPrimitive primitive : drawing_queue) {
@@ -100,13 +100,13 @@ public class TouchEventThread extends Thread {
 					drawing_queue.add(primitive);
 					switch (primitive.GetType()) {
 					case JOINT:
-						PlayingTableView.currently_touched_joint = (CentralJoint)primitive;
+						GameView.currently_touched_joint = (CentralJoint)primitive;
 						break;
 					case STICK:
-						PlayingTableView.currently_touched_stick = (Stick)primitive;
+						GameView.currently_touched_stick = (Stick)primitive;
 						break;
 					case CIRCLE:
-						PlayingTableView.currently_touched_circle = (Circle)primitive;
+						GameView.currently_touched_circle = (Circle)primitive;
 						break;
 					default:
 						break;
@@ -122,17 +122,23 @@ public class TouchEventThread extends Thread {
 			}
 			break;
 		}
+		
+		case MotionEvent.ACTION_POINTER_DOWN: {
+			pointers_on_screen++;
+			break;
+		}
+		
 		case MotionEvent.ACTION_MOVE: {
-			if (PlayingTableView.currently_touched_stick != null) {
-				switch (PlayingTableView.currently_touched_stick.getTouchState()) {
+			if (GameView.currently_touched_stick != null) {
+				switch (GameView.currently_touched_stick.getTouchState()) {
 				case JOINT1:
-					PlayingTableView.currently_touched_stick.scale(x, y);
+					GameView.currently_touched_stick.scale(x, y);
 					break;
 				case JOINT2:
-					PlayingTableView.currently_touched_stick.rotateAroundJoint1(x, y);
+					GameView.currently_touched_stick.rotateAroundJoint1(x, y);
 					break;
 				case STICK:
-					PlayingTableView.currently_touched_stick.translate(x - mLastTouchX, y - mLastTouchY);
+					GameView.currently_touched_stick.translate(x - mLastTouchX, y - mLastTouchY);
 					break;
 				default:
 					break;
@@ -141,9 +147,9 @@ public class TouchEventThread extends Thread {
 				float min_dist = 10000;
 				DrawingPrimitive closest_primitive = null;
 				for (DrawingPrimitive primitive : drawing_queue) {
-					if (primitive == PlayingTableView.currently_touched_stick)
+					if (primitive == GameView.currently_touched_stick)
 						continue;
-					float cur_dist = PlayingTableView.currently_touched_stick.distTo(primitive);
+					float cur_dist = GameView.currently_touched_stick.distTo(primitive);
 					if (cur_dist < min_dist) {
 						min_dist = cur_dist;
 						closest_primitive = primitive;
@@ -151,40 +157,40 @@ public class TouchEventThread extends Thread {
 				}
 
 				if (min_dist <= 100)
-					PlayingTableView.currently_touched_stick.connectTo(closest_primitive);
+					GameView.currently_touched_stick.connectTo(closest_primitive);
 				else 
-					PlayingTableView.currently_touched_stick.set_not_connected();
+					GameView.currently_touched_stick.set_not_connected();
 			}
 
 			
-		    if (PlayingTableView.currently_touched_joint != null) {
-				PlayingTableView.currently_touched_joint.translate(x - mLastTouchX, y - mLastTouchY);
+		    if (GameView.currently_touched_joint != null) {
+				GameView.currently_touched_joint.translate(x - mLastTouchX, y - mLastTouchY);
 			}
 		    
-		    if (PlayingTableView.currently_touched_circle != null) {
-		    	PlayingTableView.currently_touched_circle.applyMove(x, y, mLastTouchX, mLastTouchY);
+		    if (GameView.currently_touched_circle != null) {
+		    	GameView.currently_touched_circle.applyMove(x, y, mLastTouchX, mLastTouchY);
 		    }
 		    
 		    if (menu_central_joint.isTouched()) {
-				PlayingTableView.currently_touched_joint = new CentralJoint(menu_stick.getContext());
-				PlayingTableView.currently_touched_joint.CopyJoint(menu_central_joint);
+				GameView.currently_touched_joint = new CentralJoint(menu_stick.getContext());
+				GameView.currently_touched_joint.CopyJoint(menu_central_joint);
 				menu_central_joint.setUntouched();
-				drawing_queue.add(PlayingTableView.currently_touched_joint);
-				PlayingTableView.currently_touched_joint.translate(x - mLastTouchX, y - mLastTouchY);
+				drawing_queue.add(GameView.currently_touched_joint);
+				GameView.currently_touched_joint.translate(x - mLastTouchX, y - mLastTouchY);
 			}
 		    else if (menu_stick.isTouched()) {
-				PlayingTableView.currently_touched_stick = new Stick(menu_stick.getContext());
-				PlayingTableView.currently_touched_stick.CopyStick(menu_stick);
+				GameView.currently_touched_stick = new Stick(menu_stick.getContext());
+				GameView.currently_touched_stick.CopyStick(menu_stick);
 				menu_stick.setUntouched();
-				drawing_queue.add(PlayingTableView.currently_touched_stick);
-				PlayingTableView.currently_touched_stick.translate(x - mLastTouchX, y - mLastTouchY);
+				drawing_queue.add(GameView.currently_touched_stick);
+				GameView.currently_touched_stick.translate(x - mLastTouchX, y - mLastTouchY);
 			}
 			else if (menu_circle.isTouched()) {
-				PlayingTableView.currently_touched_circle = new Circle(menu_stick.getContext());
-				PlayingTableView.currently_touched_circle.CopyCircle(menu_circle);
+				GameView.currently_touched_circle = new Circle(menu_stick.getContext());
+				GameView.currently_touched_circle.CopyCircle(menu_circle);
 				menu_circle.setUntouched();
-				drawing_queue.add(PlayingTableView.currently_touched_circle);
-				PlayingTableView.currently_touched_circle.translate(x - mLastTouchX, y - mLastTouchY);
+				drawing_queue.add(GameView.currently_touched_circle);
+				GameView.currently_touched_circle.translate(x - mLastTouchX, y - mLastTouchY);
 			}
 			mLastTouchX = x;
 			mLastTouchY = y;
@@ -192,20 +198,20 @@ public class TouchEventThread extends Thread {
 		}
 		
 		case MotionEvent.ACTION_UP: {
-			if (PlayingTableView.currently_touched_joint != null) {
-				PlayingTableView.currently_touched_joint.setUntouched();
+			if (GameView.currently_touched_joint != null) {
+				GameView.currently_touched_joint.setUntouched();
 				/*if (inMenu(PlayingTableView.currently_touched_joint)) {
 					drawing_queue.removeLast();
 				}*/
-				PlayingTableView.currently_touched_joint = null;
+				GameView.currently_touched_joint = null;
 			}
 
-			if (PlayingTableView.currently_touched_stick != null) {
-				PlayingTableView.currently_touched_stick.setUntouched();
+			if (GameView.currently_touched_stick != null) {
+				GameView.currently_touched_stick.setUntouched();
 				/*if (inMenu(PlayingTableView.currently_touched_stick)) {
 					drawing_queue.removeLast();
 				}*/
-				PlayingTableView.currently_touched_stick = null;
+				GameView.currently_touched_stick = null;
 			}
 			break;
 		}
