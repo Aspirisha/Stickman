@@ -7,8 +7,7 @@ import android.util.Log;
 public class GameLoopThread extends Thread {
 	private GameView playingTable;
 	private boolean isRunning = false;
-	static final long FPS = 30;
-	static final long ticksPS = 1000 / FPS;
+	static final long ticksPS = 1000 / GameData.FPS;
 	
 	public GameLoopThread(GameView view) {
         this.playingTable = view;

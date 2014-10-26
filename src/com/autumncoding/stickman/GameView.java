@@ -1,6 +1,5 @@
 package com.autumncoding.stickman;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 
 import android.content.Context;
@@ -35,47 +34,29 @@ public class GameView extends SurfaceView {
     
     private LinkedList<DrawingPrimitive> drawing_queue;
     private long prev_drawing_time = System.currentTimeMillis();
-   
     
-    public static Stick currently_touched_stick;
-    public static CentralJoint currently_touched_joint;
-    public static Circle currently_touched_circle;
+    private DrawingPrimitive currently_touched_pimititve;
     
     public GameView(Context context) {
     	super(context);
     	this.setBackgroundColor(Color.WHITE);
-    	
+    	game_data = GameData.getInstance();
+    	game_data.init(this);
     	gameLoopThread = new GameLoopThread(this);
     	
     	holder = getHolder();
-    	debug_paint = new Paint();
-    	debug_paint.setColor(Color.BLACK);
-    	debug_paint.setAntiAlias(true);
-    	debug_paint.setDither(true);
-    	debug_paint.setStrokeWidth(2f);
-    	debug_paint.setStyle(Paint.Style.STROKE);
-    	debug_paint.setStrokeJoin(Paint.Join.ROUND);
-    	debug_paint.setStrokeCap(Paint.Cap.ROUND);
-    	debug_paint.setTextSize(getResources().getDimension(R.dimen.debug_font_size));
+    	debug_paint = GameData.debug_paint;
 		
-    	menu_line_paint = new Paint();
-    	menu_line_paint.setColor(Color.BLACK);
-    	menu_line_paint.setStrokeJoin(Paint.Join.ROUND);
-    	menu_line_paint.setStrokeCap(Paint.Cap.ROUND);
-    	menu_line_paint.setAntiAlias(true);
-    	menu_line_paint.setDither(true);
-    	menu_line_paint.setStrokeWidth(3f);
+    	menu_line_paint = GameData.menu_line_paint;
     	
-    	
-    	game_data = GameData.getInstance();
-    	game_data.init(this);
     	menu_central_joint = game_data.getMenuCentralJoint();
     	menu_stick = game_data.getMenuStick();
     	menu_circle = game_data.getMenuCircle();
     	
     	drawing_queue = game_data.getDrawingQueue();
-    	touch_thread = new TouchEventThread();
+    	touch_thread = new TouchEventThread(this);
     	touch_thread.init();
+    	currently_touched_pimititve = null;
     	
     	setWillNotDraw(true);    	
     	
@@ -124,52 +105,9 @@ public class GameView extends SurfaceView {
     }
     
     @Override
-    public boolean onTouchEvent(final MotionEvent ev) {
-        // Let the ScaleGestureDetector inspect all events.    	
-    	int pointerIndex = -1;
-    	
+    public boolean onTouchEvent(final MotionEvent ev) {    	
     	synchronized (getHolder()) {
-    		switch (ev.getAction()) {
-    		case MotionEvent.ACTION_DOWN: 
-    			touch_thread.pushEvent(ev.getX(), ev.getY(), MotionEvent.ACTION_DOWN);
-    			mActivePointerId = ev.getPointerId(0);
-    			break;
-
-    		case MotionEvent.ACTION_POINTER_DOWN: 
-    			touch_thread.pushEvent(ev.getX(), ev.getY(), MotionEvent.ACTION_POINTER_DOWN);
-    			break;
-    			
-    		case MotionEvent.ACTION_MOVE: 
-    			pointerIndex = ev.findPointerIndex(mActivePointerId);
-    			touch_thread.pushEvent(ev.getX(pointerIndex), ev.getY(pointerIndex), MotionEvent.ACTION_MOVE);   			
-    			break;
-
-    		case MotionEvent.ACTION_UP: 
-    			mActivePointerId = INVALID_POINTER_ID;
-    			touch_thread.pushEvent(0, 0, MotionEvent.ACTION_UP);
-    			break;
-
-    		case MotionEvent.ACTION_CANCEL: {
-    			mActivePointerId = INVALID_POINTER_ID;
-    			break;
-    		}
-
-    		case MotionEvent.ACTION_POINTER_UP: 
-    			pointerIndex = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-    			touch_thread.pushEvent(ev.getX(pointerIndex), ev.getY(pointerIndex), MotionEvent.ACTION_MOVE);
-    			final int pointerId = ev.getPointerId(pointerIndex);
-    			if (pointerId == mActivePointerId) {
-    				// This was our active pointer going up. Choose a new
-    				// active pointer and adjust accordingly.
-    				final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-    				mActivePointerId = ev.getPointerId(newPointerIndex);
-    			}
-    			break;
-    		
-    		default:
-    			Log.i("Default event", "default event happened");
-    			
-    		}
+    		touch_thread.pushEvent(ev);
     	}
         return true;
     }
@@ -216,6 +154,12 @@ public class GameView extends SurfaceView {
     	return (!stick.isHigher(MainActivity.layout_height - dy));
     }
     
+    public DrawingPrimitive getTouchedPrimitive() {
+    	return currently_touched_pimititve;
+    }
  
+    public void setTouchedPrimitive(DrawingPrimitive pr) {
+    	currently_touched_pimititve = pr;
+    }
 }
 

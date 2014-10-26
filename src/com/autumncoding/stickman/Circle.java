@@ -55,10 +55,11 @@ public class Circle implements DrawingPrimitive {
 		parentPrimitive = null;
 	}
 	
-	@Override
-	public boolean checkTouched(float touch_x, float touch_y) {
+	private CircleTouches m_checkTouched(float touch_x, float touch_y) {
 		float dx = x_rotate - touch_x;
 		float dy = y_rotate - touch_y;
+		CircleTouches newTouchState = CircleTouches.NONE;
+		
 		boolean rotate_point_touched = (dx * dx + dy * dy <= GameData.joint_radius_touchable_square);
 		
 		boolean stretch_point_touched = false;
@@ -75,29 +76,46 @@ public class Circle implements DrawingPrimitive {
 			float max_dist_in = (r + GameData.circle_touchable_dr) * (r + GameData.circle_touchable_dr);
 			circle_touched = (dist >= min_dist_in && dist <= max_dist_in);
 		}
+				
+		if (rotate_point_touched) {
+			newTouchState = CircleTouches.JOINT;
+		}
+		else if (stretch_point_touched) {
+			m_stretch_line_paint = GameData.joint_touched_paint;
+			newTouchState = CircleTouches.STRETCHER;
+		}
+		else if (circle_touched) {
+			newTouchState = CircleTouches.CIRCLE;
+		}
 		
+		
+		return newTouchState;
+	}
+	
+	@Override
+	public boolean checkTouched(float touch_x, float touch_y) {
+		touch_state = m_checkTouched(touch_x, touch_y);
 		
 		is_touched = true;
 		m_joint_paint = GameData.joint_paint;
 		m_line_paint = GameData.line_paint;
 		
-		if (rotate_point_touched) {
-			m_joint_paint = GameData.joint_touched_paint;
-			touch_state = CircleTouches.JOINT;
-		}
-		else if (stretch_point_touched) {
-			m_stretch_line_paint = GameData.joint_touched_paint;
-			touch_state = CircleTouches.STRETCHER;
-		}
-		else if (circle_touched) {
+		switch (touch_state) {
+		case CIRCLE:
 			m_line_paint = GameData.line_touched_paint;
-			touch_state = CircleTouches.CIRCLE;
-		}
-		else {
-			touch_state = CircleTouches.NONE;
+			break;
+		case JOINT:
+			m_joint_paint = GameData.joint_touched_paint;
+			break;
+		case NONE:
 			is_touched = false;
+			break;
+		case STRETCHER:
+			m_stretch_line_paint = GameData.joint_touched_paint;
+			break;
+		default:
+			break;
 		}
-		
 		return is_touched;
 	}
 
@@ -182,7 +200,14 @@ public class Circle implements DrawingPrimitive {
 		return (x_rotate - from_x) * (x_rotate - from_x) + (y_rotate - from_y) * (y_rotate - from_y);
 	}
 	
-	public void CopyCircle(Circle cir) {
+	public void copy(DrawingPrimitive primitive) {
+		if (primitive == null)
+			return;
+		
+		if (primitive.GetType() != PrimitiveType.CIRCLE)
+			return;
+		Circle cir = (Circle)primitive;
+		
 		x = cir.x;
 		y = cir.y;
 		r = cir.r;
@@ -232,10 +257,15 @@ public class Circle implements DrawingPrimitive {
 		case JOINT: {
 			float len1 = (float) Math.sqrt((new_x - x_stretch) * (new_x - x_stretch) + (new_y - y_stretch) * (new_y - y_stretch));
 			float len2 = (float) Math.sqrt((x_rotate - x_stretch) * (x_rotate - x_stretch) + (y_rotate - y_stretch) * (y_rotate - y_stretch));
-			float cosfi = (new_x - x_stretch) * (x_rotate - x_stretch) + (new_y - y_stretch) * (y_rotate - y_stretch) / (len1 * len2);
+			float cos_theta = (new_x - x_stretch) * (x_rotate - x_stretch) + (new_y - y_stretch) * (y_rotate - y_stretch) / (len1 * len2);
 			
-			float fi = (float) Math.acos(cosfi); // NB: using acos is not very cool just so: need to be sue fi <= 180
-			rotate(fi, x_stretch, y_stretch);
+	    	if (cos_theta > 1.0f)
+	    		cos_theta = 1.0f;
+	    	else if (cos_theta < -1.0f)
+	    		cos_theta = -1.0f;
+	    	
+			float theta = (float) Math.acos(cos_theta); // NB: using acos is not very cool just so: need to be sue fi <= 180
+			rotate(theta, x_stretch, y_stretch);
 			break;
 		}
 		case NONE:
@@ -248,6 +278,22 @@ public class Circle implements DrawingPrimitive {
 		
 		
 		}
+	}
+
+	@Override
+	public void setNotConnected() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean checkScaleTouched(float touch_x, float touch_y) {
+		CircleTouches newTouchState = m_checkTouched(touch_x, touch_y);
+		
+		if (newTouchState == CircleTouches.NONE)
+			return false;
+		
+		return true;
 	}
 	
 }

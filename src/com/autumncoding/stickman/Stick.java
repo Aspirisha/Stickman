@@ -20,16 +20,6 @@ public class Stick extends View implements DrawingPrimitive {
 	
 	private float length;
 	private float angle;
-	private static float joint_radius_touchable;
-	private static float stick_distance_touchable;
-	private static float stick_distance_touchable_square;
-	private static float joint_radius_touchable_square;
-	private static float joint_radius_visible;
-	private static float menu_line_y; // y coordinate of horizontal menu line
-	private static float menu_line_x1;
-	private static float menu_line_x2;
-	private static float stretch_line_length; // length of stick part which can be pulled to scale stick
-	private static float min_length; // minimal stick length
 	
 	private Paint m_line_paint;
 	private Paint m_joint1_paint;
@@ -59,16 +49,6 @@ public class Stick extends View implements DrawingPrimitive {
 	JOINTS rotateless_joint;
 	StickTouches touch_state = StickTouches.NONE;
 	
-	static {
-		joint_radius_touchable = 10;
-		joint_radius_visible = 5;
-		joint_radius_touchable_square = joint_radius_touchable * joint_radius_touchable;
-		stick_distance_touchable = 10;
-		stick_distance_touchable_square = stick_distance_touchable * stick_distance_touchable;
-		
-		stretch_line_length = 10;
-		min_length = 10;
-	}
 	
 	public Stick(Context context) {
 		super(context);
@@ -88,12 +68,18 @@ public class Stick extends View implements DrawingPrimitive {
 		child_sticks = new ArrayList<Stick>();
 		parent_stick = null;
 		parent_joint = null;
-		stretch_line_x = x1 + stretch_line_length * (x2 - x1) / length;
-    	stretch_line_y = y1 + stretch_line_length * (y2 - y1) / length;
+		stretch_line_x = x1 + GameData.stretch_line_length * (x2 - x1) / length;
+    	stretch_line_y = y1 + GameData.stretch_line_length * (y2 - y1) / length;
 	   // measure(100, 10);
 	}
 	
-	public void CopyStick(Stick st) {
+	public void copy(DrawingPrimitive primitive) {
+		if (primitive == null)
+			return;
+		if (primitive.GetType() != PrimitiveType.STICK)
+			return;
+		
+		Stick st = (Stick)primitive;
 		angle = st.angle;
 		x1 = st.x1;
 		y1 = st.y1;
@@ -127,26 +113,38 @@ public class Stick extends View implements DrawingPrimitive {
 		x2 = new_x;
 		y2 = new_y;
 		
-		stretch_line_x = x1 + stretch_line_length * (x2 - x1) / length;
-    	stretch_line_y = y1 + stretch_line_length * (y2 - y1) / length;
+		stretch_line_x = x1 + GameData.stretch_line_length * (x2 - x1) / length;
+    	stretch_line_y = y1 + GameData.stretch_line_length * (y2 - y1) / length;
     	
 		for (Stick st : child_sticks) { 
 			st.rotate(fi, cx, cy);
 		}
 	}
 	
-	public void rotateAroundJoint1(float new_x1, float new_y1) {
+	public void rotateAroundJoint1(float x, float y) {
 		if (rotateless_joint == JOINTS.JOINT2)
 			return;
-		float dl = (float)Math.sqrt((new_x1 - x1) * (new_x1 - x1) + (new_y1 - y1) * (new_y1 - y1));
+		float dl = (float)Math.sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1));
 		if (dl == 0)
 			return;
-    	float cos_theta = ((new_x1 - x1) * (x2 - x1) + (new_y1 - y1) * (y2 - y1)) / (dl * length);
+    	float cos_theta = ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / (dl * length);
+    	
+    	if (cos_theta > 1.0f)
+    		cos_theta = 1.0f;
+    	else if (cos_theta < -1.0f)
+    		cos_theta = -1.0f;
+    	
     	float theta = (float)Math.acos(cos_theta);
     	
-    	if ((x2 - x1) * (new_y1 - y1) - (new_x1 - x1) * (y2 - y1) < 0)
+    	if ((x2 - x1) * (y - y1) - (x - x1) * (y2 - y1) < 0)
     		theta = -theta;
     	rotate(theta, x1, y1);
+    	if (Float.isNaN(x1))
+    	{
+    		x1 = 0;
+    		x2 = 0;
+    		
+    	}
 	}
 	
 	public void rotateAroundJoint2(float new_x2, float new_y2) {
@@ -154,6 +152,11 @@ public class Stick extends View implements DrawingPrimitive {
 		if (dl == 0)
 			return;
     	float cos_theta = ((new_x2 - x2) * (x1 - x2) + (new_y2 - y2) * (y1 - y2)) / (dl * length);
+    	if (cos_theta > 1.0f)
+    		cos_theta = 1.0f;
+    	else if (cos_theta < -1.0f)
+    		cos_theta = -1.0f;
+    	
     	float theta = (float)Math.acos(cos_theta);
     	
     	if ((x1 - x2) * (new_y2 - y2) - (new_x2 - x2) * (y1 - y2) < 0)
@@ -180,7 +183,7 @@ public class Stick extends View implements DrawingPrimitive {
 			return;
 		
 		float temp_length = (float) Math.sqrt((new_x2 - x2) * (new_x2 - x2) + (new_y2 - y2) * (new_y2 - y2));
-		if (temp_length <= min_length)
+		if (temp_length <= GameData.min_length)
 			return;
 		float dl = (float)Math.sqrt((new_x2 - x2) * (new_x2 - x2) + (new_y2 - y2) * (new_y2 - y2));
 		if (dl == 0)
@@ -195,8 +198,8 @@ public class Stick extends View implements DrawingPrimitive {
     	x1 = new_x2;
     	y1 = new_y2;
     	
-    	stretch_line_x = x1 + stretch_line_length * (x2 - x1) / length;
-    	stretch_line_y = y1 + stretch_line_length * (y2 - y1) / length;
+    	stretch_line_x = x1 + GameData.stretch_line_length * (x2 - x1) / length;
+    	stretch_line_y = y1 + GameData.stretch_line_length * (y2 - y1) / length;
     	length = temp_length;
 	}
 	
@@ -204,7 +207,7 @@ public class Stick extends View implements DrawingPrimitive {
 	public void draw(Canvas canvas) { 
 		canvas.drawLine(stretch_line_x, stretch_line_y, x2, y2, m_line_paint);
 		canvas.drawLine(x1, y1, stretch_line_x, stretch_line_y, m_stretch_line_paint);
-		canvas.drawCircle(x2, y2, joint_radius_visible, m_joint2_paint);
+		canvas.drawCircle(x2, y2, GameData.joint_radius_visible, m_joint2_paint);
 		//canvas.drawCircle(x1, y1, joint_radius_visible, m_joint1_paint);
 	}
 	
@@ -214,18 +217,18 @@ public class Stick extends View implements DrawingPrimitive {
 		return super.onTouchEvent(event);
 	}
 	
-
-	public boolean checkTouched(float touch_x, float touch_y) {
+	
+	private StickTouches m_checkTouched(float touch_x, float touch_y) {
 		float dx = x1 - touch_x;
 		float dy = y1 - touch_y;
-		boolean joint1_touched = (dx * dx + dy * dy <= joint_radius_touchable_square);
+		boolean joint1_touched = (dx * dx + dy * dy <= GameData.joint_radius_touchable_square);
 				
 		dx = x2 - touch_x;
 		dy = y2 - touch_y;
 		boolean joint2_touched = false;
 		
 		if (!joint1_touched)
-			joint2_touched = (dx * dx + dy * dy <= joint_radius_touchable_square);
+			joint2_touched = (dx * dx + dy * dy <= GameData.joint_radius_touchable_square);
 		
 		boolean stick_touched = false;
 		if (!joint1_touched && !joint2_touched) {
@@ -235,30 +238,48 @@ public class Stick extends View implements DrawingPrimitive {
 			float touch_vector_projection = dot_product / length;
 			if (touch_vector_projection >= 0 && touch_vector_projection <= length) { 
 				float dist = touch_vector_length_squared - touch_vector_projection * touch_vector_projection;
-				stick_touched = (dist <= stick_distance_touchable_square);
+				stick_touched = (dist <= GameData.stick_distance_touchable_square);
 			}
 		}
+		
+		StickTouches newTouchState = StickTouches.NONE;
+		if (joint1_touched) {
+			newTouchState = StickTouches.JOINT1;
+		}
+		else if (joint2_touched) {
+			newTouchState = StickTouches.JOINT2;
+		}
+		else if (stick_touched) {
+			newTouchState = StickTouches.STICK;
+		}
+		
+		
+		return newTouchState;
+	}
+	
+	public boolean checkTouched(float touch_x, float touch_y) {
+		touch_state = m_checkTouched(touch_x, touch_y);
 		
 		is_touched = true;
 		m_joint1_paint = GameData.joint_paint;
 		m_joint2_paint = GameData.joint_paint;
 		m_line_paint = GameData.line_paint;
 		
-		if (joint1_touched) {
+		switch (touch_state) {
+		case JOINT1:
 			m_joint1_paint = GameData.joint_touched_paint;
-			touch_state = StickTouches.JOINT1;
-		}
-		else if (joint2_touched) {
+			break;
+		case JOINT2:
 			m_joint2_paint = GameData.joint_touched_paint;
-			touch_state = StickTouches.JOINT2;
-		}
-		else if (stick_touched) {
-			m_line_paint = GameData.line_touched_paint;
-			touch_state = StickTouches.STICK;
-		}
-		else {
-			touch_state = StickTouches.NONE;
+			break;
+		case NONE:
 			is_touched = false;
+			break;
+		case STICK:
+			m_line_paint = GameData.line_touched_paint;
+			break;
+		default:
+			break;
 		}
 		
 		return is_touched;
@@ -294,7 +315,7 @@ public class Stick extends View implements DrawingPrimitive {
 	}
 	
 	
-	public void set_not_connected() {
+	public void setNotConnected() {
 		if (parent_joint != null) {
 			parent_joint.removeConnectedStick(this);
 			parent_joint = null;
@@ -313,8 +334,8 @@ public class Stick extends View implements DrawingPrimitive {
 		x2 = _x2;
 		y2 = _y2;
 		length = (float) Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-		stretch_line_x = x1 + stretch_line_length * (x2 - x1) / length;
-    	stretch_line_y = y1 + stretch_line_length * (y2 - y1) / length;
+		stretch_line_x = x1 + GameData.stretch_line_length * (x2 - x1) / length;
+    	stretch_line_y = y1 + GameData.stretch_line_length * (y2 - y1) / length;
 	}
 	
 	public boolean isHigher(float y) {
@@ -328,7 +349,6 @@ public class Stick extends View implements DrawingPrimitive {
 
 	@Override
 	public float distTo(DrawingPrimitive primitive) {
-	
 		return primitive.getDistToMe(x1, y1);
 	}
 
@@ -371,5 +391,32 @@ public class Stick extends View implements DrawingPrimitive {
 	@Override
 	public float getDistToMe(float x_from, float y_from) {
 		return (x2 - x_from) * (x2 - x_from) + (y2 - y_from) * (y2 - y_from);
+	}
+
+	@Override
+	public void applyMove(float new_x, float new_y, float prev_x, float prev_y) {
+		switch (touch_state) {
+		case JOINT1:
+			scale(new_x, new_y);
+			break;
+		case JOINT2:
+			rotateAroundJoint1(new_x, new_y);
+			break;
+		case STICK:
+			translate(new_x - prev_x, new_y - prev_y);
+			break;
+		default:
+			break;
+		}
+	}
+
+	@Override
+	public boolean checkScaleTouched(float touch_x, float touch_y) {
+		StickTouches newTouchState = m_checkTouched(touch_x, touch_y);
+		
+		if (newTouchState == StickTouches.NONE)
+			return false;
+		
+		return true;
 	}
 }

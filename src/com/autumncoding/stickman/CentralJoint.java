@@ -48,13 +48,6 @@ public class CentralJoint extends View implements DrawingPrimitive {
 		x = 0;
 		y = 0;
 	}
-	
-	public void CopyJoint(final CentralJoint joint) {
-		x = joint.x;
-		y = joint.y;
-		is_touched = joint.is_touched;
-		m_paint = joint.m_paint;
-	}
 
 	public void translate(float dx, float dy) {	
 		x += dx;
@@ -152,5 +145,36 @@ public class CentralJoint extends View implements DrawingPrimitive {
 	@Override
 	public float getDistToMe(float x_from, float y_from) {
 		return (x - x_from) * (x - x_from) + (y - y_from) * (y - y_from);
+	}
+
+	@Override
+	public void applyMove(float new_x, float new_y, float prev_x, float prev_y) {
+		translate(new_x - prev_x, new_y - prev_y);
+		
+	}
+
+	@Override
+	public void setNotConnected() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void copy(DrawingPrimitive p) {
+		if (p == null)
+			return;
+		if (p.GetType() != PrimitiveType.JOINT)
+			return;
+		
+		CentralJoint joint = (CentralJoint)p;
+		x = joint.x;
+		y = joint.y;
+		is_touched = joint.is_touched;
+		m_paint = joint.m_paint;
+	}
+
+	@Override
+	public boolean checkScaleTouched(float touch_x, float touch_y) { // no sense
+		return false;
 	}
 }

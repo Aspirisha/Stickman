@@ -88,7 +88,6 @@ public class MainActivity extends Activity {
 				}
 			});
 			setContentView(m_playingTable);
-			//m_gameHolder.start();
 		}
 	}
 
