@@ -21,13 +21,16 @@ public class TouchEventThread extends Thread {
 	private Circle menu_circle;
     private Stick menu_stick;
     
-    float mLastTouchX;
-	float mLastTouchY;
+    float mLastTouchX = 0;
+	float mLastTouchY = 0;
 	
 	LinkedList<MotionEvent> touch_events;
+	LinkedList<Long> events_time;
 	
 	private long startTime = 0;
-	private int pointers_on_screen = 0;
+	private long lastTouchTime = System.currentTimeMillis();
+	private DrawingPrimitive lastTouchedPrimitive = null;
+	private boolean movementIsScaling = false;
 	
 	public void setRunning(boolean run) {
         isRunning = run;
@@ -36,8 +39,7 @@ public class TouchEventThread extends Thread {
 	TouchEventThread(GameView _gameView) {
 		m_gameView = _gameView;
 		touch_events = new LinkedList<MotionEvent>();
-		mLastTouchX = 0;
-		mLastTouchY = 0;
+		events_time = new LinkedList<Long>();
 		setName("Touch thread");
 	}
 	
@@ -79,13 +81,14 @@ public class TouchEventThread extends Thread {
 	
 	synchronized private void processEvent() {
 		MotionEvent event = touch_events.pollFirst();
+		long eventTime = events_time.pollFirst();
+		
 		int eventCode = event.getAction() & MotionEvent.ACTION_MASK;
 		float x = event.getX();
 		float y = event.getY();
 		
 		switch (eventCode) {
 		case MotionEvent.ACTION_DOWN: {
-			pointers_on_screen++;
 			
 			mLastTouchX = x;
 			mLastTouchY = y;
@@ -93,47 +96,37 @@ public class TouchEventThread extends Thread {
 			boolean something_is_touched = false;
 			
 			for (DrawingPrimitive primitive : drawing_queue) {
-				primitive.checkTouched(x, y);
+				primitive.checkTouch(x, y);
 				if (primitive.isTouched()) {
 					something_is_touched = true;
 					drawing_queue.remove(primitive); // to make it drawing last
 					drawing_queue.add(primitive);
 					m_gameView.setTouchedPrimitive(primitive);
+					
+					if (eventTime - lastTouchTime < 400) 
+						movementIsScaling = true;
+					else
+						movementIsScaling = false;
+					
+					lastTouchedPrimitive = primitive;
+					lastTouchTime = eventTime;
 					break;
 				}
 			}
 			
 			if (!something_is_touched) {
-    			menu_central_joint.checkTouched(x, y);
-    			menu_stick.checkTouched(x, y);
-    			menu_circle.checkTouched(x, y);
+    			menu_central_joint.checkTouch(x, y);
+    			menu_stick.checkTouch(x, y);
+    			menu_circle.checkTouch(x, y);
 			}
-			break;
-		}
-		
-		case MotionEvent.ACTION_POINTER_DOWN: {
-			pointers_on_screen++;
-			DrawingPrimitive primitive = m_gameView.getTouchedPrimitive();
-			if (primitive == null)
-				break;
-			
-			int index = event.getActionIndex();
-			float touch_x = event.getX(index);
-			float touch_y = event.getY(index);
-			primitive.checkScaleTouched(touch_x, touch_y);
-			
-			break;
-		}
-		
-		case MotionEvent.ACTION_POINTER_UP: {
-			pointers_on_screen--;
 			break;
 		}
 		
 		case MotionEvent.ACTION_MOVE: {
 			DrawingPrimitive touchedPrimitive = m_gameView.getTouchedPrimitive();
+			int index = event.getActionIndex();
 			if (touchedPrimitive != null) {
-				touchedPrimitive.applyMove(x, y, mLastTouchX, mLastTouchY);
+				touchedPrimitive.applyMove(x, y, mLastTouchX, mLastTouchY, movementIsScaling);
 				
 				if (touchedPrimitive.GetType() == PrimitiveType.STICK) {
 					float min_dist = 10000;
@@ -185,7 +178,6 @@ public class TouchEventThread extends Thread {
 		}
 		
 		case MotionEvent.ACTION_UP: {
-			pointers_on_screen--;
 			DrawingPrimitive primitive = m_gameView.getTouchedPrimitive();
 			if (primitive != null) {
 				primitive.setUntouched();
@@ -194,10 +186,12 @@ public class TouchEventThread extends Thread {
 			break;
 		}
 		}
+		
 	}
 	
 	synchronized public void pushEvent(MotionEvent ev) {
 		touch_events.push(ev);
+		events_time.push(System.currentTimeMillis());
 	}
 	
 }

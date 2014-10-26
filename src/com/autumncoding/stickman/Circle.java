@@ -17,12 +17,18 @@ public class Circle implements DrawingPrimitive {
 	private float y_rotate;
 	private float r;
 	private float angle;
+	
+	/*********************** touch data *********************************************/
 	private boolean is_touched;
+	private int index1;
+	private int index2;
 	
 	private Paint m_line_paint;
 	private Paint m_joint_paint;
 	private Paint m_stretch_line_paint;
-	ArrayList<Stick> child_sticks;
+	private DrawingPrimitive parentPrimitive;
+	private ArrayList<DrawingPrimitive> childPrimitives;
+	
 	
 	enum CircleTouches {
 		JOINT, 
@@ -32,7 +38,6 @@ public class Circle implements DrawingPrimitive {
 	}
 	
 	private CircleTouches touch_state;
-	private DrawingPrimitive parentPrimitive;
 	
 	public Circle(Context context) {
 		x = 100;
@@ -46,7 +51,7 @@ public class Circle implements DrawingPrimitive {
 		
 		angle = 0;
 		is_touched = false;
-		child_sticks = new ArrayList<Stick>();
+		childPrimitives = new ArrayList<DrawingPrimitive>();
 		
 		m_line_paint = GameData.line_paint;
 		m_joint_paint = GameData.joint_paint;
@@ -93,7 +98,7 @@ public class Circle implements DrawingPrimitive {
 	}
 	
 	@Override
-	public boolean checkTouched(float touch_x, float touch_y) {
+	public boolean checkTouch(float touch_x, float touch_y) {
 		touch_state = m_checkTouched(touch_x, touch_y);
 		
 		is_touched = true;
@@ -163,8 +168,8 @@ public class Circle implements DrawingPrimitive {
 		x = new_x;
 		y = new_y;
     	
-		for (Stick st : child_sticks) { 
-			st.rotate(fi, cx, cy);
+		for (DrawingPrimitive pr : childPrimitives) { 
+			pr.rotate(fi, cx, cy);
 		}
 	}
 	
@@ -177,8 +182,8 @@ public class Circle implements DrawingPrimitive {
 		y_rotate += dy;
 		
     	
-		for (Stick stick : child_sticks) {
-			stick.translate(dx,  dy);
+		for (DrawingPrimitive pr : childPrimitives) { 
+			pr.translate(dx,  dy);
 		}
 	}
 	
@@ -249,7 +254,7 @@ public class Circle implements DrawingPrimitive {
 		}
 	}
 	
-	public void applyMove(float new_x, float new_y, float prev_x, float prev_y) {
+	public void applyMove(float new_x, float new_y, float prev_x, float prev_y, boolean isScaling) {
 		switch (touch_state) {
 		case CIRCLE:
 			translate(new_x - prev_x, new_y - prev_y);
@@ -287,13 +292,16 @@ public class Circle implements DrawingPrimitive {
 	}
 
 	@Override
-	public boolean checkScaleTouched(float touch_x, float touch_y) {
-		CircleTouches newTouchState = m_checkTouched(touch_x, touch_y);
+	public void removeChild(DrawingPrimitive p) {
+		// TODO Auto-generated method stub
 		
-		if (newTouchState == CircleTouches.NONE)
-			return false;
+	}
+
+	@Override
+	public void addChild(DrawingPrimitive p) {
+		// TODO Auto-generated method stub
 		
-		return true;
 	}
 	
 }
+	

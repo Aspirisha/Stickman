@@ -2,8 +2,6 @@ package com.autumncoding.stickman;
 
 import java.util.ArrayList;
 
-import com.autumncoding.stickman.Stick.StickTouches;
-
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -22,6 +20,8 @@ public class CentralJoint extends View implements DrawingPrimitive {
 	private boolean is_touched;
 	private float x;
 	private float y;
+	private int toucher_index;
+	
 	static {
 		joint_radius_touchable = 10;
 		joint_radius_visible = 5;
@@ -63,7 +63,7 @@ public class CentralJoint extends View implements DrawingPrimitive {
 		canvas.drawCircle(x, y, joint_radius_visible, m_paint);
 	}
 	
-	public boolean checkTouched(float touch_x, float touch_y) {
+	public boolean checkTouch(float touch_x, float touch_y) {
 		float dx = x - touch_x;
 		float dy = y - touch_y;
 		is_touched = (dx * dx + dy * dy <= joint_radius_touchable_square);
@@ -148,9 +148,8 @@ public class CentralJoint extends View implements DrawingPrimitive {
 	}
 
 	@Override
-	public void applyMove(float new_x, float new_y, float prev_x, float prev_y) {
+	public void applyMove(float new_x, float new_y, float prev_x, float prev_y, boolean isScaling) {
 		translate(new_x - prev_x, new_y - prev_y);
-		
 	}
 
 	@Override
@@ -171,10 +170,5 @@ public class CentralJoint extends View implements DrawingPrimitive {
 		y = joint.y;
 		is_touched = joint.is_touched;
 		m_paint = joint.m_paint;
-	}
-
-	@Override
-	public boolean checkScaleTouched(float touch_x, float touch_y) { // no sense
-		return false;
 	}
 }

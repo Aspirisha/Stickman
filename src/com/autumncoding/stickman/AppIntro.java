@@ -87,7 +87,7 @@ public class AppIntro
 	int					m_scrCenterX, m_scrCenterY;
 	float				m_appleRadiusBase;
 	float				m_appleRadiusMin;
-	V2d					m_point;
+	Vector2DI					m_point;
 	
 	
 	// METHODS
@@ -105,7 +105,7 @@ public class AppIntro
 		m_pathAppleGraft	= new Path();
 		m_pathAppleLeaf		= new Path();
 		
-		m_point				= new V2d();
+		m_point				= new Vector2DI();
 		m_renderCounter 	= 0;
 		m_paintGreenEmpty	= new Paint();
 		m_paintGreenEmpty.setStyle(Style.STROKE);
@@ -271,7 +271,7 @@ public class AppIntro
 	// *****************************************************
 	
 	// t in [0..1]
-	private void getCardioid(float t, float cx, float cy, float radiusBase, float radiusApple, V2d pointOut)
+	private void getCardioid(float t, float cx, float cy, float radiusBase, float radiusApple, Vector2DI pointOut)
 	{
 		float phi;
 		

@@ -30,6 +30,7 @@ public class GameData {
     
     // visible sizes
     public static final float joint_radius_visible = 7;
+    public static final float min_stick_length = 20;
     
     // touchable sizes
     public static final float circle_touchable_dr; // +- so make it 0.5 of needed delta
@@ -40,7 +41,6 @@ public class GameData {
 	public static final float stick_distance_touchable = 10;
 	public static final float stick_distance_touchable_square = stick_distance_touchable * stick_distance_touchable;
 	public static float stretch_line_length = 10; // length of stick part which can be pulled to scale stick
-	public static float min_length = 20; // minimal stick length
     
     /*********** PAINTS ***************/
     // constant paints:

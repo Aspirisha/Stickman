@@ -1,6 +1,6 @@
 package com.autumncoding.stickman;
 
-public class V2d 
+public class Vector2DI 
 {
 	public int	x;
 	public int	y;
