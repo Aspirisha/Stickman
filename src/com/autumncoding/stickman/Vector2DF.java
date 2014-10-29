@@ -14,6 +14,11 @@ public class Vector2DF {
 		y = _y;
 	}
 	
+	Vector2DF(Vector2DF v) {
+		x = v.x;
+		y = v.y;
+	}
+	
 	public float getLength() {
 		return (float) Math.sqrt(x * x + y * y);
 	}

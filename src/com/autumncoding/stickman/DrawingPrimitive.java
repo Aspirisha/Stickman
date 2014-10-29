@@ -1,8 +1,18 @@
 package com.autumncoding.stickman;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.LinkedList;
+
 import android.graphics.Canvas;
 
 public interface DrawingPrimitive  {
+	enum VisitColor {
+		WHITE, 
+		GRAY,
+		BLACK
+	}
+	
 	public boolean checkTouch(float touch_x, float touch_y);
 	public void draw(Canvas canvas);
 	public boolean isTouched();
@@ -15,14 +25,21 @@ public interface DrawingPrimitive  {
 	public void setUntouched();
 	public void setNotConnected();
 	public void copy(DrawingPrimitive p);
-	public void removeChild(DrawingPrimitive p);
-	public void addChild(DrawingPrimitive p);
-	
+	public void removeConnection(DrawingPrimitive p);
+	public void addConnection(DrawingPrimitive p);
+	public boolean tryConnection(LinkedList<DrawingPrimitive> neighbours);
+	public float getDepth();
+	public void setDepth(float d);
+	public boolean isLeafInPrimitiveTree();
+	public void setVisitColor(VisitColor color);
+	public VisitColor getVisitColor();
+	public ArrayList<DrawingPrimitive> getConnectedPrimitives();
+	public void addChild(DrawingPrimitive ch);
+	public void addParent(DrawingPrimitive ch);
 	enum PrimitiveType {
 		STICK,
 		CIRCLE,
 		JOINT
 	};
-	
 	PrimitiveType GetType();
 }

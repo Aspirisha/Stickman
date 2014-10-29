@@ -1,6 +1,7 @@
 package com.autumncoding.stickman;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import com.autumncoding.stickman.Stick.StickTouches;
 
@@ -11,21 +12,16 @@ import android.graphics.Paint;
 public class Circle implements DrawingPrimitive {
 	private float x;
 	private float y;
-	private float x_stretch; // coordinates of point pulling which we can stretch the circle
-	private float y_stretch;
-	private float x_rotate; // joint on circle
-	private float y_rotate;
+	private float x_joint; // joint on circle
+	private float y_joint;
 	private float r;
 	private float angle;
 	
 	/*********************** touch data *********************************************/
 	private boolean is_touched;
-	private int index1;
-	private int index2;
 	
 	private Paint m_line_paint;
 	private Paint m_joint_paint;
-	private Paint m_stretch_line_paint;
 	private DrawingPrimitive parentPrimitive;
 	private ArrayList<DrawingPrimitive> childPrimitives;
 	
@@ -43,11 +39,9 @@ public class Circle implements DrawingPrimitive {
 		x = 100;
 		y = 100;
 		r = 10;
-		x_stretch = x - r;
-		y_stretch = y;
 		
-		x_rotate = x + r;
-		y_rotate = y;
+		x_joint = x + r;
+		y_joint = y;
 		
 		angle = 0;
 		is_touched = false;
@@ -55,44 +49,30 @@ public class Circle implements DrawingPrimitive {
 		
 		m_line_paint = GameData.line_paint;
 		m_joint_paint = GameData.joint_paint;
-		m_stretch_line_paint = GameData.stretch_line_paint;
 		touch_state = CircleTouches.NONE;
 		parentPrimitive = null;
 	}
 	
 	private CircleTouches m_checkTouched(float touch_x, float touch_y) {
-		float dx = x_rotate - touch_x;
-		float dy = y_rotate - touch_y;
+		float dx = x_joint - touch_x;
+		float dy = y_joint - touch_y;
 		CircleTouches newTouchState = CircleTouches.NONE;
 		
-		boolean rotate_point_touched = (dx * dx + dy * dy <= GameData.joint_radius_touchable_square);
-		
-		boolean stretch_point_touched = false;
-		if (!rotate_point_touched) {
-			dx = x_stretch - touch_x;
-			dy = y_stretch - touch_y;
-		    stretch_point_touched = (dx * dx + dy * dy <= GameData.joint_radius_touchable_square);
-		}
+		boolean joint_point_touched = (dx * dx + dy * dy <= GameData.joint_radius_touchable_square);
 		
 		boolean circle_touched = false;
-		if (!rotate_point_touched && !stretch_point_touched) {
+		if (!joint_point_touched) {
 			float dist = (x - touch_x) * (x - touch_x) + (y - touch_y) * (y - touch_y);
 			float min_dist_in = (r - GameData.circle_touchable_dr) * (r - GameData.circle_touchable_dr);
 			float max_dist_in = (r + GameData.circle_touchable_dr) * (r + GameData.circle_touchable_dr);
 			circle_touched = (dist >= min_dist_in && dist <= max_dist_in);
 		}
 				
-		if (rotate_point_touched) {
+		if (joint_point_touched) {
 			newTouchState = CircleTouches.JOINT;
-		}
-		else if (stretch_point_touched) {
-			m_stretch_line_paint = GameData.joint_touched_paint;
-			newTouchState = CircleTouches.STRETCHER;
-		}
-		else if (circle_touched) {
+		} else if (circle_touched) {
 			newTouchState = CircleTouches.CIRCLE;
 		}
-		
 		
 		return newTouchState;
 	}
@@ -115,9 +95,6 @@ public class Circle implements DrawingPrimitive {
 		case NONE:
 			is_touched = false;
 			break;
-		case STRETCHER:
-			m_stretch_line_paint = GameData.joint_touched_paint;
-			break;
 		default:
 			break;
 		}
@@ -127,8 +104,7 @@ public class Circle implements DrawingPrimitive {
 	@Override
 	public void draw(Canvas canvas) {
 		canvas.drawCircle(x, y, r, m_line_paint);
-		canvas.drawPoint(x_rotate, y_rotate, m_joint_paint);
-		canvas.drawPoint(x_stretch, y_stretch, m_stretch_line_paint);
+		canvas.drawCircle(x_joint, y_joint, GameData.joint_radius_visible, m_joint_paint);
 	}
 
 	@Override
@@ -138,7 +114,7 @@ public class Circle implements DrawingPrimitive {
 
 	@Override
 	public float distTo(DrawingPrimitive primitive) {
-		return primitive.getDistToMe(x_stretch, y_stretch);
+		return primitive.getDistToMe(x_joint, y_joint);
 	}
 
 	@Override
@@ -153,15 +129,10 @@ public class Circle implements DrawingPrimitive {
 	}
 	
 	public void rotate(float fi, float cx, float cy) {
-		float new_x = (float) (cx + (x_rotate - cx) * Math.cos(fi) - (y_rotate - cy) * Math.sin(fi));
-		float new_y = (float) (cy + (x_rotate - cx) * Math.sin(fi) + (y_rotate - cy) * Math.cos(fi));
-		x_rotate = new_x;
-		y_rotate = new_y;
-		
-		new_x = (float) (cx + (x_stretch - cx) * Math.cos(fi) - (y_stretch - cy) * Math.sin(fi));
-		new_y = (float) (cy + (x_stretch - cx) * Math.sin(fi) + (y_stretch - cy) * Math.cos(fi));
-		x_stretch = new_x;
-		y_stretch = new_y;
+		float new_x = (float) (cx + (x_joint - cx) * Math.cos(fi) - (y_joint - cy) * Math.sin(fi));
+		float new_y = (float) (cy + (x_joint - cx) * Math.sin(fi) + (y_joint - cy) * Math.cos(fi));
+		x_joint = new_x;
+		y_joint = new_y;
 		
 		new_x = (float) (cx + (x - cx) * Math.cos(fi) - (y - cy) * Math.sin(fi));
 		new_y = (float) (cy + (x - cx) * Math.sin(fi) + (y - cy) * Math.cos(fi));
@@ -176,10 +147,8 @@ public class Circle implements DrawingPrimitive {
 	public void translate(float dx, float dy) {	
 		x += dx;
 		y += dy;
-		x_stretch += dx;
-		y_stretch += dy;
-		x_rotate += dx;
-		y_rotate += dy;
+		x_joint += dx;
+		y_joint += dy;
 		
     	
 		for (DrawingPrimitive pr : childPrimitives) { 
@@ -190,11 +159,9 @@ public class Circle implements DrawingPrimitive {
 	public void setPosition(float _x, float _y, float _angle) {
 		x = _x;
 		y = _y;
-		x_stretch = x - r;
-		y_stretch = y;
 		
-		x_rotate = x + r;
-		y_rotate = y;
+		x_joint = x + r;
+		y_joint = y;
 		
 		angle = _angle;
 		rotate(angle, x, y);
@@ -202,7 +169,7 @@ public class Circle implements DrawingPrimitive {
 
 	@Override
 	public float getDistToMe(float from_x, float from_y) {
-		return (x_rotate - from_x) * (x_rotate - from_x) + (y_rotate - from_y) * (y_rotate - from_y);
+		return (x_joint - from_x) * (x_joint - from_x) + (y_joint - from_y) * (y_joint - from_y);
 	}
 	
 	public void copy(DrawingPrimitive primitive) {
@@ -217,11 +184,8 @@ public class Circle implements DrawingPrimitive {
 		y = cir.y;
 		r = cir.r;
 		
-		x_stretch = cir.x_stretch;
-		y_stretch = cir.y_stretch;
-		
-		x_rotate = cir.x_rotate;
-		y_rotate = cir.y_rotate;
+		x_joint = cir.x_joint;
+		y_joint = cir.y_joint;
 		
 		angle = cir.angle;
 		is_touched = cir.is_touched;
@@ -237,7 +201,6 @@ public class Circle implements DrawingPrimitive {
 		is_touched = false;
 		touch_state = CircleTouches.NONE;
 		m_joint_paint = GameData.joint_paint;
-		m_stretch_line_paint = GameData.stretch_line_paint;
 		m_line_paint = GameData.line_paint;
 	}
 	
@@ -246,11 +209,9 @@ public class Circle implements DrawingPrimitive {
 		
 		if (new_r > GameData.min_circle_radius && new_r < GameData.max_circle_radius) {
 			r = new_r;
-			x_stretch = (float) (x - r * Math.cos(angle));
-			y_stretch = (float) (y - r * Math.sin(angle));
 			
-			x_rotate = (float) (x + r * Math.cos(angle));
-			y_rotate = (float) (y + r * Math.sin(angle));
+			x_joint = (float) (x + r * Math.cos(angle));
+			y_joint = (float) (y + r * Math.sin(angle));
 		}
 	}
 	
@@ -260,23 +221,27 @@ public class Circle implements DrawingPrimitive {
 			translate(new_x - prev_x, new_y - prev_y);
 			break;
 		case JOINT: {
-			float len1 = (float) Math.sqrt((new_x - x_stretch) * (new_x - x_stretch) + (new_y - y_stretch) * (new_y - y_stretch));
-			float len2 = (float) Math.sqrt((x_rotate - x_stretch) * (x_rotate - x_stretch) + (y_rotate - y_stretch) * (y_rotate - y_stretch));
-			float cos_theta = (new_x - x_stretch) * (x_rotate - x_stretch) + (new_y - y_stretch) * (y_rotate - y_stretch) / (len1 * len2);
-			
-	    	if (cos_theta > 1.0f)
-	    		cos_theta = 1.0f;
-	    	else if (cos_theta < -1.0f)
-	    		cos_theta = -1.0f;
-	    	
-			float theta = (float) Math.acos(cos_theta); // NB: using acos is not very cool just so: need to be sue fi <= 180
-			rotate(theta, x_stretch, y_stretch);
+			if (isScaling) {
+				float newRadius = (float) Math.sqrt((x - new_x) * (x - new_x) + (y - new_y) * (y - new_y));
+				scale(x, y, newRadius / r);
+			} else {
+				float len1 = (float) Math.sqrt((new_x - x) * (new_x - x) + (new_y - y) * (new_y - y));
+				float len2 = (float) Math.sqrt((prev_x - x) * (prev_x - x) + (prev_y - y) * (prev_y - y));
+				float cos_theta = ((new_x - x) * (prev_x - x) + (new_y - y) * (prev_y - y)) / (len1 * len2);
+				
+		    	if (cos_theta > 1.0f)
+		    		cos_theta = 1.0f;
+		    	else if (cos_theta < -1.0f)
+		    		cos_theta = -1.0f;
+		    	
+				float theta = (float) Math.acos(cos_theta); // NB: using acos is not very cool just so: need to be sue fi <= 180
+				if ((new_x - x) * (prev_y - y) - (prev_x - x) * (new_y - y) > 0)
+					theta = -theta;
+				rotate(theta, x, y);
+			}
 			break;
 		}
 		case NONE:
-			break;
-		case STRETCHER:
-			stretch(new_x, new_y);
 			break;
 		default:
 			break;
@@ -290,18 +255,92 @@ public class Circle implements DrawingPrimitive {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	public void scale(float cx, float cy, float ratio) {
+		if (parentPrimitive != null)
+			return;
+		
+		float temp_radius = r * ratio;
+		if (temp_radius < GameData.min_circle_radius)
+		{
+			temp_radius = GameData.min_circle_radius;
+			ratio = temp_radius / r;
+		}
+		
+		x = cx + ratio * (x - cx);
+		y = cy + ratio * (y - cy);
+		
+		x_joint = cx + ratio * (x_joint - cx);
+		y_joint = cy + ratio * (y_joint - cy);
+    	r = temp_radius;
+	}
 
 	@Override
-	public void removeChild(DrawingPrimitive p) {
+	public void removeConnection(DrawingPrimitive p) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void addChild(DrawingPrimitive p) {
+	public void addConnection(DrawingPrimitive p) {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public boolean tryConnection(LinkedList<DrawingPrimitive> neighbours) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public float getDepth() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setDepth(float d) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isLeafInPrimitiveTree() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void setVisitColor(VisitColor color) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public VisitColor getVisitColor() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ArrayList<DrawingPrimitive> getConnectedPrimitives() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void addChild(DrawingPrimitive ch) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void addParent(DrawingPrimitive ch) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	
 }
 	

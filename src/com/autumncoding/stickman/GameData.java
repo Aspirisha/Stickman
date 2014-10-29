@@ -27,9 +27,11 @@ public class GameData {
     public float top_menu_x1 = 0;
     public float top_menu_x2 = 0;
     
+    // distances
+    public static final float min_dist_to_connect_square = 100;
     
     // visible sizes
-    public static final float joint_radius_visible = 7;
+    public static final float joint_radius_visible = 8;
     public static final float min_stick_length = 20;
     
     // touchable sizes

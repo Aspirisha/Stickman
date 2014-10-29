@@ -1,8 +1,12 @@
 package com.autumncoding.stickman;
 
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.LinkedList;
+import java.util.Stack;
 
 import com.autumncoding.stickman.DrawingPrimitive.PrimitiveType;
+import com.autumncoding.stickman.DrawingPrimitive.VisitColor;
 
 import android.util.Log;
 import android.view.MotionEvent;
@@ -103,7 +107,7 @@ public class TouchEventThread extends Thread {
 					drawing_queue.add(primitive);
 					m_gameView.setTouchedPrimitive(primitive);
 					
-					if (eventTime - lastTouchTime < 400) 
+					if (eventTime - lastTouchTime < 500 && lastTouchedPrimitive == primitive) 
 						movementIsScaling = true;
 					else
 						movementIsScaling = false;
@@ -127,25 +131,9 @@ public class TouchEventThread extends Thread {
 			int index = event.getActionIndex();
 			if (touchedPrimitive != null) {
 				touchedPrimitive.applyMove(x, y, mLastTouchX, mLastTouchY, movementIsScaling);
-				
-				if (touchedPrimitive.GetType() == PrimitiveType.STICK) {
-					float min_dist = 10000;
-					DrawingPrimitive closest_primitive = null;
-					for (DrawingPrimitive primitive : drawing_queue) {
-						if (primitive == touchedPrimitive)
-							continue;
-						float cur_dist = touchedPrimitive.distTo(primitive);
-						if (cur_dist < min_dist) {
-							min_dist = cur_dist;
-							closest_primitive = primitive;
-						}
-					}
-	
-					if (min_dist <= 100)
-						touchedPrimitive.connectTo(closest_primitive);
-					else 
-						touchedPrimitive.setNotConnected();
-				}
+				boolean needRecountTree = touchedPrimitive.tryConnection(drawing_queue);
+				if (needRecountTree)
+					recountDrawingTree(touchedPrimitive);
 			} else {
 				DrawingPrimitive pr = null;
 				
@@ -183,6 +171,9 @@ public class TouchEventThread extends Thread {
 				primitive.setUntouched();
 				m_gameView.setTouchedPrimitive(null);
 			}
+			if (movementIsScaling) {
+				lastTouchTime = -1;
+			}
 			break;
 		}
 		}
@@ -192,6 +183,65 @@ public class TouchEventThread extends Thread {
 	synchronized public void pushEvent(MotionEvent ev) {
 		touch_events.push(ev);
 		events_time.push(System.currentTimeMillis());
+	}
+	
+	/**
+	 * @param root is the root of the primitives tree we need to rearrange 
+	 * (we need to change some relations so that primitive, which is closer 
+	 *  to free joint is child of primitive that is farther)
+	 */
+	private void recountDrawingTree(DrawingPrimitive root) {
+		Stack<DrawingPrimitive> stack = new Stack<DrawingPrimitive>();
+		LinkedList<DrawingPrimitive> q = new LinkedList<DrawingPrimitive>();
+		
+		for (DrawingPrimitive pr : drawing_queue)
+			pr.setVisitColor(VisitColor.WHITE);
+		stack.push(root);
+		while (!stack.isEmpty()) {
+			DrawingPrimitive s = stack.pop();
+			ArrayList<DrawingPrimitive> children = s.getConnectedPrimitives();
+			for (DrawingPrimitive pr : children) {
+				if (pr.getVisitColor() == VisitColor.WHITE) {
+					stack.push(pr);
+					if (pr.isLeafInPrimitiveTree()) {
+						q.push(pr);
+						pr.setVisitColor(VisitColor.BLACK);
+						pr.setDepth(0);
+					} else {
+						pr.setVisitColor(VisitColor.GRAY);	
+					}
+				}
+			}
+		}
+		
+		// now call BFS with this q to recount depths
+		while (!q.isEmpty()) {
+			DrawingPrimitive s = q.pollFirst();
+			stack.push(s);
+			ArrayList<DrawingPrimitive> children = s.getConnectedPrimitives();
+			float depth = s.getDepth();
+			
+			for (DrawingPrimitive pr : children) {
+				if (pr.getVisitColor() == VisitColor.GRAY) {
+					q.add(pr);
+					pr.setVisitColor(VisitColor.BLACK);
+					pr.setDepth(depth + 1);
+				}
+			}
+		}	
+		
+		for (DrawingPrimitive pr: stack) {
+			float depth = pr.getDepth();
+			for (DrawingPrimitive connected : pr.getConnectedPrimitives()) {
+				if (depth < connected.getDepth()) {
+					pr.addParent(connected);
+					connected.addChild(pr);
+				} else {
+					pr.addChild(connected);
+					connected.addParent(pr);
+				}
+			}
+		}
 	}
 	
 }

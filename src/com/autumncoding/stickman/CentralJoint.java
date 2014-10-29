@@ -1,6 +1,7 @@
 package com.autumncoding.stickman;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -170,5 +171,71 @@ public class CentralJoint extends View implements DrawingPrimitive {
 		y = joint.y;
 		is_touched = joint.is_touched;
 		m_paint = joint.m_paint;
+	}
+
+	@Override
+	public void removeConnection(DrawingPrimitive p) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void addConnection(DrawingPrimitive p) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean tryConnection(LinkedList<DrawingPrimitive> neighbours) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public float getDepth() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setDepth(float d) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isLeafInPrimitiveTree() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void setVisitColor(VisitColor color) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public VisitColor getVisitColor() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public ArrayList<DrawingPrimitive> getConnectedPrimitives() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void addChild(DrawingPrimitive ch) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void addParent(DrawingPrimitive ch) {
+		// TODO Auto-generated method stub
+		
 	}
 }
