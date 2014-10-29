@@ -1,6 +1,7 @@
 package com.autumncoding.stickman;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -176,7 +177,7 @@ public class Stick extends View implements DrawingPrimitive {
 	
 	@Override
 	public void draw(Canvas canvas) { 
-		canvas.drawLine(p1.x, p2.x, p2.x, p2.y, m_line_paint);
+		canvas.drawLine(p1.x, p1.y, p2.x, p2.y, m_line_paint);
 		canvas.drawCircle(p2.x, p2.y, GameData.joint_radius_visible, m_joint2_paint);
 		canvas.drawCircle(p1.x, p1.y, GameData.joint_radius_visible, m_joint1_paint);
 	}
@@ -227,6 +228,32 @@ public class Stick extends View implements DrawingPrimitive {
 		return newTouchState;
 	}
 	
+	@Override
+	public boolean tryConnection(LinkedList<DrawingPrimitive> neighbours) {
+		float min_dist = 10000;
+		DrawingPrimitive closest_primitive = null;
+		for (DrawingPrimitive pr : neighbours) {
+			if (pr == this)
+				continue;
+			float cur_dist = distTo(pr);
+			if (cur_dist < min_dist) {
+				min_dist = cur_dist;
+				closest_primitive = pr;
+			}
+		}
+
+		if (min_dist <= GameData.min_dist_to_connect_square) {
+			if (!childrenPrimitives.contains(closest_primitive)) {
+				connectTo(closest_primitive);
+				return true;
+			}
+		}
+		else 
+			setNotConnected();
+
+		return false;
+	}
+	
 	public boolean checkTouch(float touch_x, float touch_y) {
 		touch_state = m_checkTouched(touch_x, touch_y);
 		
@@ -274,11 +301,6 @@ public class Stick extends View implements DrawingPrimitive {
 		return touch_state;
 	}
 	
-	public float distTo(Stick stick) {
-		return (stick.p2.y - p1.y) * (stick.p2.y - p1.y) + (stick.p2.x - p1.x) * (stick.p2.x - p1.x);
-	}
-	
-	
 	public void addChild(DrawingPrimitive p) {
 		if (!childrenPrimitives.contains(p))
 			childrenPrimitives.add(p);
@@ -311,33 +333,12 @@ public class Stick extends View implements DrawingPrimitive {
 
 	@Override
 	public float distTo(DrawingPrimitive primitive) {
-		return primitive.getDistToMe(p1.x, p1.y);
+		return Math.min(primitive.getDistToMe(p1.x, p1.y), primitive.getDistToMe(p2.x, p2.y));
 	}
 
 	@Override
 	public void connectTo(DrawingPrimitive primitive) {
 		switch (primitive.GetType()) {
-		case JOINT: {
-			CentralJoint joint = (CentralJoint)primitive;
-			Vector2DF e = new Vector2DF(joint.getMyX(), joint.getMyY());
-			float len1 = Vector2DF.sub(e, p1).getLength();
-			float len2 = Vector2DF.sub(e, p2).getLength();
-			
-			float dx;
-			float dy;
-			if (len2 < len1) {
-				dx = joint.getMyX() - p2.x;
-				dy = joint.getMyY() - p2.y;
-			} else {
-				dx = joint.getMyX() - p1.x;
-				dy = joint.getMyY() - p1.y;
-			}
-			if (parentPrimitive == joint && dx == 0 && dy == 0)
-				return;
-			
-			translate(dx, dy);
-			break;
-		}
 		case STICK: {
 			Stick stick = (Stick)primitive;
 			float len1 = Vector2DF.sub(stick.p1, p1).getLength();
@@ -372,7 +373,10 @@ public class Stick extends View implements DrawingPrimitive {
 
 	@Override
 	public float getDistToMe(float x_from, float y_from) {
-		return (p2.x - x_from) * (p2.x - x_from) + (p2.y - y_from) * (p2.y - y_from);
+		float d1 = (p2.x - x_from) * (p2.x - x_from) + (p2.y - y_from) * (p2.y - y_from);
+		float d2 = (p1.x - x_from) * (p1.x - x_from) + (p1.y - y_from) * (p1.y - y_from);
+		
+		return Math.min(d1, d2);
 	}
 
 	@Override

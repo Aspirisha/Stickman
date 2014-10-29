@@ -1,6 +1,7 @@
 package com.autumncoding.stickman;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import com.autumncoding.stickman.Stick.StickTouches;
 
@@ -301,6 +302,12 @@ public class Circle implements DrawingPrimitive {
 	public void addChild(DrawingPrimitive p) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public boolean tryConnection(LinkedList<DrawingPrimitive> neighbours) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 	
 }

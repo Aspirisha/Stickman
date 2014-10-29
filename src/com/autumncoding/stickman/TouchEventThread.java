@@ -17,7 +17,6 @@ public class TouchEventThread extends Thread {
 	
 	// drawing entities
 	private LinkedList<DrawingPrimitive> drawing_queue;
-	private CentralJoint menu_central_joint;
 	private Circle menu_circle;
     private Stick menu_stick;
     
@@ -45,7 +44,6 @@ public class TouchEventThread extends Thread {
 	
 	public void init() {
 		game_data = GameData.getInstance();
-		menu_central_joint = game_data.getMenuCentralJoint();
     	menu_stick = game_data.getMenuStick();
     	menu_circle = game_data.getMenuCircle();
     	drawing_queue = game_data.getDrawingQueue();
@@ -115,7 +113,6 @@ public class TouchEventThread extends Thread {
 			}
 			
 			if (!something_is_touched) {
-    			menu_central_joint.checkTouch(x, y);
     			menu_stick.checkTouch(x, y);
     			menu_circle.checkTouch(x, y);
 			}
@@ -127,34 +124,11 @@ public class TouchEventThread extends Thread {
 			int index = event.getActionIndex();
 			if (touchedPrimitive != null) {
 				touchedPrimitive.applyMove(x, y, mLastTouchX, mLastTouchY, movementIsScaling);
-				
-				if (touchedPrimitive.GetType() == PrimitiveType.STICK) {
-					float min_dist = 10000;
-					DrawingPrimitive closest_primitive = null;
-					for (DrawingPrimitive primitive : drawing_queue) {
-						if (primitive == touchedPrimitive)
-							continue;
-						float cur_dist = touchedPrimitive.distTo(primitive);
-						if (cur_dist < min_dist) {
-							min_dist = cur_dist;
-							closest_primitive = primitive;
-						}
-					}
-	
-					if (min_dist <= 100)
-						touchedPrimitive.connectTo(closest_primitive);
-					else 
-						touchedPrimitive.setNotConnected();
-				}
+				touchedPrimitive.tryConnection(drawing_queue);
 			} else {
 				DrawingPrimitive pr = null;
 				
-				if (menu_central_joint.isTouched()) {
-					pr = new CentralJoint(menu_stick.getContext());
-					pr.copy(menu_central_joint);
-					menu_central_joint.setUntouched();
-				}
-				else if (menu_stick.isTouched()) {
+				if (menu_stick.isTouched()) {
 					pr = new Stick(menu_stick.getContext());
 					pr.copy(menu_stick);
 					menu_stick.setUntouched();

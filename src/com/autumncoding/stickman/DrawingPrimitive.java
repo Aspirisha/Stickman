@@ -1,5 +1,7 @@
 package com.autumncoding.stickman;
 
+import java.util.LinkedList;
+
 import android.graphics.Canvas;
 
 public interface DrawingPrimitive  {
@@ -17,11 +19,11 @@ public interface DrawingPrimitive  {
 	public void copy(DrawingPrimitive p);
 	public void removeChild(DrawingPrimitive p);
 	public void addChild(DrawingPrimitive p);
+	public boolean tryConnection(LinkedList<DrawingPrimitive> neighbours);
 	
 	enum PrimitiveType {
 		STICK,
 		CIRCLE,
-		JOINT
 	};
 	
 	PrimitiveType GetType();

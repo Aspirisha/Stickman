@@ -9,7 +9,6 @@ import android.graphics.Paint;
 
 public class GameData {
 	private LinkedList<DrawingPrimitive> drawing_queue;
-	private CentralJoint menu_central_joint = null;
     private Stick menu_stick = null;
     private Circle menu_circle = null;
     private boolean is_inited = false;
@@ -18,6 +17,9 @@ public class GameData {
     private long prevDrawingTime = System.currentTimeMillis();
     
     public static final long FPS = 30;
+    
+    //lengths
+    public static final float min_dist_to_connect_square = 100;
     
     //menu lines
     public float bottom_menu_y = 0;
@@ -127,7 +129,6 @@ public class GameData {
     		return 0;
     	
     	menu_stick = new Stick(playing_table.getContext());
-    	menu_central_joint = new CentralJoint(playing_table.getContext());
     	menu_circle = new Circle(playing_table.getContext());
     	is_inited = true;
     	
@@ -148,10 +149,6 @@ public class GameData {
     
     public LinkedList<DrawingPrimitive> getDrawingQueue() {
     	return drawing_queue;
-    }
-    
-    public synchronized CentralJoint getMenuCentralJoint() {
-    	return menu_central_joint;
     }
     
     public synchronized long getPrevDrawingTime() {

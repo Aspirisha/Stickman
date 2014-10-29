@@ -28,7 +28,6 @@ public class GameView extends SurfaceView {
     private Paint menu_line_paint;
     
     // share with touch thread: get from shared storage
-    private CentralJoint menu_central_joint;
     private Stick menu_stick;
     private Circle menu_circle;
     
@@ -49,7 +48,6 @@ public class GameView extends SurfaceView {
 		
     	menu_line_paint = GameData.menu_line_paint;
     	
-    	menu_central_joint = game_data.getMenuCentralJoint();
     	menu_stick = game_data.getMenuStick();
     	menu_circle = game_data.getMenuCircle();
     	
@@ -98,7 +96,6 @@ public class GameView extends SurfaceView {
     
     
     public void setMetrics() {
-    	menu_central_joint.setPosition(MainActivity.layout_width - 20, MainActivity.layout_height - 20);
     	menu_stick.setPosition(MainActivity.layout_width - 140, MainActivity.layout_height - 20, MainActivity.layout_width - 40, MainActivity.layout_height - 20);
     	menu_circle.setPosition(MainActivity.layout_width - 180, MainActivity.layout_height - 20, 0);
     	game_data.setMetrics();
@@ -131,7 +128,6 @@ public class GameView extends SurfaceView {
         
         
         synchronized (game_data.getLocker()) {
-	        menu_central_joint.draw(canvas);
 	        menu_stick.draw(canvas);
 	        menu_circle.draw(canvas);
 	        // finally draw all joints
@@ -142,12 +138,6 @@ public class GameView extends SurfaceView {
         prev_drawing_time = cur_drawing_time;
     }
     
-    private boolean inMenu(CentralJoint joint) {
-    	int dy = 40;
-    	if (joint.getMyY() >= MainActivity.layout_height - dy)
-    		return true;
-    	return false;
-    }
     
     private boolean inMenu(Stick stick) {
     	int dy = 40;
