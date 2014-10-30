@@ -45,6 +45,8 @@ public class Stick extends View implements DrawingPrimitive {
 	private DrawingPrimitive parentPrimitive = null;
 	private JOINTS rotateless_joint;
 	private StickTouches touch_state = StickTouches.NONE;
+	private Joint joint1;
+	private Joint joint2;
 	
 	public Stick(Context context) {
 		super(context);
@@ -63,6 +65,9 @@ public class Stick extends View implements DrawingPrimitive {
 		m_joint2_paint = GameData.joint_paint;
 		rotateless_joint = JOINTS.NONE;
 		childrenPrimitives = new ArrayList<DrawingPrimitive>();
+		
+		joint1 = new Joint();
+		joint2 = new Joint();
 	}
 	
 	public void copy(DrawingPrimitive primitive) {
@@ -84,6 +89,9 @@ public class Stick extends View implements DrawingPrimitive {
 		m_joint2_paint = st.m_joint2_paint;
 		is_touched = st.is_touched;
 		touch_state = st.touch_state;
+		// TODO add copy constructor to joint
+		joint1 = new Joint();
+		joint2 = new Joint();
 	}
 	
 	public void rotate(float fi, float cx, float cy) {
@@ -97,13 +105,13 @@ public class Stick extends View implements DrawingPrimitive {
 		p2.x = new_x;
 		p2.y = new_y;
     	
-		for (DrawingPrimitive pr : childrenPrimitives) { 
+		for (DrawingPrimitive pr : childrenPrimitives) {  
 			pr.rotate(fi, cx, cy);
 		}
 	}
 	
 	public void rotateAroundJoint1(float x, float y) {
-		if (rotateless_joint == JOINTS.JOINT2)
+		if (joint2.isChild())
 			return;
 		float dl = (float)Math.sqrt((x - p1.x) * (x - p1.x) + (y - p1.y) * (y - p1.y));
 		if (dl == 0)
@@ -120,15 +128,11 @@ public class Stick extends View implements DrawingPrimitive {
     	if ((p2.x - p1.x) * (y - p1.y) - (x - p1.x) * (p2.y - p1.y) < 0)
     		theta = -theta;
     	rotate(theta, p1.x, p1.y);
-    	if (Float.isNaN(p1.x))
-    	{
-    		p1.x = 0;
-    		p2.x = 0;
-    		
-    	}
 	}
 	
 	public void rotateAroundJoint2(float new_x2, float new_y2) {
+		if (joint1.isChild())
+			return;
 		float dl = (float)Math.sqrt((new_x2 - p2.x) * (new_x2 - p2.x) + (new_y2 - p2.y) * (new_y2 - p2.y));
 		if (dl == 0)
 			return;
@@ -193,12 +197,14 @@ public class Stick extends View implements DrawingPrimitive {
 		float dx = p1.x - touch_x;
 		float dy = p1.y - touch_y;
 		boolean joint1_touched = (dx * dx + dy * dy <= GameData.joint_radius_touchable_square);
-				
+		if (joint1.isChild())
+			joint1_touched = false;
+		
 		dx = p2.x - touch_x;
 		dy = p2.y - touch_y;
 		boolean joint2_touched = false;
 		
-		if (!joint1_touched)
+		if (!joint1_touched && !joint2.isChild())
 			joint2_touched = (dx * dx + dy * dy <= GameData.joint_radius_touchable_square);
 		
 		boolean stick_touched = false;
@@ -301,12 +307,6 @@ public class Stick extends View implements DrawingPrimitive {
 		return touch_state;
 	}
 	
-	public void addChild(DrawingPrimitive p) {
-		if (!childrenPrimitives.contains(p))
-			childrenPrimitives.add(p);
-	}
-	
-	
 	public void setNotConnected() {	
 		if (parentPrimitive != null) {
 			parentPrimitive.removeChild(this);
@@ -338,6 +338,8 @@ public class Stick extends View implements DrawingPrimitive {
 
 	@Override
 	public void connectTo(DrawingPrimitive primitive) {
+		// TODO check that primitive graph is tree, else exit from here
+		
 		switch (primitive.GetType()) {
 		case STICK: {
 			Stick stick = (Stick)primitive;
@@ -347,15 +349,52 @@ public class Stick extends View implements DrawingPrimitive {
 			float len4 = Vector2DF.sub(stick.p2, p2).getLength();
 			
 			Vector2DF dv = null;
+			Joint newParentJoint = null;
+			Joint myChildJoint = null;
+			
 			if (len1 <= len2 && len1 <= len3 && len1 <= len4) {
 				dv = Vector2DF.sub(stick.p1, p1);
+				myChildJoint = joint1;
+				if (!stick.joint1.isChild()) {
+					stick.joint1.setParent(); 
+					newParentJoint = stick.joint1;
+				} else {
+					newParentJoint = stick.joint1.getMyParent();
+				}
+				
 			} else if (len2 <= len1 && len2 <= len3 && len2 <= len4) {
 				dv = Vector2DF.sub(stick.p2, p1);
-			} else if (len3 <= len2 && len3 <= len2 && len3 <= len4) {
+				myChildJoint = joint1;
+				if (!stick.joint2.isChild()) {
+					stick.joint2.setParent(); 
+					newParentJoint = stick.joint2;
+				} else {
+					newParentJoint = stick.joint2.getMyParent();
+				}
+			} else if (len3 <= len1 && len3 <= len2 && len3 <= len4) {
 				dv = Vector2DF.sub(stick.p1, p2);
+				myChildJoint = joint2;
+				if (!stick.joint1.isChild()) {
+					stick.joint1.setParent(); 
+					newParentJoint = stick.joint1;
+				} else {
+					newParentJoint = stick.joint1.getMyParent();
+				}
 			} else {
 				dv = Vector2DF.sub(stick.p2, p2);
+				myChildJoint = joint2;
+				if (!stick.joint2.isChild()) {
+					stick.joint2.setParent(); 
+					newParentJoint = stick.joint2;
+				} else {
+					newParentJoint = stick.joint2.getMyParent();
+				}
 			}
+			
+			if (myChildJoint.isParent()) { // reattach all his children to new root
+				// TODO when connect two trees of primitives, root of one should become parent of another: manage it
+			}
+			myChildJoint.setChild(newParentJoint);
 			
 			if (parentPrimitive == stick && dv.y == 0 && dv.x == 0)
 				return;
@@ -400,9 +439,15 @@ public class Stick extends View implements DrawingPrimitive {
 				scale(p1.x, p1.y, newLen / length);
 			}
 			break;
-		case STICK:
+		case STICK: {
+			float dx = new_x - prev_x;
+			float dy = new_y - prev_y;
+			if (dx * dx + dy * dy <= GameData.min_dist_to_connect_square && parentPrimitive != null)
+				return;
 			translate(new_x - prev_x, new_y - prev_y);
+			setNotConnected();
 			break;
+		}
 		default:
 			break;
 		}
@@ -412,5 +457,12 @@ public class Stick extends View implements DrawingPrimitive {
 	public void removeChild(DrawingPrimitive p) {
 		childrenPrimitives.remove(p);
 	}
+	
+	
+	public void addChild(DrawingPrimitive p) {
+		if (!childrenPrimitives.contains(p))
+			childrenPrimitives.add(p);
+	}
+	
 
 }
