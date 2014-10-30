@@ -14,6 +14,11 @@ public class Vector2DF {
 		y = _y;
 	}
 	
+	Vector2DF(Vector2DF p) {
+		x = p.x;
+		y = p.y;
+	}
+	
 	public float getLength() {
 		return (float) Math.sqrt(x * x + y * y);
 	}
@@ -55,5 +60,12 @@ public class Vector2DF {
 		return result;
 	}
 	
+	static float distSquare(Vector2DF v1, Vector2DF v2) {
+		return ((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y));
+	}
+	
+	static float dist(Vector2DF v1, Vector2DF v2) {
+		return (float) Math.sqrt((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y));
+	}
 	
 }

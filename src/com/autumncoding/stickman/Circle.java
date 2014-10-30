@@ -3,8 +3,6 @@ package com.autumncoding.stickman;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import com.autumncoding.stickman.Stick.StickTouches;
-
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -21,8 +19,6 @@ public class Circle implements DrawingPrimitive {
 	
 	/*********************** touch data *********************************************/
 	private boolean is_touched;
-	private int index1;
-	private int index2;
 	
 	private Paint m_line_paint;
 	private Paint m_joint_paint;
@@ -142,11 +138,6 @@ public class Circle implements DrawingPrimitive {
 		return primitive.getDistToMe(x_stretch, y_stretch);
 	}
 
-	@Override
-	public void connectTo(DrawingPrimitive primitive) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
 	public PrimitiveType GetType() {
@@ -287,25 +278,50 @@ public class Circle implements DrawingPrimitive {
 	}
 
 	@Override
-	public void setNotConnected() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void removeChild(DrawingPrimitive p) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void addChild(DrawingPrimitive p) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public boolean tryConnection(LinkedList<DrawingPrimitive> neighbours) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public ArrayList<Joint> getMyJoints() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean connectToParent(DrawingPrimitive primitive) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void ConnectToChild(DrawingPrimitive primitive, Joint myJoint,
+			Joint primitiveJoint) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void disconnectFromChild(DrawingPrimitive p) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void disconnectFromParent() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setSubtreeVisited(boolean visited) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isVisited() {
 		// TODO Auto-generated method stub
 		return false;
 	}
