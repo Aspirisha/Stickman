@@ -7,7 +7,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
-public class Circle implements DrawingPrimitive {
+public class Circle extends AbstractDrawingPrimitive {
 	private float x;
 	private float y;
 	private float x_stretch; // coordinates of point pulling which we can stretch the circle
@@ -23,8 +23,6 @@ public class Circle implements DrawingPrimitive {
 	private Paint m_line_paint;
 	private Paint m_joint_paint;
 	private Paint m_stretch_line_paint;
-	private DrawingPrimitive parentPrimitive;
-	private ArrayList<DrawingPrimitive> childPrimitives;
 	
 	
 	enum CircleTouches {
@@ -37,6 +35,7 @@ public class Circle implements DrawingPrimitive {
 	private CircleTouches touch_state;
 	
 	public Circle(Context context) {
+		super(context);
 		x = 100;
 		y = 100;
 		r = 10;
@@ -48,13 +47,11 @@ public class Circle implements DrawingPrimitive {
 		
 		angle = 0;
 		is_touched = false;
-		childPrimitives = new ArrayList<DrawingPrimitive>();
 		
 		m_line_paint = GameData.line_paint;
 		m_joint_paint = GameData.joint_paint;
 		m_stretch_line_paint = GameData.stretch_line_paint;
 		touch_state = CircleTouches.NONE;
-		parentPrimitive = null;
 	}
 	
 	private CircleTouches m_checkTouched(float touch_x, float touch_y) {
@@ -160,9 +157,9 @@ public class Circle implements DrawingPrimitive {
 		x = new_x;
 		y = new_y;
     	
-		for (DrawingPrimitive pr : childPrimitives) { 
+		/*for (DrawingPrimitive pr : childPrimitives) { 
 			pr.rotate(fi, cx, cy);
-		}
+		}*/
 	}
 	
 	public void translate(float dx, float dy) {	
@@ -174,9 +171,9 @@ public class Circle implements DrawingPrimitive {
 		y_rotate += dy;
 		
     	
-		for (DrawingPrimitive pr : childPrimitives) { 
+		/*for (DrawingPrimitive pr : childPrimitives) { 
 			pr.translate(dx,  dy);
-		}
+		}*/
 	}
 	
 	public void setPosition(float _x, float _y, float _angle) {
@@ -278,53 +275,9 @@ public class Circle implements DrawingPrimitive {
 	}
 
 	@Override
-	public boolean tryConnection(LinkedList<DrawingPrimitive> neighbours) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public ArrayList<Joint> getMyJoints() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean connectToParent(DrawingPrimitive primitive) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void ConnectToChild(DrawingPrimitive primitive, Joint myJoint,
-			Joint primitiveJoint) {
+	public void scale(float cx, float cy, float rate) {
 		// TODO Auto-generated method stub
 		
 	}
-
-	@Override
-	public void disconnectFromChild(DrawingPrimitive p) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void disconnectFromParent() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void setSubtreeVisited(boolean visited) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public boolean isVisited() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-	
 }
 	

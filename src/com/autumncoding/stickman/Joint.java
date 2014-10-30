@@ -40,7 +40,7 @@ public class Joint {
 	 * Sets current joint to be parent of joint (newChild).
 	 * @param newChild new child of this joint
 	 */
-	public void setParent(Joint newChild) {
+	public void addChild(Joint newChild) {
 		m_childrenJoints.add(newChild);
 		isParentJoint = true;
 		isChildJoint = false;
@@ -52,7 +52,7 @@ public class Joint {
 	 * Sets current joint to be child of joint (newParent)
 	 * @param newParent new parent of this joint
 	 */
-	public void setChild(Joint newParent) {
+	public void connectToParent(Joint newParent) {
 		isParentJoint = false;
 		isChildJoint = true;
 		isFreeJoint = false;

@@ -1,5 +1,6 @@
 package com.autumncoding.stickman;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 import com.autamncoding.stickman.R;
@@ -11,6 +12,7 @@ public class GameData {
 	private LinkedList<DrawingPrimitive> drawing_queue;
     private Stick menu_stick = null;
     private Circle menu_circle = null;
+    private static ArrayList<DrawingPrimitive> roots;
     private boolean is_inited = false;
     private static GameData instance = null;
     private Object locker;// object for touch thread and ui thread synchronization
@@ -113,6 +115,8 @@ public class GameData {
 		
 		invisible_paint = new Paint(joint_paint);
 		invisible_paint.setColor(Color.TRANSPARENT);
+		
+		roots = new ArrayList<DrawingPrimitive>();
     }
     
     private GameData() {
@@ -175,4 +179,31 @@ public class GameData {
     	top_menu_x2 = MainActivity.layout_width - dx;
     	top_menu_x1 = dx;
     }
+    
+    public static void addRoot(DrawingPrimitive root) {
+    	roots.add(root);
+    }
+    
+    public static DrawingPrimitive getRootWithBiggestTreeNumber() {
+    	DrawingPrimitive ret = null;
+    	int maxNumber = -1;
+    	for (DrawingPrimitive pr : roots) {
+    		if (pr.getTreeNumber() > maxNumber) {
+    			maxNumber = pr.getTreeNumber();
+    			ret = pr;
+    		}
+    	}
+    	
+    	return ret;
+    }
+    
+    public static int getTreesNumber() {
+    	return roots.size();
+    }
+    
+    public static void removeRoot(DrawingPrimitive root) {
+    	roots.remove(root);
+    }
+    
+    
 }

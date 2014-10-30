@@ -1,16 +1,12 @@
 package com.autumncoding.stickman;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.view.MotionEvent;
-import android.view.View;
 
-public class Stick extends View implements DrawingPrimitive {
+public class Stick extends AbstractDrawingPrimitive {
 
 	private Vector2DF p1;
 	private Vector2DF p2;
@@ -23,32 +19,18 @@ public class Stick extends View implements DrawingPrimitive {
 	private Paint m_joint2_paint;
 	
 	/*********************** touch data *********************************************/
-	private boolean is_touched;	
-	
 	enum StickTouches {
 		JOINT1, 
 		JOINT2,
 		STICK,
 		NONE
-	}
-	
-	enum JOINTS {
-		JOINT1,
-		JOINT2,
-		BOTH, 
-		NONE
-	}
-	
+	}	
 	
 	private StickTouches touch_state = StickTouches.NONE;
-	private ArrayList<Joint> joints;
-	private boolean isScalable;
-	private boolean hasParent;
-	private ArrayList<Connection> m_connections;
-	private boolean isVisited;
 	
 	public Stick(Context context) {
 		super(context);
+		
 		p1 = new Vector2DF();
 		p2 = new Vector2DF();
 		
@@ -58,7 +40,7 @@ public class Stick extends View implements DrawingPrimitive {
 		p2.x = p1.x + length * (float)Math.cos(angle);
 		p2.y = p1.y + length * (float)Math.sin(angle);
 		angle = 0;
-		is_touched = false;
+		m_isTouched = false;
 		m_line_paint = GameData.line_paint;
 		m_joint1_paint = GameData.joint_paint;
 		m_joint2_paint = GameData.joint_paint;
@@ -69,7 +51,6 @@ public class Stick extends View implements DrawingPrimitive {
 		isScalable = true;
 		hasParent = false;
 		m_connections = new ArrayList<DrawingPrimitive.Connection>();
-		isVisited = false;
 	}
 	
 	public void copy(DrawingPrimitive primitive) {
@@ -88,7 +69,7 @@ public class Stick extends View implements DrawingPrimitive {
 		m_line_paint = st.m_line_paint;
 		m_joint1_paint = st.m_joint1_paint;
 		m_joint2_paint = st.m_joint2_paint;
-		is_touched = st.is_touched;
+		m_isTouched = st.m_isTouched;
 		touch_state = st.touch_state;
 		joints = new ArrayList<Joint>(2);
 		joints.add(new Joint(this, p1));
@@ -96,9 +77,11 @@ public class Stick extends View implements DrawingPrimitive {
 		isScalable = true;
 		hasParent = false;
 		m_connections = new ArrayList<DrawingPrimitive.Connection>();
-		isVisited = false;
+		
+		m_context = primitive.getContext();
 	}
 	
+	@Override
 	public void rotate(float fi, float cx, float cy) {
 		float new_x = (float) (cx + (p1.x - cx) * Math.cos(fi) - (p1.y - cy) * Math.sin(fi));
 		float new_y = (float) (cy + (p1.x - cx) * Math.sin(fi) + (p1.y - cy) * Math.cos(fi));
@@ -159,6 +142,7 @@ public class Stick extends View implements DrawingPrimitive {
     	rotate(theta, p2.x, p2.y);
 	}
 	
+	@Override
 	public void translate(float dx, float dy) {	
 		p1.x += dx;
 		p1.y += dy;
@@ -174,6 +158,7 @@ public class Stick extends View implements DrawingPrimitive {
 		}
 	}
 	
+	@Override
 	public void scale(float cx, float cy, float rate) {	
 		float temp_length = length * rate;
 		if (temp_length < GameData.min_stick_length)
@@ -199,13 +184,6 @@ public class Stick extends View implements DrawingPrimitive {
 		canvas.drawCircle(p2.x, p2.y, GameData.joint_radius_visible, m_joint2_paint);
 		canvas.drawCircle(p1.x, p1.y, GameData.joint_radius_visible, m_joint1_paint);
 	}
-	
-	@Override
-	public boolean onTouchEvent(MotionEvent event) {
-		// TODO Auto-generated method stub
-		return super.onTouchEvent(event);
-	}
-	
 	
 	private StickTouches m_checkTouched(float touch_x, float touch_y) {
 		float dx = p1.x - touch_x;
@@ -248,34 +226,10 @@ public class Stick extends View implements DrawingPrimitive {
 		return newTouchState;
 	}
 	
-	@Override
-	public boolean tryConnection(LinkedList<DrawingPrimitive> neighbours) {
-		float min_dist = 10000;
-		DrawingPrimitive closest_primitive = null;
-		for (DrawingPrimitive pr : neighbours) {
-			if (pr == this)
-				continue;
-			float cur_dist = distTo(pr);
-			if (cur_dist < min_dist) {
-				min_dist = cur_dist;
-				closest_primitive = pr;
-			}
-		}
-
-		if (min_dist <= GameData.min_dist_to_connect_square) {
-			connectToParent(closest_primitive);
-				return true;
-		}
-		else 
-			disconnectFromParent();
-
-		return false;
-	}
-	
 	public boolean checkTouch(float touch_x, float touch_y) {
 		touch_state = m_checkTouched(touch_x, touch_y);
 		
-		is_touched = true;
+		m_isTouched = true;
 		m_joint1_paint = GameData.joint_paint;
 		m_joint2_paint = GameData.joint_paint;
 		m_line_paint = GameData.line_paint;
@@ -288,7 +242,7 @@ public class Stick extends View implements DrawingPrimitive {
 			m_joint2_paint = GameData.joint_touched_paint;
 			break;
 		case NONE:
-			is_touched = false;
+			m_isTouched = false;
 			break;
 		case STICK:
 			m_line_paint = GameData.line_touched_paint;
@@ -297,18 +251,18 @@ public class Stick extends View implements DrawingPrimitive {
 			break;
 		}
 		
-		return is_touched;
+		return m_isTouched;
 	}
 	
 	public boolean isTouched() {
-		return is_touched;
+		return m_isTouched;
 	}
 	
 	public void setUntouched() {
-		if (!is_touched)
+		if (!m_isTouched)
 			return;
 		
-		is_touched = false;
+		m_isTouched = false;
 		touch_state = StickTouches.NONE;
 		m_joint1_paint = GameData.joint_paint;
 		m_joint2_paint = GameData.joint_paint;
@@ -317,29 +271,6 @@ public class Stick extends View implements DrawingPrimitive {
 	
 	public StickTouches getTouchState() {
 		return touch_state;
-	}
-	
-	@Override
-	public void disconnectFromParent() {	
-		if (hasParent) {
-			hasParent = false;
-			DrawingPrimitive exParent = null;
-			
-			Connection toRemove = null;
-			for (Connection con : m_connections) {
-				if (con.myRelation == Relation.PRIMITIVE_IS_PARENT) {
-					con.myJoint.setFree();
-					con.primitiveJoint.removeChild(con.myJoint);
-					exParent = con.primitiveJoint.getMyPrimitive();
-					toRemove = con;
-					break;
-				}
-			}
-			m_connections.remove(toRemove);
-			exParent.disconnectFromChild(this);
-			
-			isScalable = m_connections.isEmpty();
-		}
 	}
 	
 	public void setPosition(float _x1, float _y1, float _x2, float _y2) {
@@ -369,67 +300,6 @@ public class Stick extends View implements DrawingPrimitive {
 	}
 
 	@Override
-	public boolean connectToParent(DrawingPrimitive primitive) {
-		// TODO check that primitive graph is tree, else exit from here
-		// for example, use DFS
-		if (hasParent)
-			return false;
-		
-		boolean wasVisited = primitive.isVisited();
-		setSubtreeVisited(!wasVisited);
-		if (primitive.isVisited() != wasVisited) // <this> is already predecessor of primitive
-			return false;
-		
-		Joint newParentJoint = null;
-		Joint myChildJoint = null;
-		ArrayList<Joint> primitivesJoints = primitive.getMyJoints();
-		Vector2DF dv = null;
-		float minLen = 1000000000f; // CHANGE then
-		for (Joint myJoint : joints) {
-			for (Joint externJoint : primitivesJoints) {
-				float len = Vector2DF.distSquare(myJoint.getMyPoint(), externJoint.getMyPoint());
-				if (len < minLen) {
-					minLen = len;
-					myChildJoint = myJoint;
-					if (!externJoint.isChild())
-						newParentJoint = externJoint;
-					else
-						newParentJoint = externJoint.getMyParent();
-				}
-			}
-		}
-		
-		dv = Vector2DF.sub(newParentJoint.getMyPoint(), myChildJoint.getMyPoint());
-			
-		if (myChildJoint.isParent()) { // reattach all his children to new root
-			ArrayList<Joint> children = myChildJoint.getMyChildren();
-			for (Joint ch : children) {
-				ch.setChild(newParentJoint);
-				newParentJoint.setParent(ch);
-			}
-		}
-
-		translate(dv.x, dv.y);
-
-		myChildJoint.setChild(newParentJoint);
-		newParentJoint.setParent(myChildJoint);
-		
-		Connection newConnection = new Connection();
-		newConnection.myRelation = Relation.PRIMITIVE_IS_PARENT;
-		newConnection.myJoint = myChildJoint;
-		newConnection.primitiveJoint = newParentJoint;
-		newConnection.primitive = newParentJoint.getMyPrimitive();
-		m_connections.add(newConnection);
-		
-		newConnection.primitive.ConnectToChild(this, newParentJoint, myChildJoint);
-		
-		hasParent = true;
-		isScalable = false;
-		
-		return true;
-	}
-
-	@Override
 	public float getDistToMe(float x_from, float y_from) {
 		float d1 = (p2.x - x_from) * (p2.x - x_from) + (p2.y - y_from) * (p2.y - y_from);
 		float d2 = (p1.x - x_from) * (p1.x - x_from) + (p1.y - y_from) * (p1.y - y_from);
@@ -437,7 +307,6 @@ public class Stick extends View implements DrawingPrimitive {
 		return Math.min(d1, d2);
 	}
 
-	// TODO joints should have correct state after disconnection/ connection
 	@Override
 	public void applyMove(float new_x, float new_y, float prev_x, float prev_y, boolean isScaling) {
 		switch (touch_state) {
@@ -472,55 +341,5 @@ public class Stick extends View implements DrawingPrimitive {
 			break;
 		}
 	}
-
-	@Override
-	public void disconnectFromChild(DrawingPrimitive p) {
-		Connection toRemove = null;
-		
-		for (Connection con : m_connections) {
-			if (con.primitive == p) {
-				con.primitiveJoint.setFree();
-				con.myJoint.removeChild(con.primitiveJoint);
-				toRemove = con;
-				break;
-			}
-		}
-		
-		m_connections.remove(toRemove);
-		isScalable = m_connections.isEmpty();
-	}
-	
-
-	@Override
-	public ArrayList<Joint> getMyJoints() {
-		return joints;
-	}
-
-	@Override
-	public void ConnectToChild(DrawingPrimitive primitive, Joint myJoint, Joint primitiveJoint) {
-		Connection con = new Connection();
-		con.myRelation = Relation.PRIMITIVE_IS_CHILD;
-		con.myJoint = myJoint;
-		con.primitive = primitive;
-		con.primitiveJoint = primitiveJoint;
-		m_connections.add(con);
-		
-	}
-
-	@Override
-	public void setSubtreeVisited(boolean visited) {
-		isVisited = visited;
-		for (Connection con : m_connections) {
-			if (con.myRelation == Relation.PRIMITIVE_IS_CHILD)
-				con.primitive.setSubtreeVisited(visited);
-		}
-		
-	}
-
-	@Override
-	public boolean isVisited() {
-		return isVisited;
-	}
-	
 
 }

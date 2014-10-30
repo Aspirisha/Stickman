@@ -32,9 +32,15 @@ public class GameView extends SurfaceView {
     private Circle menu_circle;
     
     private LinkedList<DrawingPrimitive> drawing_queue;
-    private long prev_drawing_time = System.currentTimeMillis();
     
     private DrawingPrimitive currently_touched_pimititve;
+    
+    
+    // for debug purposes
+    final int d_drawsBetweenFpsRecount = 10;
+    int d_drawsMade = 0;
+    long d_timePassedBetweenFpsRecounts = 0;
+    float d_fps = 0f;
     
     public GameView(Context context) {
     	super(context);
@@ -111,14 +117,19 @@ public class GameView extends SurfaceView {
     
     
     @Override  
-    public void onDraw(Canvas canvas) {
-    	long cur_drawing_time = System.currentTimeMillis();
-    	game_data.writeDrawingTime();
-    	//canvas.translate(translate_x, translate_y);
+    public void onDraw(Canvas canvas) {   	
         canvas.save();
         
         // debug info
-        canvas.drawText(Float.toString(1000f / (float)(cur_drawing_time - prev_drawing_time)), 30 - translate_x, 30 - translate_y, debug_paint);
+        long prevTime = game_data.getPrevDrawingTime();
+        game_data.writeDrawingTime();
+        d_timePassedBetweenFpsRecounts += (game_data.getPrevDrawingTime() - prevTime);
+        if (d_drawsBetweenFpsRecount == ++d_drawsMade) {
+        	d_drawsMade = 0;
+        	d_fps = d_drawsBetweenFpsRecount * 1000f / (float)d_timePassedBetweenFpsRecounts;
+        	d_timePassedBetweenFpsRecounts = 0;
+        }
+        canvas.drawText("FPS: " + Float.toString(d_fps), 30 - translate_x, 30 - translate_y, debug_paint);
         
         // bottom menu 
         canvas.drawLine(game_data.bottom_menu_x1, game_data.bottom_menu_y, game_data.bottom_menu_x2, game_data.bottom_menu_y, menu_line_paint);
@@ -135,7 +146,6 @@ public class GameView extends SurfaceView {
 	        	v.draw(canvas);
         }
         canvas.restore();
-        prev_drawing_time = cur_drawing_time;
     }
     
     
