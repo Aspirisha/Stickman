@@ -40,16 +40,12 @@ public class Stick extends AbstractDrawingPrimitive {
 		p2.x = p1.x + length * (float)Math.cos(angle);
 		p2.y = p1.y + length * (float)Math.sin(angle);
 		angle = 0;
-		m_isTouched = false;
 		m_line_paint = GameData.line_paint;
 		m_joint1_paint = GameData.joint_paint;
 		m_joint2_paint = GameData.joint_paint;
 		
-		joints = new ArrayList<Joint>(2);
 		joints.add(new Joint(this, p1));
 		joints.add(new Joint(this, p2));
-		isScalable = true;
-		hasParent = false;
 		m_connections = new ArrayList<DrawingPrimitive.Connection>();
 	}
 	
@@ -71,12 +67,12 @@ public class Stick extends AbstractDrawingPrimitive {
 		m_joint2_paint = st.m_joint2_paint;
 		m_isTouched = st.m_isTouched;
 		touch_state = st.touch_state;
-		joints = new ArrayList<Joint>(2);
+		joints.clear();
 		joints.add(new Joint(this, p1));
 		joints.add(new Joint(this, p2));
 		isScalable = true;
 		hasParent = false;
-		m_connections = new ArrayList<DrawingPrimitive.Connection>();
+		m_connections.clear();
 		
 		m_context = primitive.getContext();
 	}
