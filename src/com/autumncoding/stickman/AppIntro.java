@@ -172,7 +172,7 @@ public class AppIntro
 		return m_language;
 	}
 	
-	public Bitmap	loadBitmap(String fileName)
+	public Bitmap loadBitmap(String fileName)
 	{
 		Bitmap bmp = null;
 		try

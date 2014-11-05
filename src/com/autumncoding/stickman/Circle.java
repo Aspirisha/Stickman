@@ -3,6 +3,9 @@ package com.autumncoding.stickman;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import com.autumncoding.stickman.DrawingPrimitive.Connection;
+import com.autumncoding.stickman.DrawingPrimitive.Relation;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -18,14 +21,13 @@ public class Circle extends AbstractDrawingPrimitive {
 	private Paint m_line_paint;
 	private Paint m_joint_paint;
 	
-	
 	enum CircleTouches {
 		JOINT, 
 		CIRCLE,
 		NONE
 	}
 	
-	private CircleTouches touch_state;
+	private CircleTouches touch_state = CircleTouches.NONE;
 	
 	public Circle(Context context) {
 		super(context);
@@ -41,7 +43,6 @@ public class Circle extends AbstractDrawingPrimitive {
 		
 		m_line_paint = GameData.line_paint;
 		m_joint_paint = GameData.joint_paint;
-		touch_state = CircleTouches.NONE;
 	}
 	
 	private CircleTouches m_checkTouched(float touch_x, float touch_y) {
@@ -130,9 +131,10 @@ public class Circle extends AbstractDrawingPrimitive {
     	
 		joints.get(0).setMyPoint(m_jointPoint);
 		
-		/*for (DrawingPrimitive pr : childPrimitives) { 
-			pr.rotate(fi, cx, cy);
-		}*/
+		for (Connection con : m_connections) {
+			if (con.myRelation == Relation.PRIMITIVE_IS_CHILD)
+				con.primitive.rotate(fi, cx, cy);
+		}
 	}
 	
 	public void translate(float dx, float dy) {	
@@ -143,14 +145,16 @@ public class Circle extends AbstractDrawingPrimitive {
 		
 		joints.get(0).setMyPoint(m_jointPoint);
     	
-		/*for (DrawingPrimitive pr : childPrimitives) { 
-			pr.translate(dx,  dy);
-		}*/
+		for (Connection con : m_connections) {
+			if (con.myRelation == Relation.PRIMITIVE_IS_CHILD)
+				con.primitive.translate(dx, dy);
+		}
 	}
 	
-	public void setPosition(float _x, float _y, float _angle) {
+	public void setPosition(float _x, float _y, float _r, float _angle) {
 		m_centre.x = _x;
 		m_centre.y = _y;
+		r = _r;
 		
 		m_jointPoint.x = m_centre.x + r;
 		m_jointPoint.y = m_centre.y;
@@ -163,7 +167,7 @@ public class Circle extends AbstractDrawingPrimitive {
 
 	@Override
 	public float getDistToMe(float from_x, float from_y) {
-		return (m_jointPoint.x - from_x) * (m_jointPoint.x - from_x) + (m_centre.y - from_y) * (m_centre.y - from_y);
+		return (m_jointPoint.x - from_x) * (m_jointPoint.x - from_x) + (m_jointPoint.y - from_y) * (m_jointPoint.y - from_y);
 	}
 	
 	public void copy(DrawingPrimitive primitive) {
@@ -212,14 +216,20 @@ public class Circle extends AbstractDrawingPrimitive {
 	
 	public void applyMove(float new_x, float new_y, float prev_x, float prev_y, boolean isScaling) {
 		switch (touch_state) {
-		case CIRCLE:
-			translate(new_x - prev_x, new_y - prev_y);
+		case CIRCLE: {
+			float dx = new_x - prev_x;
+			float dy = new_y - prev_y;
+			if (dx * dx + dy * dy <= GameData.min_dist_to_connect_square && hasParent)
+				return;
+			disconnectFromParent();
+			translate(dx, dy);
 			break;
+		}
 		case JOINT: {
 			if (!isScaling || !isScalable) {
 				float len1 = (float) Math.sqrt((new_x - m_centre.x) * (new_x - m_centre.x) + (new_y - m_centre.y) * (new_y - m_centre.y));
-				float len2 = (float) Math.sqrt((m_jointPoint.x - m_centre.x) * (m_jointPoint.x - m_centre.x) + (m_centre.y - m_centre.y) * (m_centre.y - m_centre.y));
-				float cos_theta = (new_x - m_centre.x) * (m_jointPoint.x - m_centre.x) + (new_y - m_centre.y) * (m_jointPoint.y - m_centre.y) / (len1 * len2);
+				float len2 = r;
+				float cos_theta = ((new_x - m_centre.x) * (m_jointPoint.x - m_centre.x) + (new_y - m_centre.y) * (m_jointPoint.y - m_centre.y)) / (len1 * len2);
 				
 		    	if (cos_theta > 1.0f)
 		    		cos_theta = 1.0f;
@@ -227,6 +237,8 @@ public class Circle extends AbstractDrawingPrimitive {
 		    		cos_theta = -1.0f;
 		    	
 				float theta = (float) Math.acos(cos_theta); // NB: using acos is not very cool just so: need to be sue fi <= 180
+				if ((m_jointPoint.x - m_centre.x) * (new_y - m_centre.y) - (new_x - m_centre.x) * (m_jointPoint.y - m_centre.y) < 0)
+		    		theta = -theta;
 				rotate(theta, m_centre.x, m_centre.y);
 			} else {
 				Vector2DF v = new Vector2DF(new_x, new_y);

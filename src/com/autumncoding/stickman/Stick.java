@@ -329,7 +329,7 @@ public class Stick extends AbstractDrawingPrimitive {
 			float dy = new_y - prev_y;
 			if (dx * dx + dy * dy <= GameData.min_dist_to_connect_square && hasParent)
 				return;
-			translate(new_x - prev_x, new_y - prev_y);
+			translate(dx, dy);
 			disconnectFromParent();
 			break;
 		}

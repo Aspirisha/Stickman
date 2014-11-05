@@ -7,6 +7,7 @@ import com.autamncoding.stickman.R;
 
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PointF;
 
 public class GameData {
 	private LinkedList<DrawingPrimitive> drawing_queue;
@@ -31,6 +32,8 @@ public class GameData {
     public float top_menu_x1 = 0;
     public float top_menu_x2 = 0;
     
+    public static final int maxPrimitivesNumber = 15; 
+    
     
     // visible sizes
     public static final float joint_radius_visible = 7;
@@ -51,7 +54,7 @@ public class GameData {
     public static Paint menu_line_paint;
     public static Paint debug_paint;
     // untouched paints:
-	public static Paint line_paint;  // normal paint for stick line
+	public static final Paint line_paint;  // normal paint for stick line
 	public static Paint joint_paint;
 	public static Paint stretch_line_paint;
 	public static Paint invisible_paint;
@@ -60,6 +63,13 @@ public class GameData {
 	public static Paint joint_touched_paint;
 	public static Paint line_touched_paint;
 	
+	// menu info
+	public static final int numberOfMenuIcons = 7;
+	public static final float menuIconsTop = 4f;
+	
+	private static float menuBottom = 0;
+	private static boolean menuTouchState[];
+	private static ArrayList<PointF> drawnPoints; 
 	
     static {
     	instance = new GameData();
@@ -117,6 +127,12 @@ public class GameData {
 		invisible_paint.setColor(Color.TRANSPARENT);
 		
 		roots = new ArrayList<DrawingPrimitive>();
+		menuTouchState = new boolean[numberOfMenuIcons];
+		for (int i = 0; i < numberOfMenuIcons; i++)
+			menuTouchState[i] = false;
+		menuTouchState[2] = true;
+		
+		drawnPoints = new ArrayList<PointF>();
     }
     
     private GameData() {
@@ -205,5 +221,21 @@ public class GameData {
     	roots.remove(root);
     }
     
+    public static boolean[] getMenuTouchState() {
+    	return menuTouchState;
+    }
     
+    public static void setMenuTouch(int index, boolean touch) {
+    	if (index >= numberOfMenuIcons || index < 0)
+    		return;
+    	menuTouchState[index] = touch;
+    }
+
+	public static float getMenuBottom() {
+		return menuBottom;
+	}
+
+	public static void setMenuBottom(float menuBottom) {
+		GameData.menuBottom = menuBottom;
+	}
 }

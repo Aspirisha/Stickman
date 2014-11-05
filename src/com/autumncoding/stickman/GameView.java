@@ -1,15 +1,22 @@
 package com.autumncoding.stickman;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.util.Log;
+import android.graphics.Point;
+import android.os.AsyncTask;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.WindowManager;
 
 import com.autamncoding.stickman.R;
 
@@ -21,11 +28,11 @@ public class GameView extends SurfaceView {
 	private SurfaceHolder holder;
 	private GameLoopThread gameLoopThread;
 	private TouchEventThread touch_thread;
-    
-    private Paint debug_paint;
+	
     private float translate_x = 0;
     private float translate_y = 0;
     private Paint menu_line_paint;
+    private Paint m_menuBitmapPaint;
     
     // share with touch thread: get from shared storage
     private Stick menu_stick;
@@ -33,14 +40,17 @@ public class GameView extends SurfaceView {
     
     private LinkedList<DrawingPrimitive> drawing_queue;
     
-    private DrawingPrimitive currently_touched_pimititve;
-    
+    private DrawingPrimitive currently_touched_pimititve = null;
+    private ArrayList<Bitmap> m_menuBitmapsUntouched = null;
+    private ArrayList<Bitmap> m_menuBitmapsTouched = null;
+    private Bitmap m_menuBackground = null;
     
     // for debug purposes
     final int d_drawsBetweenFpsRecount = 10;
     int d_drawsMade = 0;
     long d_timePassedBetweenFpsRecounts = 0;
     float d_fps = 0f;
+    private Paint debug_paint;
     
     public GameView(Context context) {
     	super(context);
@@ -60,10 +70,13 @@ public class GameView extends SurfaceView {
     	drawing_queue = game_data.getDrawingQueue();
     	touch_thread = new TouchEventThread(this);
     	touch_thread.init();
-    	currently_touched_pimititve = null;
     	
     	setWillNotDraw(true);    	
+    	m_menuBitmapPaint = new Paint();
     	
+    	BitmapWorkerTask task = new BitmapWorkerTask(this);
+        task.execute();
+        
     	holder.addCallback(new SurfaceHolder.Callback() {
     		
     		@Override
@@ -78,9 +91,6 @@ public class GameView extends SurfaceView {
     				} catch (InterruptedException e) {
     					// we will try it again and again...
     				}
-    			}
-    			for (int i = 0; i < 12; i++) {
-
     			}
     		}
 
@@ -99,11 +109,10 @@ public class GameView extends SurfaceView {
     		}
     	});
 	}
-    
-    
+
     public void setMetrics() {
     	menu_stick.setPosition(MainActivity.layout_width - 140, MainActivity.layout_height - 20, MainActivity.layout_width - 40, MainActivity.layout_height - 20);
-    	menu_circle.setPosition(MainActivity.layout_width - 180, MainActivity.layout_height - 20, 0);
+    	menu_circle.setPosition(MainActivity.layout_width - 180, MainActivity.layout_height - 20, 10, 0);
     	game_data.setMetrics();
     }
     
@@ -115,6 +124,22 @@ public class GameView extends SurfaceView {
         return true;
     }
     
+    private void drawMenu(Canvas canvas)
+    {
+    	float left = 4f;
+    	canvas.drawBitmap(m_menuBackground, 0, 0, m_menuBitmapPaint);
+    	
+    	Bitmap b = null;
+    	boolean menuTouches[] = GameData.getMenuTouchState(); 
+    	for (int i = 0; i < m_menuBitmapsUntouched.size(); i++) {
+    		if (menuTouches[i])
+    			b = m_menuBitmapsTouched.get(i);
+    		else
+    			b = m_menuBitmapsUntouched.get(i);
+    		canvas.drawBitmap(b, left, GameData.menuIconsTop, m_menuBitmapPaint);
+    		left += (b.getWidth() + 7.8f);
+    	}
+    }
     
     @Override  
     public void onDraw(Canvas canvas) {   	
@@ -129,7 +154,7 @@ public class GameView extends SurfaceView {
         	d_fps = d_drawsBetweenFpsRecount * 1000f / (float)d_timePassedBetweenFpsRecounts;
         	d_timePassedBetweenFpsRecounts = 0;
         }
-        canvas.drawText("FPS: " + Float.toString(d_fps), 30 - translate_x, 30 - translate_y, debug_paint);
+        canvas.drawText("FPS: " + Float.toString(d_fps), 30, 470, debug_paint);
         
         // bottom menu 
         canvas.drawLine(game_data.bottom_menu_x1, game_data.bottom_menu_y, game_data.bottom_menu_x2, game_data.bottom_menu_y, menu_line_paint);
@@ -137,8 +162,9 @@ public class GameView extends SurfaceView {
         // top menu
         canvas.drawLine(game_data.top_menu_x1, game_data.top_menu_y, game_data.top_menu_x2, game_data.top_menu_y, menu_line_paint);
         
-        
         synchronized (game_data.getLocker()) {
+        	if (m_menuBackground != null)
+            	drawMenu(canvas);
 	        menu_stick.draw(canvas);
 	        menu_circle.draw(canvas);
 	        // finally draw all joints
@@ -160,6 +186,71 @@ public class GameView extends SurfaceView {
  
     public void setTouchedPrimitive(DrawingPrimitive pr) {
     	currently_touched_pimititve = pr;
+    }
+    
+    public void setMenuBitmaps(ArrayList<Bitmap> bitmapList)
+    {
+    	m_menuBackground = bitmapList.get(0);
+    	m_menuBitmapsUntouched = new ArrayList<Bitmap>();
+    	m_menuBitmapsTouched = new ArrayList<Bitmap>();
+    	for (int i = 0; i < GameData.numberOfMenuIcons; i++)
+    		m_menuBitmapsUntouched.add(bitmapList.get(i + 1));
+    	for (int i = 0; i < GameData.numberOfMenuIcons; i++)
+    		m_menuBitmapsTouched.add(bitmapList.get(i + 8));
+    	
+    	WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+    	Display display = wm.getDefaultDisplay();
+    	float width = display.getWidth();
+    	
+    	GameData.setMenuBottom(m_menuBackground.getHeight());
+    	touch_thread.SetMenuRects(width, m_menuBitmapsUntouched.get(0).getWidth(), m_menuBitmapsUntouched.get(0).getHeight());
+    }
+    
+    class BitmapWorkerTask extends AsyncTask<Void, Void, ArrayList<Bitmap>> {
+        private final WeakReference<GameView> imageViewReference;
+
+        public BitmapWorkerTask(GameView gameView) {
+            // Use a WeakReference to ensure the ImageView can be garbage collected
+            imageViewReference = new WeakReference<GameView>(gameView);
+        }
+
+      
+        // Once complete, see if ImageView is still around and set bitmap.
+        protected void onPostExecute(ArrayList<Bitmap> bitmapList) {
+            if (imageViewReference != null) {
+                final GameView gameView = imageViewReference.get();
+                if (gameView != null) {
+                	gameView.setMenuBitmaps(bitmapList);
+                }
+            }
+        }
+    
+
+		@Override
+		protected ArrayList<Bitmap> doInBackground(Void... params) {
+			BitmapFactory.Options options = new BitmapFactory.Options();
+	    	options.inJustDecodeBounds = false;
+	    	
+	    	ArrayList<Bitmap> output = new ArrayList<Bitmap>();
+	    	output.add(BitmapFactory.decodeResource(getResources(), R.drawable.menu_back, options));
+	    	
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.save, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.open, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.pencil, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.hand, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.prev, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.next, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.play, options));
+	        
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.save_touched, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.open_touched, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.pencil_touched, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.hand_touched, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.prev_touched, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.next_touched, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.play_touched, options));
+			return output;
+		}
     }
 }
 
