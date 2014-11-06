@@ -14,10 +14,10 @@ public class Joint {
 	private int distToFreeJoint;
 	private Joint m_parent;
 	private ArrayList<Joint> m_childrenJoints;
-	private DrawingPrimitive m_primitive; // primitive, to which this joint belongs
+	private AbstractDrawingPrimitive m_primitive; // primitive, to which this joint belongs
 	private Vector2DF m_point;
 	
-	public Joint(DrawingPrimitive pr, Vector2DF p) {
+	public Joint(AbstractDrawingPrimitive pr, Vector2DF p) {
 		m_childrenJoints = new ArrayList<Joint>();
 		m_primitive = pr;
 		m_point = new Vector2DF(p);

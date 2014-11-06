@@ -49,7 +49,7 @@ public interface DrawingPrimitive  {
 	public void ConnectToChild(DrawingPrimitive primitive, Joint myJoint, Joint primitiveJoint);
 	public void disconnectFromChild(DrawingPrimitive p);
 	public void disconnectFromParent();
-	
+	public void disconnectFromEverybody();
 	
 	public void applyMove(float new_x, float new_y, float prev_x, float prev_y, boolean isScaling);
 	public void copy(DrawingPrimitive p);
@@ -58,6 +58,9 @@ public interface DrawingPrimitive  {
 	public void updateSubtreeNumber(int number);
 	public int getTreeNumber();
 	public void setTreeNumber(int number);
+	public boolean isOutOfBounds();
+	
+	public  void checkOutOfBounds();
 	enum PrimitiveType {
 		STICK,
 		CIRCLE,

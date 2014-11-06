@@ -50,8 +50,11 @@ public class Circle extends AbstractDrawingPrimitive {
 		float dy = m_jointPoint.y - touch_y;
 
 		CircleTouches newTouchState = CircleTouches.NONE;
-		
 		boolean joint_touched = (dx * dx + dy * dy <= GameData.joint_radius_touchable_square);
+		if (joints.get(0).isChild() && joint_touched) {
+			newTouchState = CircleTouches.NONE;
+			return newTouchState;
+		}
 		
 		boolean circle_touched = false;
 		if (!joint_touched) {
@@ -199,8 +202,11 @@ public class Circle extends AbstractDrawingPrimitive {
 		
 		m_isTouched = false;
 		touch_state = CircleTouches.NONE;
-		m_joint_paint = GameData.joint_paint;
-		m_line_paint = GameData.line_paint;
+		
+		if (!m_isOutOfBounds) {
+			m_joint_paint = GameData.joint_paint;
+			m_line_paint = GameData.line_paint;
+		}
 	}
 	
 	public void stretch(float new_x, float new_y) {
@@ -223,6 +229,7 @@ public class Circle extends AbstractDrawingPrimitive {
 				return;
 			disconnectFromParent();
 			translate(dx, dy);
+			checkOutOfBounds();
 			break;
 		}
 		case JOINT: {
@@ -245,14 +252,13 @@ public class Circle extends AbstractDrawingPrimitive {
 				float newLen = Vector2DF.dist(v, m_centre);
 				scale(m_centre.x, m_centre.y, newLen / r);
 			}
+			checkOutOfBounds();
 			break;
 		}
 		case NONE:
 			break;
 		default:
 			break;
-		
-		
 		}
 	}
 
@@ -271,6 +277,41 @@ public class Circle extends AbstractDrawingPrimitive {
 		joints.get(0).setMyPoint(m_jointPoint);
 		
     	r = temp_r;
+	}
+	
+	public void checkOutOfBounds() {
+		
+		boolean newOutOfBoundsState = false;
+		if (m_centre.x - r < 0 || m_centre.x + r > MainActivity.layout_width) {
+			newOutOfBoundsState = true;
+		}
+		if (m_centre.y - r < 0 || m_centre.y + r > MainActivity.layout_height) {
+			newOutOfBoundsState = true;
+		}
+		
+		if (newOutOfBoundsState != m_isOutOfBounds) {
+			m_isOutOfBounds = newOutOfBoundsState;
+			if (m_isOutOfBounds) {
+				m_line_paint = GameData.drop_line_paint;
+				m_joint_paint = GameData.drop_joint_paint;
+			} else {
+				m_line_paint = GameData.drop_line_paint;
+				m_joint_paint = GameData.drop_joint_paint;
+				switch (touch_state) {
+				case JOINT:
+					m_joint_paint = GameData.joint_touched_paint;
+					break;
+				case CIRCLE:
+					m_line_paint = GameData.line_touched_paint;
+					break;
+				default:
+					break;
+				
+				}
+			}
+		}
+		super.checkOutOfBounds();
+		
 	}
 }
 	

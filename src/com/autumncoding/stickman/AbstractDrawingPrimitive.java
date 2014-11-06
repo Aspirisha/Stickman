@@ -1,13 +1,13 @@
 package com.autumncoding.stickman;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.Stack;
 
 import android.content.Context;
 
-public abstract class AbstractDrawingPrimitive implements DrawingPrimitive {
-	
+public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Serializable {
+	private static final long serialVersionUID = 6036735876597370696L;
 	protected ArrayList<Joint> joints;
 	protected boolean isScalable;
 	protected boolean hasParent;
@@ -15,6 +15,7 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive {
 	protected int m_treeNumber;
 	protected Context m_context;
 	protected boolean m_isTouched;
+	protected boolean m_isOutOfBounds = false;
 	
 	AbstractDrawingPrimitive(Context context) {
 		m_connections = new ArrayList<DrawingPrimitive.Connection>();
@@ -212,6 +213,31 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive {
 	@Override
 	public Context getContext() {
 		return m_context;
+	}
+	
+	@Override
+	public boolean isOutOfBounds() {
+		return m_isOutOfBounds;
+	}
+	
+	@Override
+	public void checkOutOfBounds() {
+		for (Connection con : m_connections) {
+			if (con.myRelation == Relation.PRIMITIVE_IS_CHILD)
+				con.primitive.checkOutOfBounds();
+		}
+	}
+	
+	@Override
+	public void disconnectFromEverybody() {
+		while (!m_connections.isEmpty()) {
+			Connection con = m_connections.get(0);
+			if (con.myRelation == Relation.PRIMITIVE_IS_CHILD) {
+				con.primitive.disconnectFromParent();
+			} else {
+				disconnectFromParent();
+			}
+		}
 	}
 
 }

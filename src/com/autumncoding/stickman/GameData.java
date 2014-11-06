@@ -19,7 +19,7 @@ public class GameData {
     private Object locker;// object for touch thread and ui thread synchronization
     private long prevDrawingTime = System.currentTimeMillis();
     
-    public static final long FPS = 30;
+    public static final long FPS = 60;
     
     //lengths
     public static final float min_dist_to_connect_square = 100;
@@ -47,7 +47,6 @@ public class GameData {
     public static final float min_circle_radius = 10;
 	public static final float stick_distance_touchable = 10;
 	public static final float stick_distance_touchable_square = stick_distance_touchable * stick_distance_touchable;
-	public static float stretch_line_length = 10; // length of stick part which can be pulled to scale stick
     
     /*********** PAINTS ***************/
     // constant paints:
@@ -56,20 +55,21 @@ public class GameData {
     // untouched paints:
 	public static final Paint line_paint;  // normal paint for stick line
 	public static Paint joint_paint;
-	public static Paint stretch_line_paint;
 	public static Paint invisible_paint;
 	// touched paints:
-	public static Paint drop_paint;  // paint used to show that element is going to be dropped to the bin
+	public static final Paint drop_line_paint;  // paint used to show that element is going to be dropped to the bin
+	public static final Paint drop_joint_paint;
 	public static Paint joint_touched_paint;
 	public static Paint line_touched_paint;
 	
+	
 	// menu info
-	public static final int numberOfMenuIcons = 7;
+	public static final int numberOfMenuIcons = 8;
 	public static final float menuIconsTop = 4f;
 	
 	private static float menuBottom = 0;
 	private static boolean menuTouchState[];
-	private static ArrayList<PointF> drawnPoints; 
+	public static ArrayList<PointF> drawnPoints; 
 	
     static {
     	instance = new GameData();
@@ -117,11 +117,11 @@ public class GameData {
 		joint_touched_paint = new Paint(joint_paint);
 		joint_touched_paint.setColor(Color.argb(220, 16, 216, 235));
 		
-		drop_paint = new Paint(joint_paint);
-		drop_paint.setColor(Color.GRAY);
+		drop_line_paint = new Paint(line_paint);
+		drop_line_paint.setColor(Color.RED);
 		
-		stretch_line_paint = new Paint(joint_paint);
-		stretch_line_paint.setColor(Color.RED);
+		drop_joint_paint = new Paint(joint_paint);
+		drop_line_paint.setColor(Color.RED);
 		
 		invisible_paint = new Paint(joint_paint);
 		invisible_paint.setColor(Color.TRANSPARENT);
@@ -136,7 +136,7 @@ public class GameData {
     }
     
     private GameData() {
-    	drawing_queue = new LinkedList<DrawingPrimitive>();
+    	drawing_queue = Animation.getInstance().getFrame(0);
     	locker = new Object();
     }
     
@@ -237,5 +237,9 @@ public class GameData {
 
 	public static void setMenuBottom(float menuBottom) {
 		GameData.menuBottom = menuBottom;
+	}
+	
+	public void setDrawingQueue(LinkedList<DrawingPrimitive> q) {
+		drawing_queue = q;
 	}
 }

@@ -4,13 +4,17 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import com.autamncoding.stickman.R;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.os.AsyncTask;
 import android.view.Display;
 import android.view.MotionEvent;
@@ -18,7 +22,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
-import com.autamncoding.stickman.R;
 
 
 public class GameView extends SurfaceView {
@@ -39,6 +42,7 @@ public class GameView extends SurfaceView {
     private Circle menu_circle;
     
     private LinkedList<DrawingPrimitive> drawing_queue;
+    private Paint m_pointsLinePaint = null;
     
     private DrawingPrimitive currently_touched_pimititve = null;
     private ArrayList<Bitmap> m_menuBitmapsUntouched = null;
@@ -55,6 +59,8 @@ public class GameView extends SurfaceView {
     public GameView(Context context) {
     	super(context);
     	this.setBackgroundColor(Color.WHITE);
+    	
+    	Animation.getInstance().setContext(context);
     	game_data = GameData.getInstance();
     	game_data.init(this);
     	gameLoopThread = new GameLoopThread(this);
@@ -63,6 +69,10 @@ public class GameView extends SurfaceView {
     	debug_paint = GameData.debug_paint;
 		
     	menu_line_paint = GameData.menu_line_paint;
+    	m_pointsLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    	m_pointsLinePaint.setStyle(Paint.Style.STROKE);
+    	m_pointsLinePaint.setStrokeWidth(2);
+    	m_pointsLinePaint.setColor(Color.BLACK);
     	
     	menu_stick = game_data.getMenuStick();
     	menu_circle = game_data.getMenuCircle();
@@ -118,18 +128,16 @@ public class GameView extends SurfaceView {
     
     @Override
     public boolean onTouchEvent(final MotionEvent ev) {    	
-    	synchronized (getHolder()) {
-    		touch_thread.pushEvent(ev);
-    	}
+    	touch_thread.pushEvent(ev);
         return true;
     }
     
     private void drawMenu(Canvas canvas)
     {
-    	float left = 4f;
     	canvas.drawBitmap(m_menuBackground, 0, 0, m_menuBitmapPaint);
-    	
-    	Bitmap b = null;
+    	Bitmap b = m_menuBitmapsTouched.get(0);
+    	float dx = (MainActivity.layout_width - m_menuBitmapsUntouched.size() * b.getWidth()) / (float)m_menuBitmapsUntouched.size();
+    	float left = dx / 2f;
     	boolean menuTouches[] = GameData.getMenuTouchState(); 
     	for (int i = 0; i < m_menuBitmapsUntouched.size(); i++) {
     		if (menuTouches[i])
@@ -137,7 +145,7 @@ public class GameView extends SurfaceView {
     		else
     			b = m_menuBitmapsUntouched.get(i);
     		canvas.drawBitmap(b, left, GameData.menuIconsTop, m_menuBitmapPaint);
-    		left += (b.getWidth() + 7.8f);
+    		left += (b.getWidth() + dx);
     	}
     }
     
@@ -170,6 +178,20 @@ public class GameView extends SurfaceView {
 	        // finally draw all joints
 	        for (DrawingPrimitive v : drawing_queue)
 	        	v.draw(canvas);
+	        
+	        Path path = new Path();
+	        boolean first = true;
+	        for(PointF point : GameData.drawnPoints){
+	            if(first){
+	                first = false;
+	                path.moveTo(point.x, point.y);
+	            }
+	            else{
+	                path.lineTo(point.x, point.y);
+	            }
+	        }
+	        
+	        canvas.drawPath(path, m_pointsLinePaint);
         }
         canvas.restore();
     }
@@ -196,7 +218,7 @@ public class GameView extends SurfaceView {
     	for (int i = 0; i < GameData.numberOfMenuIcons; i++)
     		m_menuBitmapsUntouched.add(bitmapList.get(i + 1));
     	for (int i = 0; i < GameData.numberOfMenuIcons; i++)
-    		m_menuBitmapsTouched.add(bitmapList.get(i + 8));
+    		m_menuBitmapsTouched.add(bitmapList.get(i + 1 + GameData.numberOfMenuIcons));
     	
     	WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
     	Display display = wm.getDefaultDisplay();
@@ -240,6 +262,7 @@ public class GameView extends SurfaceView {
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.hand, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.prev, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.next, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.new_frame, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.play, options));
 	        
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.save_touched, options));
@@ -248,9 +271,14 @@ public class GameView extends SurfaceView {
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.hand_touched, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.prev_touched, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.next_touched, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.new_frame_touched, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.play_touched, options));
 			return output;
 		}
+    }
+    
+    public void setDrawingQueue(LinkedList<DrawingPrimitive> q) {
+    	drawing_queue = q;
     }
 }
 

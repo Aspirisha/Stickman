@@ -2,6 +2,9 @@ package com.autumncoding.stickman;
 
 import java.util.ArrayList;
 
+import com.autumncoding.stickman.DrawingPrimitive.Connection;
+import com.autumncoding.stickman.DrawingPrimitive.Relation;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -260,9 +263,11 @@ public class Stick extends AbstractDrawingPrimitive {
 		
 		m_isTouched = false;
 		touch_state = StickTouches.NONE;
-		m_joint1_paint = GameData.joint_paint;
-		m_joint2_paint = GameData.joint_paint;
-		m_line_paint = GameData.line_paint;
+		if (!m_isOutOfBounds) {
+			m_joint1_paint = GameData.joint_paint;
+			m_joint2_paint = GameData.joint_paint;
+			m_line_paint = GameData.line_paint;
+		}
 	}
 	
 	public StickTouches getTouchState() {
@@ -314,6 +319,7 @@ public class Stick extends AbstractDrawingPrimitive {
 				float newLen = Vector2DF.sub(v, p2).getLength();
 				scale(p2.x, p2.y, newLen / length);
 			}
+			checkOutOfBounds();
 			break;
 		case JOINT2:
 			if (!isScaling || !isScalable)
@@ -323,6 +329,7 @@ public class Stick extends AbstractDrawingPrimitive {
 				float newLen = Vector2DF.sub(v, p1).getLength();
 				scale(p1.x, p1.y, newLen / length);
 			}
+			checkOutOfBounds();
 			break;
 		case STICK: {
 			float dx = new_x - prev_x;
@@ -331,11 +338,55 @@ public class Stick extends AbstractDrawingPrimitive {
 				return;
 			translate(dx, dy);
 			disconnectFromParent();
+			checkOutOfBounds();
 			break;
 		}
 		default:
 			break;
 		}
+		
+		
 	}
-
+	
+	
+	public void checkOutOfBounds() {
+		
+		boolean newOutOfBoundsState = false;
+		if (p1.x < 0 || p1.x > MainActivity.layout_width || p2.x < 0 || p2.x > MainActivity.layout_width) {
+			newOutOfBoundsState = true;
+		}
+		if (p1.y < 0 || p1.y > MainActivity.layout_height || p2.y < 0 || p2.y > MainActivity.layout_height) {
+			newOutOfBoundsState = true;
+		}
+		
+		if (newOutOfBoundsState != m_isOutOfBounds) {
+			m_isOutOfBounds = newOutOfBoundsState;
+			if (m_isOutOfBounds) {
+				m_line_paint = GameData.drop_line_paint;
+				m_joint1_paint = GameData.drop_joint_paint;
+				m_joint2_paint = GameData.drop_joint_paint;
+			} else {
+				m_line_paint = GameData.line_paint;
+				m_joint1_paint = GameData.joint_paint;
+				m_joint2_paint = GameData.joint_paint;
+				switch (touch_state) {
+				case JOINT1:
+					m_joint1_paint = GameData.joint_touched_paint;
+					break;
+				case JOINT2:
+					m_joint2_paint = GameData.joint_touched_paint;
+					break;
+				case STICK:
+					m_line_paint = GameData.line_touched_paint;
+					break;
+				default:
+					break;
+				
+				}
+			}
+		}
+		super.checkOutOfBounds();
+		
+	}
+	
 }
