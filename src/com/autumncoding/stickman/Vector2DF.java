@@ -1,6 +1,9 @@
 package com.autumncoding.stickman;
 
-public class Vector2DF {
+import java.io.Serializable;
+
+public class Vector2DF implements Serializable {
+	private static final long serialVersionUID = 3955268686748801150L;
 	public float x;
 	public float y;
 		

@@ -1,5 +1,6 @@
 package com.autumncoding.stickman;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -12,7 +13,8 @@ public interface DrawingPrimitive  {
 		PRIMITIVE_IS_CHILD
 	}
 	
-	public class Connection {
+	public class Connection implements Serializable{
+		private static final long serialVersionUID = -3556215467308870723L;
 		Relation myRelation;
 		DrawingPrimitive primitive;
 		Joint myJoint;
@@ -59,6 +61,8 @@ public interface DrawingPrimitive  {
 	public int getTreeNumber();
 	public void setTreeNumber(int number);
 	public boolean isOutOfBounds();
+	public void setTransitiveFields(Context context);
+	public DrawingPrimitive getCopy();
 	
 	public  void checkOutOfBounds();
 	enum PrimitiveType {

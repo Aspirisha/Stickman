@@ -5,15 +5,15 @@ import java.util.LinkedList;
 
 import com.autamncoding.stickman.R;
 
+import android.app.Application;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
 
 public class GameData {
 	private LinkedList<DrawingPrimitive> drawing_queue;
-    private Stick menu_stick = null;
-    private Circle menu_circle = null;
-    private static ArrayList<DrawingPrimitive> roots;
+	public static Context context = null;
     private boolean is_inited = false;
     private static GameData instance = null;
     private Object locker;// object for touch thread and ui thread synchronization
@@ -51,6 +51,7 @@ public class GameData {
     /*********** PAINTS ***************/
     // constant paints:
     public static Paint menu_line_paint;
+    public static final Paint menuBitmapPaint;
     public static Paint debug_paint;
     // untouched paints:
 	public static final Paint line_paint;  // normal paint for stick line
@@ -68,7 +69,6 @@ public class GameData {
 	public static final float menuIconsTop = 4f;
 	
 	private static float menuBottom = 0;
-	private static boolean menuTouchState[];
 	public static ArrayList<PointF> drawnPoints; 
 	
     static {
@@ -126,13 +126,9 @@ public class GameData {
 		invisible_paint = new Paint(joint_paint);
 		invisible_paint.setColor(Color.TRANSPARENT);
 		
-		roots = new ArrayList<DrawingPrimitive>();
-		menuTouchState = new boolean[numberOfMenuIcons];
-		for (int i = 0; i < numberOfMenuIcons; i++)
-			menuTouchState[i] = false;
-		menuTouchState[2] = true;
-		
 		drawnPoints = new ArrayList<PointF>();
+		
+    	menuBitmapPaint = new Paint();
     }
     
     private GameData() {
@@ -144,27 +140,8 @@ public class GameData {
     	return instance;
     }
     
-    public synchronized int init(GameView playing_table) {
-    	if (is_inited)
-    		return 0;
-    	
-    	menu_stick = new Stick(playing_table.getContext());
-    	menu_circle = new Circle(playing_table.getContext());
-    	is_inited = true;
-    	
-    	return 1;
-    }
-    
     public Object getLocker() {
     	return locker;
-    }
-    
-    public synchronized Stick getMenuStick() {
-    	return menu_stick;
-    }
-    
-    public synchronized Circle getMenuCircle() {
-    	return menu_circle;
     }
     
     public LinkedList<DrawingPrimitive> getDrawingQueue() {
@@ -194,41 +171,6 @@ public class GameData {
     	top_menu_y = dy;
     	top_menu_x2 = MainActivity.layout_width - dx;
     	top_menu_x1 = dx;
-    }
-    
-    public static void addRoot(DrawingPrimitive root) {
-    	roots.add(root);
-    }
-    
-    public static DrawingPrimitive getRootWithBiggestTreeNumber() {
-    	DrawingPrimitive ret = null;
-    	int maxNumber = -1;
-    	for (DrawingPrimitive pr : roots) {
-    		if (pr.getTreeNumber() > maxNumber) {
-    			maxNumber = pr.getTreeNumber();
-    			ret = pr;
-    		}
-    	}
-    	
-    	return ret;
-    }
-    
-    public static int getTreesNumber() {
-    	return roots.size();
-    }
-    
-    public static void removeRoot(DrawingPrimitive root) {
-    	roots.remove(root);
-    }
-    
-    public static boolean[] getMenuTouchState() {
-    	return menuTouchState;
-    }
-    
-    public static void setMenuTouch(int index, boolean touch) {
-    	if (index >= numberOfMenuIcons || index < 0)
-    		return;
-    	menuTouchState[index] = touch;
     }
 
 	public static float getMenuBottom() {

@@ -1,5 +1,6 @@
 package com.autumncoding.stickman;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
@@ -7,7 +8,8 @@ import java.util.ArrayList;
  * @author Andy
  *
  */
-public class Joint {
+public class Joint implements Serializable {
+	private static final long serialVersionUID = 1L;
 	private boolean isParentJoint = false;
 	private boolean isChildJoint = false;
 	private boolean isFreeJoint = true;

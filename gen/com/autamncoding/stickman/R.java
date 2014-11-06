@@ -33,16 +33,19 @@ public final class R {
         public static final int new_frame_touched=0x7f020008;
         public static final int next=0x7f020009;
         public static final int next_touched=0x7f02000a;
-        public static final int open=0x7f02000b;
-        public static final int open_touched=0x7f02000c;
-        public static final int pencil=0x7f02000d;
-        public static final int pencil_touched=0x7f02000e;
-        public static final int play=0x7f02000f;
-        public static final int play_touched=0x7f020010;
-        public static final int prev=0x7f020011;
-        public static final int prev_touched=0x7f020012;
-        public static final int save=0x7f020013;
-        public static final int save_touched=0x7f020014;
+        public static final int next_unavailable=0x7f02000b;
+        public static final int open=0x7f02000c;
+        public static final int open_touched=0x7f02000d;
+        public static final int pencil=0x7f02000e;
+        public static final int pencil_touched=0x7f02000f;
+        public static final int pencil_unavailable=0x7f020010;
+        public static final int play=0x7f020011;
+        public static final int play_touched=0x7f020012;
+        public static final int prev=0x7f020013;
+        public static final int prev_touched=0x7f020014;
+        public static final int prev_unavailable=0x7f020015;
+        public static final int save=0x7f020016;
+        public static final int save_touched=0x7f020017;
     }
     public static final class id {
         public static final int action_settings=0x7f080000;

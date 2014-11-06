@@ -1,25 +1,23 @@
 package com.autumncoding.stickman;
 
+import java.io.Serializable;
 import java.util.ArrayList;
-
-import com.autumncoding.stickman.DrawingPrimitive.Connection;
-import com.autumncoding.stickman.DrawingPrimitive.Relation;
 
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
-public class Stick extends AbstractDrawingPrimitive {
-
+public class Stick extends AbstractDrawingPrimitive implements Serializable {
+	private static final long serialVersionUID = -9064457764417918381L;
 	private Vector2DF p1;
 	private Vector2DF p2;
 	
 	private float length;
 	private float angle;
 	
-	private Paint m_line_paint;
-	private Paint m_joint1_paint;
-	private Paint m_joint2_paint;
+	private transient Paint m_line_paint;
+	private transient Paint m_joint1_paint;
+	private transient Paint m_joint2_paint;
 	
 	/*********************** touch data *********************************************/
 	enum StickTouches {
@@ -29,11 +27,12 @@ public class Stick extends AbstractDrawingPrimitive {
 		NONE
 	}	
 	
-	private StickTouches touch_state = StickTouches.NONE;
+	private transient StickTouches m_touchState = StickTouches.NONE;
 	
 	public Stick(Context context) {
 		super(context);
 		
+		m_context = context;
 		p1 = new Vector2DF();
 		p2 = new Vector2DF();
 		
@@ -69,7 +68,7 @@ public class Stick extends AbstractDrawingPrimitive {
 		m_joint1_paint = st.m_joint1_paint;
 		m_joint2_paint = st.m_joint2_paint;
 		m_isTouched = st.m_isTouched;
-		touch_state = st.touch_state;
+		m_touchState = st.m_touchState;
 		joints.clear();
 		joints.add(new Joint(this, p1));
 		joints.add(new Joint(this, p2));
@@ -226,14 +225,14 @@ public class Stick extends AbstractDrawingPrimitive {
 	}
 	
 	public boolean checkTouch(float touch_x, float touch_y) {
-		touch_state = m_checkTouched(touch_x, touch_y);
+		m_touchState = m_checkTouched(touch_x, touch_y);
 		
 		m_isTouched = true;
 		m_joint1_paint = GameData.joint_paint;
 		m_joint2_paint = GameData.joint_paint;
 		m_line_paint = GameData.line_paint;
 		
-		switch (touch_state) {
+		switch (m_touchState) {
 		case JOINT1:
 			m_joint1_paint = GameData.joint_touched_paint;
 			break;
@@ -262,7 +261,7 @@ public class Stick extends AbstractDrawingPrimitive {
 			return;
 		
 		m_isTouched = false;
-		touch_state = StickTouches.NONE;
+		m_touchState = StickTouches.NONE;
 		if (!m_isOutOfBounds) {
 			m_joint1_paint = GameData.joint_paint;
 			m_joint2_paint = GameData.joint_paint;
@@ -271,7 +270,7 @@ public class Stick extends AbstractDrawingPrimitive {
 	}
 	
 	public StickTouches getTouchState() {
-		return touch_state;
+		return m_touchState;
 	}
 	
 	public void setPosition(float _x1, float _y1, float _x2, float _y2) {
@@ -310,7 +309,7 @@ public class Stick extends AbstractDrawingPrimitive {
 
 	@Override
 	public void applyMove(float new_x, float new_y, float prev_x, float prev_y, boolean isScaling) {
-		switch (touch_state) {
+		switch (m_touchState) {
 		case JOINT1:
 			if (!isScaling || !isScalable)
 				rotateAroundJoint2(new_x, new_y);
@@ -369,7 +368,7 @@ public class Stick extends AbstractDrawingPrimitive {
 				m_line_paint = GameData.line_paint;
 				m_joint1_paint = GameData.joint_paint;
 				m_joint2_paint = GameData.joint_paint;
-				switch (touch_state) {
+				switch (m_touchState) {
 				case JOINT1:
 					m_joint1_paint = GameData.joint_touched_paint;
 					break;
@@ -387,6 +386,40 @@ public class Stick extends AbstractDrawingPrimitive {
 		}
 		super.checkOutOfBounds();
 		
+	}
+
+	@Override
+	public void setTransitiveFields(Context context) {
+		super.setTransitiveFields(context);
+		m_line_paint = GameData.line_paint;
+		m_joint1_paint = GameData.joint_paint;
+		m_joint2_paint = GameData.joint_paint;
+		m_touchState = StickTouches.NONE;
+	}
+
+	@Override
+	public DrawingPrimitive getCopy() {
+		Stick stick = new Stick(m_context);
+		stick.angle = angle;
+		stick.p1.x = p1.x;
+		stick.p1.y = p1.y;
+		stick.p2.x = p2.x;
+		stick.p2.y = p2.y;
+		stick.length = length;
+		stick.m_line_paint = m_line_paint;
+		stick.m_joint1_paint = m_joint1_paint;
+		stick.m_joint2_paint = m_joint2_paint;
+		stick.m_isTouched = m_isTouched;
+		stick.m_touchState = m_touchState;
+		stick.joints.clear();
+		stick.joints.add(new Joint(this, p1));
+		stick.joints.add(new Joint(this, p2));
+		stick.isScalable = true;
+		stick.hasParent = false;
+		stick.m_connections.clear();
+		stick.m_context = m_context;
+		
+		return stick;
 	}
 	
 }

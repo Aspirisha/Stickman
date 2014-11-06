@@ -1,16 +1,13 @@
 package com.autumncoding.stickman;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
-
-import com.autumncoding.stickman.DrawingPrimitive.Connection;
-import com.autumncoding.stickman.DrawingPrimitive.Relation;
 
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
 public class Circle extends AbstractDrawingPrimitive {
+	private static final long serialVersionUID = 5019188822441365318L;
 	private Vector2DF m_centre;
 	private Vector2DF m_jointPoint;
 	private float r;
@@ -18,8 +15,8 @@ public class Circle extends AbstractDrawingPrimitive {
 	
 	/*********************** touch data *********************************************/
 	
-	private Paint m_line_paint;
-	private Paint m_joint_paint;
+	private transient Paint m_line_paint;
+	private transient Paint m_joint_paint;
 	
 	enum CircleTouches {
 		JOINT, 
@@ -27,7 +24,7 @@ public class Circle extends AbstractDrawingPrimitive {
 		NONE
 	}
 	
-	private CircleTouches touch_state = CircleTouches.NONE;
+	private transient CircleTouches m_touchState = CircleTouches.NONE;
 	
 	public Circle(Context context) {
 		super(context);
@@ -77,13 +74,13 @@ public class Circle extends AbstractDrawingPrimitive {
 	
 	@Override
 	public boolean checkTouch(float touch_x, float touch_y) {
-		touch_state = m_checkTouched(touch_x, touch_y);
+		m_touchState = m_checkTouched(touch_x, touch_y);
 		
 		m_isTouched = true;
 		m_joint_paint = GameData.joint_paint;
 		m_line_paint = GameData.line_paint;
 		
-		switch (touch_state) {
+		switch (m_touchState) {
 		case CIRCLE:
 			m_line_paint = GameData.line_touched_paint;
 			break;
@@ -192,7 +189,7 @@ public class Circle extends AbstractDrawingPrimitive {
 		angle = cir.angle;
 		m_isTouched = cir.m_isTouched;
 
-		touch_state = cir.touch_state;
+		m_touchState = cir.m_touchState;
 	}
 
 	@Override
@@ -201,7 +198,7 @@ public class Circle extends AbstractDrawingPrimitive {
 			return;
 		
 		m_isTouched = false;
-		touch_state = CircleTouches.NONE;
+		m_touchState = CircleTouches.NONE;
 		
 		if (!m_isOutOfBounds) {
 			m_joint_paint = GameData.joint_paint;
@@ -221,7 +218,7 @@ public class Circle extends AbstractDrawingPrimitive {
 	}
 	
 	public void applyMove(float new_x, float new_y, float prev_x, float prev_y, boolean isScaling) {
-		switch (touch_state) {
+		switch (m_touchState) {
 		case CIRCLE: {
 			float dx = new_x - prev_x;
 			float dy = new_y - prev_y;
@@ -297,7 +294,7 @@ public class Circle extends AbstractDrawingPrimitive {
 			} else {
 				m_line_paint = GameData.drop_line_paint;
 				m_joint_paint = GameData.drop_joint_paint;
-				switch (touch_state) {
+				switch (m_touchState) {
 				case JOINT:
 					m_joint_paint = GameData.joint_touched_paint;
 					break;
@@ -312,6 +309,34 @@ public class Circle extends AbstractDrawingPrimitive {
 		}
 		super.checkOutOfBounds();
 		
+	}
+	
+	@Override
+	public void setTransitiveFields(Context context) {
+		super.setTransitiveFields(context);
+		m_line_paint = GameData.line_paint;
+		m_joint_paint = GameData.joint_paint;
+		m_touchState = CircleTouches.NONE;
+	}
+
+	@Override
+	public DrawingPrimitive getCopy() {
+		Circle circle = new Circle(m_context);
+		
+		circle.m_centre.x = m_centre.x;
+		circle.m_centre.y = m_centre.y;
+		circle.r = r;
+		
+		circle.m_jointPoint.x = m_jointPoint.x;
+		circle.m_jointPoint.y = m_jointPoint.y;
+		circle.m_centre.y = m_centre.y;
+		
+		circle.angle = angle;
+		circle.m_isTouched = m_isTouched;
+
+		circle.m_touchState = m_touchState;
+		
+		return circle;
 	}
 }
 	

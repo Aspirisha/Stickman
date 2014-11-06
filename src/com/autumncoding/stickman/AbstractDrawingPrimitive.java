@@ -9,26 +9,43 @@ import android.content.Context;
 public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Serializable {
 	private static final long serialVersionUID = 6036735876597370696L;
 	protected ArrayList<Joint> joints;
-	protected boolean isScalable;
 	protected boolean hasParent;
 	protected ArrayList<Connection> m_connections;
 	protected int m_treeNumber;
-	protected Context m_context;
-	protected boolean m_isTouched;
-	protected boolean m_isOutOfBounds = false;
+	//protected Context m_context;
+	protected boolean isScalable;
+	protected transient boolean m_isTouched;
+	protected transient boolean m_isOutOfBounds = false;
+	protected transient Context m_context;
 	
 	AbstractDrawingPrimitive(Context context) {
 		m_connections = new ArrayList<DrawingPrimitive.Connection>();
 		joints = new ArrayList<Joint>();
-		m_context = context;
+		//m_context = context;
 		hasParent = false;
 		isScalable = true;
-		GameData.addRoot(this);
-		m_treeNumber = GameData.getTreesNumber();
+		Animation.getInstance().getCurrentframe().addRoot(this);
+		m_treeNumber = Animation.getInstance().getCurrentframe().getTreesNumber();
 		m_isTouched = false;
 	}
 
+	@Override
+	public Context getContext() {
+		return m_context;
+	}
 
+	/*void writeObject(java.io.ObjectOutputStream out) {
+		try {
+			out.writeObject(joints);
+			out.writeObject(hasParent);
+			out.writeObject(m_connections);
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}*/
+	
 	@Override
 	public boolean tryConnection(LinkedList<DrawingPrimitive> neighbours) {
 		float min_dist = 10000;
@@ -113,10 +130,8 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 		hasParent = true;
 		isScalable = false;
 		
-		DrawingPrimitive rootWithBiggestNumber = GameData.getRootWithBiggestTreeNumber();
-		rootWithBiggestNumber.updateSubtreeNumber(m_treeNumber);
 		newParent.updateSubtreeNumber(newParent.getTreeNumber());
-		GameData.removeRoot(this);
+		Animation.getInstance().getCurrentframe().removeRoot(this); // TODO same when removing primitive
 		
 		return true;
 	}
@@ -179,8 +194,8 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 			m_connections.remove(toRemove);
 			exParent.disconnectFromChild(this);
 			
-			GameData.addRoot(this);
-			updateSubtreeNumber(GameData.getTreesNumber());
+			Animation.getInstance().getCurrentframe().addRoot(this);
+			updateSubtreeNumber(Animation.getInstance().getCurrentframe().getTreesNumber());
 			isScalable = m_connections.isEmpty();
 		}
 	}
@@ -211,11 +226,6 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 	}
 
 	@Override
-	public Context getContext() {
-		return m_context;
-	}
-	
-	@Override
 	public boolean isOutOfBounds() {
 		return m_isOutOfBounds;
 	}
@@ -238,6 +248,12 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 				disconnectFromParent();
 			}
 		}
+	}
+	
+	public void setTransitiveFields(Context context) {
+		m_context = context;
+		m_isTouched = false;
+		m_isOutOfBounds = false;
 	}
 
 }
