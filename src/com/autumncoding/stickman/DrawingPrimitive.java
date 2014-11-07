@@ -63,6 +63,7 @@ public interface DrawingPrimitive  {
 	public boolean isOutOfBounds();
 	public void setTransitiveFields(Context context);
 	public DrawingPrimitive getCopy();
+	public ArrayList<Connection> getMyConnections();
 	
 	public  void checkOutOfBounds();
 	enum PrimitiveType {

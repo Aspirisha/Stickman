@@ -283,6 +283,9 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		joints.get(1).setMyPoint(p2);
 		
 		length = (float) Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
+		if (length < GameData.min_stick_length) {
+			p2.x = p1.x + 20;
+		}
 	}
 	
 	public boolean isHigher(float y) {
@@ -419,6 +422,7 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		stick.m_connections.clear();
 		stick.m_context = m_context;
 		
+		stick.m_treeNumber = m_treeNumber;
 		return stick;
 	}
 	

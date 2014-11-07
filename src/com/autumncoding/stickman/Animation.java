@@ -38,18 +38,24 @@ public class Animation implements Serializable {
 	}
 	
 	public void addFrame() {
-		m_frames.add(currentFrameIndex + 1, m_currentFrame.copy());
+		m_currentFrame = m_currentFrame.copy();
+		m_frames.add(currentFrameIndex + 1, m_currentFrame);
 	}
 	
 	public AnimationFrame getNextFrame() {
-		if (currentFrameIndex < m_frames.size() - 1)
-			return m_frames.get(++currentFrameIndex);
+		if (currentFrameIndex < m_frames.size() - 1) {
+			m_currentFrame = m_frames.get(++currentFrameIndex);
+			return m_currentFrame;
+		}
+		
 		return null;
 	}
 	
 	public AnimationFrame getPrevFrame() {
-		if (currentFrameIndex > 0)
-			return m_frames.get(--currentFrameIndex);
+		if (currentFrameIndex > 0) {
+			m_currentFrame = m_frames.get(--currentFrameIndex);
+			return m_currentFrame;
+		}
 		return null;
 	}
 	
@@ -58,6 +64,14 @@ public class Animation implements Serializable {
 			return null;
 		
 		return m_frames.get(index).getPrimitives();
+	}
+	
+	public boolean hasNextFrame() {
+		return (currentFrameIndex < m_frames.size() - 1);
+	}
+	
+	public boolean hasPrevFrame() {
+		return (currentFrameIndex > 0);
 	}
 	
 	public boolean SaveToFile(String fileName) {

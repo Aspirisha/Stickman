@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 import com.autumncoding.stickman.DrawingPrimitive.Connection;
+import com.autumncoding.stickman.DrawingPrimitive.Relation;
 
 public class AnimationFrame implements Serializable {
 	private static final long serialVersionUID = 4425662302112250971L;
@@ -61,8 +62,25 @@ public class AnimationFrame implements Serializable {
 		for (int i = 0; i < m_primitives.size(); ++i) {
 			DrawingPrimitive oldPrimitive = m_primitives.get(i);
 			DrawingPrimitive newPrimitive = newFrame.m_primitives.get(i);
+			
 			//oldPrimitive.get
-		//	for (Connection con : oldPrimitive.)
+			for (Connection con : oldPrimitive.getMyConnections()) {
+				int primitiveIndex = m_primitives.indexOf(con.primitive);
+				int myJointIndex = oldPrimitive.getMyJoints().indexOf(con.myJoint);
+				int primJointIndex = con.primitive.getMyJoints().indexOf(con.primitiveJoint);
+				
+				Connection newCon = new Connection();
+				newCon.myJoint = newPrimitive.getMyJoints().get(myJointIndex);
+				newCon.primitiveJoint = newFrame.m_primitives.get(primitiveIndex).getMyJoints().get(primJointIndex);
+				newCon.myRelation = con.myRelation;
+				newCon.primitive = newFrame.m_primitives.get(primitiveIndex);
+				newPrimitive.getMyConnections().add(newCon);
+				
+				if (newCon.myRelation == Relation.PRIMITIVE_IS_PARENT) {
+					newCon.myJoint.connectToParent(newCon.primitiveJoint);
+					newCon.primitiveJoint.addChild(newCon.myJoint);
+				} 
+			}
 		}
 		
 		return newFrame;

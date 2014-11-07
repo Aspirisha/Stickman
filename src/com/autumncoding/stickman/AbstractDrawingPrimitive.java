@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import com.autumncoding.stickman.DrawingPrimitive.Connection;
+
 import android.content.Context;
 
 public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Serializable {
@@ -254,6 +256,11 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 		m_context = context;
 		m_isTouched = false;
 		m_isOutOfBounds = false;
+	}
+	
+	@Override
+	public ArrayList<Connection> getMyConnections() {
+		return m_connections;
 	}
 
 }

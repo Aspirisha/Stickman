@@ -43,11 +43,13 @@ public class Joint implements Serializable {
 	 * @param newChild new child of this joint
 	 */
 	public void addChild(Joint newChild) {
-		m_childrenJoints.add(newChild);
-		isParentJoint = true;
-		isChildJoint = false;
-		isFreeJoint = false;
-		m_parent = null;
+		if (!m_childrenJoints.contains(newChild)) {
+			m_childrenJoints.add(newChild);
+			isParentJoint = true;
+			isChildJoint = false;
+			isFreeJoint = false;
+			m_parent = null;
+		}
 	}
 	
 	/**

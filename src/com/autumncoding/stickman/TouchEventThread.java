@@ -5,7 +5,6 @@ import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.graphics.PointF;
-import android.graphics.RectF;
 import android.util.Log;
 import android.view.MotionEvent;
 
@@ -15,7 +14,6 @@ public class TouchEventThread extends Thread {
 		DRAGGING,
 		WATCHING
 	}
-	private RectF[] menuRects = null;
 	
 	private GameData game_data;
 	private GameView m_gameView;
@@ -65,20 +63,6 @@ public class TouchEventThread extends Thread {
 		setName("Touch thread");
 		m_startDrawingPoint = new PointF();
 		m_farthestDrawingPoint = new PointF();
-	}
-	
-	synchronized void SetMenuRects(float screenWidth, float width, float height) {
-		menuRects = new RectF[GameData.numberOfMenuIcons];
-		
-		float dx = (screenWidth - GameData.numberOfMenuIcons * width) / GameData.numberOfMenuIcons;
-		float left = dx / 2f;
-		float top = GameData.menuIconsTop;
-		float bottom = top + height;
-		for (int i = 0; i < GameData.numberOfMenuIcons; i++) {
-			menuRects[i] = new RectF(left, top, left + width, bottom);
-			left += width;
-			left += dx;
-		}
 	}
 	
 	public void init(ArrayList<MenuIcon> icons) {
@@ -173,13 +157,12 @@ public class TouchEventThread extends Thread {
 			case MotionEvent.ACTION_DOWN: {
 				switch (touchedMenuIndex) {
 				case 0:
-
 					Animation.getInstance().SaveToFile("AnimSave.sav");
 					lastTouchMenuIndex = 0;
 					break;
 				case 1:
 					Animation.getInstance().LoadFormFile("AnimSave.sav");
-					drawing_queue = Animation.getInstance().getFrame(0);
+					drawing_queue = Animation.getInstance().getCurrentframe().getPrimitives();
 					game_data.setDrawingQueue(drawing_queue);
 					m_gameView.setDrawingQueue(drawing_queue);
 					lastTouchMenuIndex = 1;
@@ -193,6 +176,30 @@ public class TouchEventThread extends Thread {
 					currentWorkingState = TouchState.DRAGGING;
 					menuIcons.get(2).setUntouched();
 					menuIcons.get(6).setUntouched();
+					break;
+				case 4:
+					drawing_queue = Animation.getInstance().getPrevFrame().getPrimitives();
+					game_data.setDrawingQueue(drawing_queue);
+					m_gameView.setDrawingQueue(drawing_queue);
+					menuIcons.get(5).setAvailable();
+					if (!Animation.getInstance().hasPrevFrame())
+						menuIcons.get(4).setUnavailable();
+					lastTouchMenuIndex = 4;
+					break;
+				case 5:
+					drawing_queue = Animation.getInstance().getNextFrame().getPrimitives();
+					game_data.setDrawingQueue(drawing_queue);
+					m_gameView.setDrawingQueue(drawing_queue);
+					
+					menuIcons.get(4).setAvailable();
+					if (!Animation.getInstance().hasNextFrame())
+						menuIcons.get(5).setUnavailable();
+					lastTouchMenuIndex = 5;
+					break;
+				case 6:
+					Animation.getInstance().addFrame();
+					menuIcons.get(5).setActive();
+					lastTouchMenuIndex = 6;
 					break;
 				case 7:
 					currentWorkingState = TouchState.WATCHING;
@@ -286,6 +293,7 @@ public class TouchEventThread extends Thread {
 				Stick stick = new Stick(m_gameView.getContext());
 				
 				stick.setPosition(m_startDrawingPoint.x, m_startDrawingPoint.y, x, y);
+				
 				newPrimitive = stick;
 			} else {
 				Circle circle = new Circle(m_gameView.getContext());

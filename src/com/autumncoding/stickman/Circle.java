@@ -156,6 +156,8 @@ public class Circle extends AbstractDrawingPrimitive {
 		m_centre.y = _y;
 		r = _r;
 		
+		if (r < GameData.min_circle_radius)
+			r = GameData.min_circle_radius;
 		m_jointPoint.x = m_centre.x + r;
 		m_jointPoint.y = m_centre.y;
 		
