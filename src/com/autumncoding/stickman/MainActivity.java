@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.Window;
 
 import com.autamncoding.stickman.R;
@@ -19,7 +20,7 @@ public class MainActivity extends Activity {
 	int	m_viewCur = -1;
 	AppIntro m_app;
 	ViewIntro m_viewIntro;
-	GameView m_playingTable;
+	GameView m_gameView;
 	
 	@Override 
 	protected void onCreate(Bundle savedInstanceState) {
@@ -55,8 +56,8 @@ public class MainActivity extends Activity {
 		if (m_viewCur == VIEW_GAME)
 		{
 			Log.d("THREE", "Switch to m_viewGame" );
-			m_playingTable = new GameView(this);
-			m_playingTable.post(new Runnable() {
+			m_gameView = new GameView(this);
+			m_gameView.post(new Runnable() {
 
 				@Override
 				public void run() {
@@ -82,11 +83,11 @@ public class MainActivity extends Activity {
 		            layout_height = screenHeight - (titleBarHeight + statusBarHeight);
 		            layout_width = screenWidth;
 		            Log.i("MY", "Layout Height = " + layout_height);   
-		            m_playingTable.setMetrics();
+		            m_gameView.setMetrics();
 				}
 			});
-			m_playingTable.setBackgroundResource(R.drawable.background);
-			setContentView(m_playingTable);
+			m_gameView.setBackgroundResource(R.drawable.background);
+			setContentView(m_gameView);
 		}
 	}
 
@@ -94,6 +95,26 @@ public class MainActivity extends Activity {
 	public AppIntro getApp()
 	{
 		return m_app;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle item selection
+	    switch (item.getItemId()) {
+	        case R.id.action_save:
+	        	synchronized (GameData.getLocker()) {
+	        		Animation.getInstance().SaveToFile("AnimSave.sav");
+				}
+	            return true;
+	        case R.id.action_load:
+	        	synchronized (GameData.getLocker()) {
+	        		Animation.getInstance().LoadFormFile("AnimSave.sav");
+	        		m_gameView.updateUpperMenu();
+	        	}
+	            return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
 	}
 	
 	@Override

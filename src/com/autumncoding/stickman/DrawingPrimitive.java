@@ -1,5 +1,6 @@
 package com.autumncoding.stickman;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -19,6 +20,29 @@ public interface DrawingPrimitive  {
 		DrawingPrimitive primitive;
 		Joint myJoint;
 		Joint primitiveJoint;
+		
+	/*	private int ___tempMyJointIndex;
+		private int ___tempPrimitiveJointIndex;
+		private int ___tempPrimitiveIndex;
+		
+		private void writeObject(java.io.ObjectOutputStream stream) throws IOException {
+			stream.writeObject(myRelation);
+			stream.writeInt(primitive.getMyNumber());
+			stream.writeInt(myJoint.getMyPrimitive().getMyJoints().indexOf(myJoint));
+			stream.writeInt(primitive.getMyJoints().indexOf(primitiveJoint));
+		}
+
+		private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
+			myRelation = (Relation)stream.readObject();
+			___tempPrimitiveIndex = stream.readInt();
+			___tempMyJointIndex = stream.readInt();
+			___tempPrimitiveIndex = stream.readInt();
+		}
+
+		public void reastoreMyFieldsMyIndexes(LinkedList<DrawingPrimitive> q) {
+			primitive = q.get
+		}*/
+		
 	}
 	public boolean checkTouch(float touch_x, float touch_y);
 	public void draw(Canvas canvas);
@@ -66,6 +90,8 @@ public interface DrawingPrimitive  {
 	public ArrayList<Connection> getMyConnections();
 	public void setActiveColour();
 	public void setUnactiveColour();
+	/*public void setMyNumber(int newNumber);
+	public int getMyNumber();*/
 	
 	public  void checkOutOfBounds();
 	enum PrimitiveType {

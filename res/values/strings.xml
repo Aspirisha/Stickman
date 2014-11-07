@@ -8,4 +8,6 @@
 	<string name="str_university">St.Petersburg Polytechnical University</string>
     <string name="str_toweb">To web site</string>
     <string name="str_start">Start</string>
+    <string name="str_load">Load</string>
+    <string name="str_save">Save</string>
 </resources>

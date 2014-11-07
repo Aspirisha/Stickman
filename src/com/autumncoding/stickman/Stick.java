@@ -357,7 +357,7 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		if (p1.x < 0 || p1.x > MainActivity.layout_width || p2.x < 0 || p2.x > MainActivity.layout_width) {
 			newOutOfBoundsState = true;
 		}
-		if (p1.y < 0 || p1.y > MainActivity.layout_height || p2.y < 0 || p2.y > MainActivity.layout_height) {
+		if (p1.y < GameData.topMenuHeight || p1.y > MainActivity.layout_height || p2.y < GameData.topMenuHeight || p2.y > MainActivity.layout_height) {
 			newOutOfBoundsState = true;
 		}
 		

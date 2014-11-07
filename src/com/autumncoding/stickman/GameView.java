@@ -133,9 +133,7 @@ public class GameView extends SurfaceView {
         }
         canvas.drawText("FPS: " + Float.toString(d_fps), 30, 470, debug_paint);
         
-        synchronized (game_data.getLocker()) {
-        	if (m_menuBackground != null)
-            	drawMenu(canvas);
+        synchronized (GameData.getLocker()) {
         	if (GameData.prevDrawingQueue != null) {
 	        	for (DrawingPrimitive pr : GameData.prevDrawingQueue)
 	        		pr.draw(canvas);
@@ -157,6 +155,9 @@ public class GameView extends SurfaceView {
 	        
 	        canvas.drawPath(path, m_pointsLinePaint);
 	        path.reset();
+	        
+	        if (m_menuBackground != null)
+            	drawMenu(canvas);
         }
         canvas.restore();
     }
@@ -171,28 +172,31 @@ public class GameView extends SurfaceView {
     
     public void setMenuBitmaps(ArrayList<Bitmap> bitmapList)
     {
-    	m_menuBackground = bitmapList.get(0);
-
-    	for (int i = 0; i < GameData.numberOfMenuIcons; i++) 
-    		m_menuIcons.get(i).setActiveBitmap(bitmapList.get(i + 1));
-    	for (int i = 0; i < GameData.numberOfMenuIcons; i++)
-    		m_menuIcons.get(i).setTouchedBitmap(bitmapList.get(i + 1 + GameData.numberOfMenuIcons));
-    
-    	m_menuIcons.get(2).setUnavailableBitmap(bitmapList.get(1 + 2 * GameData.numberOfMenuIcons));
-    	m_menuIcons.get(4).setUnavailableBitmap(bitmapList.get(2 + 2 * GameData.numberOfMenuIcons));
-    	m_menuIcons.get(5).setUnavailableBitmap(bitmapList.get(3 + 2 * GameData.numberOfMenuIcons));
-    	
-    	m_menuIcons.get(2).setTouched();
-    	m_menuIcons.get(4).setUnavailable();
-    	m_menuIcons.get(5).setUnavailable();
-    	GameData.setMenuBottom(m_menuBackground.getHeight());
-    	
-    	Bitmap b = bitmapList.get(1);
-    	float dx = (MainActivity.layout_width - GameData.numberOfMenuIcons * b.getWidth()) / (float)GameData.numberOfMenuIcons;
-    	float left = dx / 2f;
-    	for (int i = 0; i < m_menuIcons.size(); i++) {
-    		m_menuIcons.get(i).setPosition(left, GameData.menuIconsTop);
-    		left += (b.getWidth() + dx);
+    	synchronized (GameData.getLocker()) {
+	    	m_menuBackground = bitmapList.get(0);
+	    	GameData.topMenuHeight = m_menuBackground.getHeight();
+	    	
+	    	for (int i = 0; i < GameData.numberOfMenuIcons; i++) 
+	    		m_menuIcons.get(i).setActiveBitmap(bitmapList.get(i + 1));
+	    	for (int i = 0; i < GameData.numberOfMenuIcons; i++)
+	    		m_menuIcons.get(i).setTouchedBitmap(bitmapList.get(i + 1 + GameData.numberOfMenuIcons));
+	    
+	    	m_menuIcons.get(0).setUnavailableBitmap(bitmapList.get(1 + 2 * GameData.numberOfMenuIcons));
+	    	m_menuIcons.get(2).setUnavailableBitmap(bitmapList.get(2 + 2 * GameData.numberOfMenuIcons));
+	    	m_menuIcons.get(3).setUnavailableBitmap(bitmapList.get(3 + 2 * GameData.numberOfMenuIcons));
+	    	
+	    	m_menuIcons.get(0).setTouched();
+	    	m_menuIcons.get(2).setUnavailable();
+	    	m_menuIcons.get(3).setUnavailable();
+	    	GameData.setMenuBottom(m_menuBackground.getHeight());
+	    	
+	    	Bitmap b = bitmapList.get(1);
+	    	float dx = (MainActivity.layout_width - GameData.numberOfMenuIcons * b.getWidth()) / (float)GameData.numberOfMenuIcons;
+	    	float left = dx / 2f;
+	    	for (int i = 0; i < m_menuIcons.size(); i++) {
+	    		m_menuIcons.get(i).setPosition(left, GameData.menuIconsTop);
+	    		left += (b.getWidth() + dx);
+	    	}
     	}
     }
     
@@ -224,8 +228,6 @@ public class GameView extends SurfaceView {
 	    	ArrayList<Bitmap> output = new ArrayList<Bitmap>();
 	    	output.add(BitmapFactory.decodeResource(getResources(), R.drawable.menu_back, options));
 	    	
-	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.save, options));
-	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.open, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.pencil, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.hand, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.prev, options));
@@ -233,8 +235,6 @@ public class GameView extends SurfaceView {
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.new_frame, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.play, options));
 	        
-	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.save_touched, options));
-	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.open_touched, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.pencil_touched, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.hand_touched, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.prev_touched, options));
@@ -249,5 +249,11 @@ public class GameView extends SurfaceView {
 		}
     }
     
+    public void updateUpperMenu() {
+	    if (Animation.getInstance().hasNextFrame())
+			m_menuIcons.get(3).setAvailable();
+		else
+			m_menuIcons.get(3).setUnavailable();
+    }
 }
 

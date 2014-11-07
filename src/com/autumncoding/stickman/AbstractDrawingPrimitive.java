@@ -15,6 +15,7 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 	protected ArrayList<Connection> m_connections;
 	protected int m_treeNumber;
 	protected boolean isScalable;
+	protected int m_number = 0;
 	protected transient boolean m_isTouched;
 	protected transient boolean m_isOutOfBounds = false;
 	protected transient Context m_context;
@@ -22,11 +23,12 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 	AbstractDrawingPrimitive(Context context) {
 		m_connections = new ArrayList<DrawingPrimitive.Connection>();
 		joints = new ArrayList<Joint>();
-		//m_context = context;
+		m_context = context;
 		hasParent = false;
 		isScalable = true;
 		Animation.getInstance().getCurrentframe().addRoot(this);
 		m_treeNumber = Animation.getInstance().getCurrentframe().getTreesNumber();
+		m_number = Animation.getInstance().getCurrentframe().getPrimitives().size();
 		m_isTouched = false;
 	}
 
@@ -131,9 +133,8 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 		hasParent = true;
 		isScalable = false;
 		
-		newParent.updateSubtreeNumber(newParent.getTreeNumber());
 		Animation.getInstance().getCurrentframe().removeRoot(this); // TODO same when removing primitive
-		
+		newParent.updateSubtreeNumber(newParent.getTreeNumber());
 		return true;
 	}
 

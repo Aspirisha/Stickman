@@ -284,7 +284,7 @@ public class Circle extends AbstractDrawingPrimitive {
 		if (m_centre.x - r < 0 || m_centre.x + r > MainActivity.layout_width) {
 			newOutOfBoundsState = true;
 		}
-		if (m_centre.y - r < 0 || m_centre.y + r > MainActivity.layout_height) {
+		if (m_centre.y - r < GameData.topMenuHeight || m_centre.y + r > MainActivity.layout_height) {
 			newOutOfBoundsState = true;
 		}
 		

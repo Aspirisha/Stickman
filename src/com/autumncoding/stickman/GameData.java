@@ -14,10 +14,10 @@ public class GameData {
 	public static Context context = null;
     private boolean is_inited = false;
     private static GameData instance = null;
-    private Object locker;// object for touch thread and ui thread synchronization
+    private static Object locker;// object for touch thread and ui thread synchronization
     private long prevDrawingTime = System.currentTimeMillis();
     
-    public static final long FPS = 60;
+    public static final long FPS = 30;
     
     //lengths
     public static final float min_dist_to_connect_square = 100;
@@ -66,8 +66,9 @@ public class GameData {
 	
 	
 	// menu info
-	public static final int numberOfMenuIcons = 8;
+	public static final int numberOfMenuIcons = 6;
 	public static final float menuIconsTop = 4f;
+	public static int topMenuHeight = 0;
 	
 	private static float menuBottom = 0;
 	public static ArrayList<PointF> drawnPoints; 
@@ -147,7 +148,7 @@ public class GameData {
     	return instance;
     }
     
-    public Object getLocker() {
+    public static Object getLocker() {
     	return locker;
     }
     

@@ -113,7 +113,13 @@ public class Animation implements Serializable {
 		        Log.i("Saving data", "Directory not created");
 		    }
 			ObjectOutputStream ostream = new ObjectOutputStream(new FileOutputStream(file.getAbsolutePath() + "/" + fileName));
-			ostream.writeObject(m_frames);
+			
+			ostream.writeInt(m_frames.size());
+			
+			for (AnimationFrame fr : m_frames) {
+				ostream.writeObject(fr);
+				ostream.flush();
+			}
 			ostream.close();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -133,7 +139,12 @@ public class Animation implements Serializable {
 			InputStream istream = new FileInputStream(file.getAbsolutePath() + "/" + fileName);
 		    InputStream buffer = new BufferedInputStream(istream);
 		    input = new ObjectInputStream (buffer);
-		    m_frames = (ArrayList<AnimationFrame>)input.readObject();
+		    
+		    int sz = input.readInt();
+		    m_frames.clear();
+		    for (int i = 0; i < sz; i++)
+		    	m_frames.add((AnimationFrame)input.readObject());
+		    
 		    m_currentFrameIndex = 0;
 		    m_currentFrame = m_frames.get(0); // any saved animation has at least 1 frame
 		    for (AnimationFrame frame : m_frames) {
@@ -143,6 +154,7 @@ public class Animation implements Serializable {
 		    	}
 		    }
 		    GameData.drawing_queue = m_currentFrame.getPrimitives();
+		    GameData.prevDrawingQueue = null;
 		} catch (Exception e) { 
 			e.printStackTrace();
 		} finally{

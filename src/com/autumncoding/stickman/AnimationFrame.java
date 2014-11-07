@@ -10,15 +10,19 @@ import com.autumncoding.stickman.DrawingPrimitive.Relation;
 public class AnimationFrame implements Serializable {
 	private static final long serialVersionUID = 4425662302112250971L;
 	private LinkedList<DrawingPrimitive> m_primitives;
-	private ArrayList<DrawingPrimitive> m_roots;
+	private LinkedList<DrawingPrimitive> m_roots;
 	
 	public LinkedList<DrawingPrimitive> getPrimitives() {
 		return m_primitives;
 	}
 	
+	public LinkedList<DrawingPrimitive> getRoots() {
+		return m_roots;
+	}
+	
 	public AnimationFrame() {
 		m_primitives = new LinkedList<DrawingPrimitive>();
-		m_roots = new ArrayList<DrawingPrimitive>();
+		m_roots = new LinkedList<DrawingPrimitive>();
 	}
 	
 	public void addRoot(DrawingPrimitive root) {
@@ -48,8 +52,9 @@ public class AnimationFrame implements Serializable {
     	
     	if (!retVal)
     		return false;
+    	int oldNumber = root.getTreeNumber();
     	for (DrawingPrimitive pr : m_roots) {
-    		if (pr.getTreeNumber() >= root.getTreeNumber()) {
+    		if (pr.getTreeNumber() >= oldNumber) {
     			pr.updateSubtreeNumber(pr.getTreeNumber() - 1);
     		}
     	}
@@ -90,5 +95,15 @@ public class AnimationFrame implements Serializable {
 		}
 		
 		return newFrame;
+	}
+	
+	void removePrimitive(DrawingPrimitive pr) {
+		pr.disconnectFromEverybody();
+		m_primitives.remove(pr);
+		removeRoot(pr);
+	/*	for (DrawingPrimitive v : m_primitives) {
+			if (v.getMyNumber() > pr.getMyNumber())
+				v.setMyNumber(v.getMyNumber() - 1);
+		}*/
 	}
 }
