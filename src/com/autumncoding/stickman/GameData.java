@@ -3,16 +3,14 @@ package com.autumncoding.stickman;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import com.autamncoding.stickman.R;
-
-import android.app.Application;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
 
 public class GameData {
-	private LinkedList<DrawingPrimitive> drawing_queue;
+	public static LinkedList<DrawingPrimitive> drawing_queue;
+	public static LinkedList<DrawingPrimitive> prevDrawingQueue = null;
 	public static Context context = null;
     private boolean is_inited = false;
     private static GameData instance = null;
@@ -53,6 +51,9 @@ public class GameData {
     public static Paint menu_line_paint;
     public static final Paint menuBitmapPaint;
     public static Paint debug_paint;
+    public static Paint prev_frame_line_paint;
+    public static Paint prev_frame_joint_paint;
+    
     // untouched paints:
 	public static final Paint line_paint;  // normal paint for stick line
 	public static Paint joint_paint;
@@ -88,6 +89,9 @@ public class GameData {
 		line_paint.setStrokeJoin(Paint.Join.ROUND);
 		line_paint.setStrokeCap(Paint.Cap.ROUND);
 		
+		prev_frame_line_paint = new Paint(line_paint);
+		prev_frame_line_paint.setColor(Color.argb(220, 200, 200, 200));
+		
 		debug_paint = new Paint();
     	debug_paint.setColor(Color.BLACK);
     	debug_paint.setAntiAlias(true);
@@ -116,6 +120,9 @@ public class GameData {
 		
 		joint_touched_paint = new Paint(joint_paint);
 		joint_touched_paint.setColor(Color.argb(220, 16, 216, 235));
+		
+		prev_frame_joint_paint = new Paint(joint_paint);
+		prev_frame_joint_paint.setColor(Color.argb(220, 200, 200, 200));
 		
 		drop_line_paint = new Paint(line_paint);
 		drop_line_paint.setColor(Color.RED);

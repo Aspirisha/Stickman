@@ -11,8 +11,6 @@ import android.view.Window;
 import com.autamncoding.stickman.R;
 
 public class MainActivity extends Activity {
-
-	
 	static int layout_height;
 	static int layout_width;
 	public static final int	VIEW_INTRO = 0;
@@ -87,6 +85,7 @@ public class MainActivity extends Activity {
 		            m_playingTable.setMetrics();
 				}
 			});
+			m_playingTable.setBackgroundResource(R.drawable.background);
 			setContentView(m_playingTable);
 		}
 	}
@@ -95,6 +94,18 @@ public class MainActivity extends Activity {
 	public AppIntro getApp()
 	{
 		return m_app;
+	}
+	
+	@Override
+	protected void onPause() {
+		// TODO Auto-generated method stub
+		super.onPause();
+	}
+	
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
 	}
 	
 

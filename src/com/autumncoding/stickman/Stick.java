@@ -409,21 +409,34 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		stick.p2.x = p2.x;
 		stick.p2.y = p2.y;
 		stick.length = length;
-		stick.m_line_paint = m_line_paint;
-		stick.m_joint1_paint = m_joint1_paint;
-		stick.m_joint2_paint = m_joint2_paint;
+		stick.m_line_paint = GameData.line_paint;
+		stick.m_joint1_paint = GameData.joint_paint;
+		stick.m_joint2_paint = GameData.joint_paint;
 		stick.m_isTouched = m_isTouched;
 		stick.m_touchState = m_touchState;
 		stick.joints.clear();
 		stick.joints.add(new Joint(this, p1));
 		stick.joints.add(new Joint(this, p2));
 		stick.isScalable = true;
-		stick.hasParent = false;
+		stick.hasParent = hasParent;
 		stick.m_connections.clear();
 		stick.m_context = m_context;
 		
 		stick.m_treeNumber = m_treeNumber;
 		return stick;
+	}
+
+	@Override
+	public void setActiveColour() {
+		m_joint1_paint = GameData.joint_paint;
+		m_joint2_paint = GameData.joint_paint;
+		m_line_paint = GameData.line_paint;
+	}
+
+	@Override
+	public void setUnactiveColour() {
+		m_joint1_paint = m_joint2_paint = GameData.prev_frame_joint_paint;
+		m_line_paint = GameData.prev_frame_line_paint;
 	}
 	
 }

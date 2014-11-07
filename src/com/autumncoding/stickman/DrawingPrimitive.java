@@ -64,6 +64,8 @@ public interface DrawingPrimitive  {
 	public void setTransitiveFields(Context context);
 	public DrawingPrimitive getCopy();
 	public ArrayList<Connection> getMyConnections();
+	public void setActiveColour();
+	public void setUnactiveColour();
 	
 	public  void checkOutOfBounds();
 	enum PrimitiveType {

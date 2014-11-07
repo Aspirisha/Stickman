@@ -335,10 +335,23 @@ public class Circle extends AbstractDrawingPrimitive {
 		
 		circle.angle = angle;
 		circle.m_isTouched = m_isTouched;
-
+		circle.hasParent = hasParent;
 		circle.m_touchState = m_touchState;
 		
+		circle.m_treeNumber = m_treeNumber;
 		return circle;
+	}
+	
+	@Override
+	public void setActiveColour() {
+		m_joint_paint = GameData.joint_paint;
+		m_line_paint = GameData.line_paint;
+	}
+
+	@Override
+	public void setUnactiveColour() {
+		m_joint_paint = GameData.prev_frame_joint_paint;
+		m_line_paint = GameData.prev_frame_line_paint;
 	}
 }
 	

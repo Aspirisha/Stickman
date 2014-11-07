@@ -93,7 +93,7 @@ public class MenuIcon {
 	
 	public void setAvailable() {
 		if (m_state == IconState.UNAVAILABLE) {
-			m_state = IconState.TOUCHED;
+			m_state = IconState.ACTIVE;
 			m_currentBitmap = m_activeBitmap;
 		}
 	}

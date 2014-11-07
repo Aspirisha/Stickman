@@ -14,7 +14,6 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 	protected boolean hasParent;
 	protected ArrayList<Connection> m_connections;
 	protected int m_treeNumber;
-	//protected Context m_context;
 	protected boolean isScalable;
 	protected transient boolean m_isTouched;
 	protected transient boolean m_isOutOfBounds = false;
@@ -252,6 +251,7 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 		}
 	}
 	
+	@Override
 	public void setTransitiveFields(Context context) {
 		m_context = context;
 		m_isTouched = false;

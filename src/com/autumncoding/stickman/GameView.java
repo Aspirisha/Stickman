@@ -13,15 +13,11 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.os.AsyncTask;
-import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.WindowManager;
 
 import com.autamncoding.stickman.R;
-
-
 
 public class GameView extends SurfaceView {
 	private GameData game_data;
@@ -31,7 +27,6 @@ public class GameView extends SurfaceView {
 	private GameLoopThread gameLoopThread;
 	private TouchEventThread touch_thread;
     
-    private LinkedList<DrawingPrimitive> drawing_queue;
     private Paint m_pointsLinePaint = null;
     
     private DrawingPrimitive currently_touched_pimititve = null;
@@ -65,7 +60,6 @@ public class GameView extends SurfaceView {
     	m_pointsLinePaint.setStrokeWidth(2);
     	m_pointsLinePaint.setColor(Color.BLACK);
     	
-    	drawing_queue = game_data.getDrawingQueue();
     	touch_thread = new TouchEventThread(this);
     	touch_thread.init(m_menuIcons);
     	
@@ -142,8 +136,11 @@ public class GameView extends SurfaceView {
         synchronized (game_data.getLocker()) {
         	if (m_menuBackground != null)
             	drawMenu(canvas);
-	        // finally draw all joints
-	        for (DrawingPrimitive v : drawing_queue)
+        	if (GameData.prevDrawingQueue != null) {
+	        	for (DrawingPrimitive pr : GameData.prevDrawingQueue)
+	        		pr.draw(canvas);
+        	}
+	        for (DrawingPrimitive v : GameData.drawing_queue)
 	        	v.draw(canvas);
 	        
 	       
@@ -252,8 +249,5 @@ public class GameView extends SurfaceView {
 		}
     }
     
-    public void setDrawingQueue(LinkedList<DrawingPrimitive> q) {
-    	drawing_queue = q;
-    }
 }
 
