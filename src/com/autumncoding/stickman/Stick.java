@@ -1,7 +1,12 @@
 package com.autumncoding.stickman;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+
+import com.autumncoding.stickman.DrawingPrimitive.Connection;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -404,22 +409,16 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	public DrawingPrimitive getCopy() {
 		Stick stick = new Stick(m_context);
 		stick.angle = angle;
-		stick.p1.x = p1.x;
-		stick.p1.y = p1.y;
-		stick.p2.x = p2.x;
-		stick.p2.y = p2.y;
 		stick.length = length;
+		stick.setPosition(p1.x, p1.y, p2.x, p2.y);
+		
 		stick.m_line_paint = GameData.line_paint;
 		stick.m_joint1_paint = GameData.joint_paint;
 		stick.m_joint2_paint = GameData.joint_paint;
 		stick.m_isTouched = m_isTouched;
 		stick.m_touchState = m_touchState;
-		stick.joints.clear();
-		stick.joints.add(new Joint(this, p1));
-		stick.joints.add(new Joint(this, p2));
 		stick.isScalable = true;
 		stick.hasParent = hasParent;
-		stick.m_connections.clear();
 		stick.m_context = m_context;
 		
 		stick.m_treeNumber = m_treeNumber;
@@ -438,5 +437,19 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		m_joint1_paint = m_joint2_paint = GameData.prev_frame_joint_paint;
 		m_line_paint = GameData.prev_frame_line_paint;
 	}
+
+	private void writeObject(java.io.ObjectOutputStream  stream) throws IOException {
+		stream.writeObject(p1);
+		stream.writeObject(p2);
+		stream.writeFloat(length);
+		stream.writeFloat(angle);
+		
+	}
 	
+	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
+		p1 = (Vector2DF) stream.readObject();
+		p2 = (Vector2DF) stream.readObject();
+		length = stream.readFloat();
+		angle = stream.readFloat();
+	}
 }

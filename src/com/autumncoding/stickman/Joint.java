@@ -1,5 +1,6 @@
 package com.autumncoding.stickman;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -14,10 +15,29 @@ public class Joint implements Serializable {
 	private boolean isChildJoint = false;
 	private boolean isFreeJoint = true;
 	private int distToFreeJoint;
-	private Joint m_parent;
-	private ArrayList<Joint> m_childrenJoints;
-	private AbstractDrawingPrimitive m_primitive; // primitive, to which this joint belongs
+	private transient Joint m_parent;
+	private transient ArrayList<Joint> m_childrenJoints;
+	private transient AbstractDrawingPrimitive m_primitive; // primitive, to which this joint belongs
 	private Vector2DF m_point;
+	
+	private void writeObject(java.io.ObjectOutputStream  stream) throws IOException {
+		stream.writeBoolean(isParentJoint);
+		stream.writeBoolean(isChildJoint);
+		stream.writeBoolean(isFreeJoint);
+		stream.writeInt(distToFreeJoint);
+		stream.writeObject(m_point);
+	}
+	
+	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
+		isParentJoint = stream.readBoolean();
+		isChildJoint = stream.readBoolean();
+		isFreeJoint = stream.readBoolean();
+		distToFreeJoint = stream.readInt();
+		m_point = (Vector2DF) stream.readObject();
+		m_parent = null;
+		m_childrenJoints = new ArrayList<Joint>();
+		m_primitive = null;
+	}
 	
 	public Joint(AbstractDrawingPrimitive pr, Vector2DF p) {
 		m_childrenJoints = new ArrayList<Joint>();
@@ -25,6 +45,9 @@ public class Joint implements Serializable {
 		m_point = new Vector2DF(p);
 	}
 	
+	public void setMyPrimitive(AbstractDrawingPrimitive pr) {
+		m_primitive = pr;
+	}
 	/**
 	 * Sets current joint to be free, i.e. it's not connected to anything, and so
 	 * it is not a child joint, nor a parent joint.
@@ -48,7 +71,7 @@ public class Joint implements Serializable {
 			isParentJoint = true;
 			isChildJoint = false;
 			isFreeJoint = false;
-			m_parent = null;
+			m_parent = null; // TODO its shit: some joints are children and parents at the same time (circle)
 		}
 	}
 	

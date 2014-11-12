@@ -1,5 +1,6 @@
 package com.autumncoding.stickman;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import android.content.Context;
@@ -245,6 +246,7 @@ public class Circle extends AbstractDrawingPrimitive {
 				float theta = (float) Math.acos(cos_theta); // NB: using acos is not very cool just so: need to be sue fi <= 180
 				if ((m_jointPoint.x - m_centre.x) * (new_y - m_centre.y) - (new_x - m_centre.x) * (m_jointPoint.y - m_centre.y) < 0)
 		    		theta = -theta;
+				angle += theta;
 				rotate(theta, m_centre.x, m_centre.y);
 			} else {
 				Vector2DF v = new Vector2DF(new_x, new_y);
@@ -325,20 +327,14 @@ public class Circle extends AbstractDrawingPrimitive {
 	public DrawingPrimitive getCopy() {
 		Circle circle = new Circle(m_context);
 		
-		circle.m_centre.x = m_centre.x;
-		circle.m_centre.y = m_centre.y;
-		circle.r = r;
+		circle.setPosition(m_centre.x, m_centre.y, r, angle); 
 		
-		circle.m_jointPoint.x = m_jointPoint.x;
-		circle.m_jointPoint.y = m_jointPoint.y;
-		circle.m_centre.y = m_centre.y;
-		
-		circle.angle = angle;
 		circle.m_isTouched = m_isTouched;
 		circle.hasParent = hasParent;
 		circle.m_touchState = m_touchState;
 		
 		circle.m_treeNumber = m_treeNumber;
+		circle.m_number = m_number;
 		return circle;
 	}
 	
@@ -352,6 +348,21 @@ public class Circle extends AbstractDrawingPrimitive {
 	public void setUnactiveColour() {
 		m_joint_paint = GameData.prev_frame_joint_paint;
 		m_line_paint = GameData.prev_frame_line_paint;
+	}
+
+	private void writeObject(java.io.ObjectOutputStream  stream) throws IOException {
+		stream.writeObject(m_centre);
+		stream.writeObject(m_jointPoint);
+		stream.writeFloat(r);
+		stream.writeFloat(angle);
+		
+	}
+	
+	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
+		m_centre = (Vector2DF) stream.readObject();
+		m_jointPoint = (Vector2DF) stream.readObject();
+		r = stream.readFloat();
+		angle = stream.readFloat();
 	}
 }
 	

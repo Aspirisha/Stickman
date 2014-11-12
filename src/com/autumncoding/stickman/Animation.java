@@ -108,11 +108,7 @@ public class Animation implements Serializable {
 		    if (!Environment.MEDIA_MOUNTED.equals(state)) {
 		        return false;
 		    }
-		    File file = new File(GameData.context.getExternalFilesDir(null), "StickmanSaves");
-		    if (!file.mkdirs()) {
-		        Log.i("Saving data", "Directory not created");
-		    }
-			ObjectOutputStream ostream = new ObjectOutputStream(new FileOutputStream(file.getAbsolutePath() + "/" + fileName));
+			ObjectOutputStream ostream = new ObjectOutputStream(new FileOutputStream(fileName));
 			
 			ostream.writeInt(m_frames.size());
 			
@@ -131,12 +127,8 @@ public class Animation implements Serializable {
 	
 	public void LoadFormFile(String fileName) {
 		ObjectInput input = null;
-		File file = new File(GameData.context.getExternalFilesDir(null), "StickmanSaves");
-	    if (!file.mkdirs()) {
-	        Log.i("Saving data", "Directory not created");
-	    }
 		try { 
-			InputStream istream = new FileInputStream(file.getAbsolutePath() + "/" + fileName);
+			InputStream istream = new FileInputStream(fileName);
 		    InputStream buffer = new BufferedInputStream(istream);
 		    input = new ObjectInputStream (buffer);
 		    
@@ -144,6 +136,8 @@ public class Animation implements Serializable {
 		    m_frames.clear();
 		    for (int i = 0; i < sz; i++)
 		    	m_frames.add((AnimationFrame)input.readObject());
+		    for (AnimationFrame frame : m_frames)
+		    	frame.restorePrimitivesFieldsByIndexes();
 		    
 		    m_currentFrameIndex = 0;
 		    m_currentFrame = m_frames.get(0); // any saved animation has at least 1 frame

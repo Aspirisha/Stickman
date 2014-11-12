@@ -1,5 +1,6 @@
 package com.autumncoding.stickman;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -97,13 +98,36 @@ public class AnimationFrame implements Serializable {
 		return newFrame;
 	}
 	
+	private void writeObject(java.io.ObjectOutputStream stream) throws IOException {
+		stream.writeInt(m_primitives.size());
+		for (DrawingPrimitive pr : m_primitives)
+			stream.writeObject(pr);
+	}
+	
+	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
+		int sz = stream.readInt();
+		m_primitives = new LinkedList<DrawingPrimitive>();
+		for (int i = 0; i < sz; i++)
+			m_primitives.add((DrawingPrimitive)stream.readObject());
+		m_roots = new LinkedList<DrawingPrimitive>();
+		
+	}
+	
+	public void restorePrimitivesFieldsByIndexes(){
+		for (DrawingPrimitive pr : m_primitives) {
+			pr.restoreMyFieldsByIndexes(m_primitives);
+			if (!pr.hasParent())
+				m_roots.add(pr);
+		}
+	}
+	
 	void removePrimitive(DrawingPrimitive pr) {
 		pr.disconnectFromEverybody();
 		m_primitives.remove(pr);
 		removeRoot(pr);
-	/*	for (DrawingPrimitive v : m_primitives) {
+		for (DrawingPrimitive v : m_primitives) {
 			if (v.getMyNumber() > pr.getMyNumber())
 				v.setMyNumber(v.getMyNumber() - 1);
-		}*/
+		}
 	}
 }

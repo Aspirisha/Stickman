@@ -21,7 +21,7 @@ public interface DrawingPrimitive  {
 		Joint myJoint;
 		Joint primitiveJoint;
 		
-	/*	private int ___tempMyJointIndex;
+		private int ___tempMyJointIndex;
 		private int ___tempPrimitiveJointIndex;
 		private int ___tempPrimitiveIndex;
 		
@@ -36,12 +36,29 @@ public interface DrawingPrimitive  {
 			myRelation = (Relation)stream.readObject();
 			___tempPrimitiveIndex = stream.readInt();
 			___tempMyJointIndex = stream.readInt();
-			___tempPrimitiveIndex = stream.readInt();
+			___tempPrimitiveJointIndex = stream.readInt();
 		}
 
-		public void reastoreMyFieldsMyIndexes(LinkedList<DrawingPrimitive> q) {
-			primitive = q.get
-		}*/
+		public void reastoreMyFieldsMyIndexes(LinkedList<DrawingPrimitive> q, DrawingPrimitive myPrimitive) {
+			primitive = null; // TODO make it efficient
+			for (DrawingPrimitive pr : q) {
+				if (pr.getMyNumber() == ___tempPrimitiveIndex) {
+					primitive = pr;
+					break;
+				}
+			}
+			myJoint = myPrimitive.getMyJoints().get(___tempMyJointIndex);
+			primitiveJoint = primitive.getMyJoints().get(___tempPrimitiveJointIndex);
+			
+			if (myRelation == Relation.PRIMITIVE_IS_CHILD) {
+				myJoint.addChild(primitiveJoint);
+				primitiveJoint.connectToParent(myJoint);
+				//myJoint.setMyPrimitive((AbstractDrawingPrimitive)myPrimitive);
+			} else {
+				primitiveJoint.addChild(myJoint);
+				myJoint.connectToParent(primitiveJoint);
+			}
+		}
 		
 	}
 	public boolean checkTouch(float touch_x, float touch_y);
@@ -90,8 +107,10 @@ public interface DrawingPrimitive  {
 	public ArrayList<Connection> getMyConnections();
 	public void setActiveColour();
 	public void setUnactiveColour();
-	/*public void setMyNumber(int newNumber);
-	public int getMyNumber();*/
+	public void setMyNumber(int newNumber);
+	public int getMyNumber();
+	public void restoreMyFieldsByIndexes(LinkedList<DrawingPrimitive> q);
+	public boolean hasParent();
 	
 	public  void checkOutOfBounds();
 	enum PrimitiveType {

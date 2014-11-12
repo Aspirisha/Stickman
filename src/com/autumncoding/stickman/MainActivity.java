@@ -1,5 +1,9 @@
 package com.autumncoding.stickman;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+
 import android.app.Activity;
 import android.graphics.Rect;
 import android.os.Bundle;
@@ -8,8 +12,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
+import android.widget.Toast;
 
 import com.autamncoding.stickman.R;
+import com.scorchworks.demo.SimpleFileDialog;
 
 public class MainActivity extends Activity {
 	static int layout_height;
@@ -100,17 +106,58 @@ public class MainActivity extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    // Handle item selection
+		
 	    switch (item.getItemId()) {
 	        case R.id.action_save:
 	        	synchronized (GameData.getLocker()) {
-	        		Animation.getInstance().SaveToFile("AnimSave.sav");
+	        		SimpleFileDialog FileOpenDialog =  new SimpleFileDialog(MainActivity.this, "FileSave",
+	        				new SimpleFileDialog.SimpleFileDialogListener()
+	        		{
+	        			@Override
+	        			public void onChosenDir(String chosenDir) 
+	        			{
+	        				// The code in this function will be executed when the dialog OK button is pushed 
+	        				//m_chosen = chosenDir;
+	        				Animation.getInstance().SaveToFile(chosenDir);
+	        				Toast.makeText(MainActivity.this, "Chosen FileOpenDialog File: " + 
+	        						chosenDir, Toast.LENGTH_LONG).show();
+	        			}
+	        		});
+	        		
+	        		//You can change the default filename using the public variable "Default_File_Name"
+	        		File file = new File(GameData.context.getExternalFilesDir(null), "StickmanSaves");
+	     		    file.mkdirs();
+	        		FileOpenDialog.chooseFile_or_Dir(file.getAbsolutePath());
+	        		FileOpenDialog.Default_File_Name = "";
+
 				}
 	            return true;
 	        case R.id.action_load:
-	        	synchronized (GameData.getLocker()) {
-	        		Animation.getInstance().LoadFormFile("AnimSave.sav");
-	        		m_gameView.updateUpperMenu();
-	        	}
+	        		//Animation.getInstance().LoadFormFile("AnimSave.sav");
+	        		
+	        	SimpleFileDialog FileOpenDialog =  new SimpleFileDialog(MainActivity.this, "FileOpen",
+	        			new SimpleFileDialog.SimpleFileDialogListener()
+	        	{
+	        		@Override
+	        		public void onChosenDir(String chosenDir) 
+	        		{
+	        			// The code in this function will be executed when the dialog OK button is pushed 
+	        			//m_chosen = chosenDir;
+	        			synchronized (GameData.getLocker()) {
+	        				Animation.getInstance().LoadFormFile(chosenDir);
+	        			}
+	        			Toast.makeText(MainActivity.this, "Chosen FileOpenDialog File: " + 
+	        					chosenDir, Toast.LENGTH_LONG).show();
+	        			m_gameView.updateUpperMenu();
+	        		}
+	        	});
+
+	        	//You can change the default filename using the public variable "Default_File_Name"
+	        	File file = new File(GameData.context.getExternalFilesDir(null), "StickmanSaves");
+	        	file.mkdirs();
+	        	FileOpenDialog.chooseFile_or_Dir(file.getAbsolutePath());
+	        	FileOpenDialog.Default_File_Name = "";
+	        		
 	            return true;
 	        default:
 	            return super.onOptionsItemSelected(item);

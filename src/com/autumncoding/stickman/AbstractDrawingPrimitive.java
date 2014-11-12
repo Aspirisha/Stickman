@@ -1,5 +1,6 @@
 package com.autumncoding.stickman;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -36,18 +37,6 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 	public Context getContext() {
 		return m_context;
 	}
-
-	/*void writeObject(java.io.ObjectOutputStream out) {
-		try {
-			out.writeObject(joints);
-			out.writeObject(hasParent);
-			out.writeObject(m_connections);
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}*/
 	
 	@Override
 	public boolean tryConnection(LinkedList<DrawingPrimitive> neighbours) {
@@ -263,5 +252,55 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 	public ArrayList<Connection> getMyConnections() {
 		return m_connections;
 	}
+	
+	private void writeObject(java.io.ObjectOutputStream  stream) throws IOException {
+		stream.writeInt(m_connections.size());
+		for (Connection con : m_connections)
+			stream.writeObject(con);
+		stream.writeInt(joints.size());
+		for (Joint j : joints)
+			stream.writeObject(j);
+		stream.writeBoolean(hasParent);
+		stream.writeInt(m_treeNumber);
+		stream.writeBoolean(isScalable);
+		stream.writeInt(m_number);
+	}
+	
+	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
+		m_connections = new ArrayList<DrawingPrimitive.Connection>();
+		int sz = stream.readInt();
+		for (int i = 0; i < sz; i++) 
+			m_connections.add((Connection)stream.readObject());
+		
+		sz = stream.readInt();
+		joints = new ArrayList<Joint>();
+		for (int i = 0; i < sz; i++) 
+			joints.add((Joint)stream.readObject());
+		for (Joint j : joints)
+			j.setMyPrimitive(this);
+		hasParent = stream.readBoolean();
+		m_treeNumber = stream.readInt();
+		isScalable = stream.readBoolean();
+		m_number = stream.readInt();
+	}
+	
+	public void restoreMyFieldsByIndexes(LinkedList<DrawingPrimitive> q) { // should be called after all the primitives of the frame are loaded
+		for (Connection con: m_connections)
+			con.reastoreMyFieldsMyIndexes(q, this);	
+	}
+	
+	@Override
+	public void setMyNumber(int newNumber) {
+		m_number = newNumber;
+	}
 
+	@Override
+	public int getMyNumber() {
+		return m_number;
+	}
+	
+	@Override
+	public boolean hasParent() {
+		return hasParent;
+	}
 }

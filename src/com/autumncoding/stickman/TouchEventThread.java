@@ -88,7 +88,7 @@ public class TouchEventThread extends Thread {
 			startTime = System.currentTimeMillis();
 			long dt = startTime - game_data.getPrevDrawingTime();
 			// work here
-			if ((!touch_events.isEmpty() || !bufferTouchEvents.isEmpty()) && dt <= max_delta_between_drawings) {
+			if (dt <= max_delta_between_drawings) {
 				processEvent();
 			}
 			
@@ -106,7 +106,7 @@ public class TouchEventThread extends Thread {
 	
 	private void processEvent() {
 		MotionEvent event = null;
-		long eventTime = 0;
+		Long eventTime = (long) 0;
 		
 		if (lock.tryLock()) {
 			touch_events.addAll(bufferTouchEvents);
@@ -119,6 +119,9 @@ public class TouchEventThread extends Thread {
 		} else {
 			return;
 		}
+		
+		if (event == null)
+			return;
 		
 		if (event.getY() < GameData.getMenuBottom()) {
 			processEventInMenu(event);
@@ -304,6 +307,7 @@ public class TouchEventThread extends Thread {
 			}
 			synchronized (GameData.getLocker()) {
 				GameData.drawing_queue.add(newPrimitive);
+				newPrimitive.setMyNumber(GameData.drawing_queue.size() - 1);
 				GameData.drawnPoints.clear();
 				if (GameData.drawing_queue.size() == GameData.maxPrimitivesNumber) {
 					currentWorkingState = TouchState.DRAGGING;

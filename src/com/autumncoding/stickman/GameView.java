@@ -254,6 +254,10 @@ public class GameView extends SurfaceView {
 			m_menuIcons.get(3).setAvailable();
 		else
 			m_menuIcons.get(3).setUnavailable();
+	    if (Animation.getInstance().hasPrevFrame())
+	    	m_menuIcons.get(2).setAvailable();
+	    else
+	    	m_menuIcons.get(2).setUnavailable();
     }
 }
 
