@@ -16,18 +16,31 @@ import java.util.LinkedList;
 import android.os.Environment;
 import android.util.Log;
 
+
+
 public class Animation implements Serializable {
+	enum AnimationState {
+		EDIT,
+		PLAY
+	}
 	private static final long serialVersionUID = -1101650775627736580L;
 	private static Animation instance = new Animation();
 	private ArrayList<AnimationFrame> m_frames;
 	private int m_currentFrameIndex = 0;
 	private AnimationFrame m_currentFrame = null;
 	private AnimationFrame m_prevFrame = null;
+	private float m_fps = 1;
+	private AnimationState m_state = AnimationState.EDIT;
+	private Thread m_animationThread = null;
 	
 	private Animation() {
 		m_frames = new ArrayList<AnimationFrame>();
 		m_currentFrame = new AnimationFrame();
 		m_frames.add(m_currentFrame);
+	}
+	
+	public AnimationState getState() {
+		return m_state;
 	}
 	
 	public static Animation getInstance() {
@@ -42,9 +55,101 @@ public class Animation implements Serializable {
 		return m_prevFrame;
 	}
 	
+	public int getCurrentFrameNumber() {
+		return m_currentFrameIndex + 1;
+	}
+	
+	public int getFramesNumber() {
+		return m_frames.size();
+	}
+	
 	public void addFrame() {
 		m_currentFrame = m_currentFrame.copy();
 		m_frames.add(m_currentFrameIndex + 1, m_currentFrame);
+	}
+	
+	public void removeFrame() {
+		if (m_frames.size() == 1)
+			return;
+		m_frames.remove(m_currentFrameIndex);
+		if (m_currentFrameIndex > 0) {
+			m_currentFrameIndex--;
+			if (m_currentFrameIndex > 0) {
+				m_prevFrame = m_frames.get(m_currentFrameIndex - 1);
+				GameData.prevDrawingQueue = m_prevFrame.getPrimitives();
+				
+				for (DrawingPrimitive pr : GameData.prevDrawingQueue)
+					pr.setUnactiveColour();
+			}
+		}
+		
+		m_currentFrame = m_frames.get(m_currentFrameIndex);
+		GameData.drawing_queue = m_currentFrame.getPrimitives();
+		
+		for (DrawingPrimitive pr : GameData.drawing_queue)
+			pr.setActiveColour();
+	}
+	
+	private void onStopAnimation() {
+		m_state = AnimationState.EDIT;
+		GameData.menuPencil.setActive();
+		GameData.menuPlay.setActive();
+		GameData.menuBin.setAvailable();
+		GameData.menuDrag.setTouched();
+		GameData.menuNew.setAvailable();
+		
+		m_animationThread.stop();
+		m_animationThread = null;
+		if (m_currentFrameIndex > 0) {
+			m_prevFrame = m_frames.get(m_currentFrameIndex - 1);
+			GameData.prevDrawingQueue = m_prevFrame.getPrimitives();
+			GameData.menuPrev.setAvailable();
+		}
+		if (hasNextFrame())
+			GameData.menuNext.setAvailable();
+	}
+	
+	public void Play(boolean play) {
+		if (play && m_state == AnimationState.EDIT) {
+			m_state = AnimationState.PLAY;
+			m_animationThread = new Thread() {
+				@Override
+				public void run() {
+					float sleepTime = (long) (1000f / m_fps);
+					GameData.menuPencil.setUnavailable();
+					GameData.menuBin.setUnavailable();
+					GameData.menuDrag.setUnavailable();
+					GameData.menuNew.setUnavailable();
+					GameData.menuPrev.setUnavailable();
+					GameData.menuNext.setUnavailable();
+					while (true) {
+						try {
+							sleep((long) sleepTime);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						synchronized (GameData.getLocker()) {
+							if (!hasNextFrame())
+								break;
+							switchToNextFrame();
+							GameData.prevDrawingQueue = null;
+							GameData.menuPrev.setUnavailable();
+						}
+						
+					}
+					synchronized (GameData.getLocker()) {
+						 onStopAnimation();
+					}
+					
+				}
+			};
+			m_animationThread.start();
+		} else if (!play && m_state == AnimationState.PLAY) {
+			synchronized (GameData.getLocker()) {
+				 onStopAnimation();
+			}
+		}
 	}
 	
 	public AnimationFrame switchToNextFrame() {
@@ -58,6 +163,10 @@ public class Animation implements Serializable {
 				pr.setActiveColour();
 			for (DrawingPrimitive pr : GameData.prevDrawingQueue)
 				pr.setUnactiveColour();
+			
+			GameData.menuPrev.setAvailable();
+			if (!hasNextFrame())
+				GameData.menuNext.setUnavailable();
 			return m_currentFrame;
 		}
 		
@@ -81,7 +190,10 @@ public class Animation implements Serializable {
 			else {
 				m_prevFrame = null;
 				GameData.prevDrawingQueue = null;
+				GameData.menuPrev.setUnavailable();
 			}
+			
+			GameData.menuNext.setAvailable();
 			return m_currentFrame;
 		}
 		return null;

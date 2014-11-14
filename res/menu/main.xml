@@ -4,6 +4,7 @@
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         android:showAsAction="never"
+        android:icon="@drawable/settings_menu"
         android:title="@string/action_settings"/>
     <group android:id="@+id/group1" android:menuCategory="container">
         <item 
@@ -12,6 +13,7 @@
             android:title="@string/str_save" />
         <item 
             android:id="@+id/action_load" 
+            android:icon="@drawable/load_menu"
             android:title="@string/str_load">
             
         </item>

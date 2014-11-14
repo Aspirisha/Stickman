@@ -51,6 +51,7 @@ public class GameData {
     public static Paint menu_line_paint;
     public static final Paint menuBitmapPaint;
     public static Paint debug_paint;
+    public static Paint textPaint;
     public static Paint prev_frame_line_paint;
     public static Paint prev_frame_joint_paint;
     
@@ -66,12 +67,21 @@ public class GameData {
 	
 	
 	// menu info
-	public static final int numberOfMenuIcons = 6;
+	public static final int numberOfMenuIcons = 7;
 	public static final float menuIconsTop = 4f;
 	public static int topMenuHeight = 0;
 	
 	private static float menuBottom = 0;
 	public static ArrayList<PointF> drawnPoints; 
+	
+	public static MenuIcon menuPencil = null;
+	public static MenuIcon menuDrag = null;
+	public static MenuIcon menuPrev = null;
+	public static MenuIcon menuNext = null;
+	public static MenuIcon menuNew = null;
+	public static MenuIcon menuPlay = null;
+	public static MenuIcon menuBin = null;
+	public static ArrayList<MenuIcon> menuIcons;
 	
     static {
     	instance = new GameData();
@@ -84,7 +94,6 @@ public class GameData {
 		line_paint.setColor(Color.BLACK);
 		line_paint.setAntiAlias(true);
 		line_paint.setDither(true);
-		line_paint.setColor(Color.BLACK);
 		line_paint.setStrokeWidth(7f);
 		line_paint.setStyle(Paint.Style.STROKE);
 		line_paint.setStrokeJoin(Paint.Join.ROUND);
@@ -92,6 +101,13 @@ public class GameData {
 		
 		prev_frame_line_paint = new Paint(line_paint);
 		prev_frame_line_paint.setColor(Color.argb(220, 200, 200, 200));
+		
+		textPaint = new Paint();
+		textPaint.setColor(Color.GRAY);
+		textPaint.setAntiAlias(true);
+		textPaint.setStrokeWidth(1f);
+		textPaint.setStyle(Paint.Style.STROKE);
+		textPaint.setTextSize(16);
 		
 		debug_paint = new Paint();
     	debug_paint.setColor(Color.BLACK);
@@ -138,6 +154,7 @@ public class GameData {
 		
     	menuBitmapPaint = new Paint();
     }
+   
     
     private GameData() {
     	drawing_queue = Animation.getInstance().getFrame(0);

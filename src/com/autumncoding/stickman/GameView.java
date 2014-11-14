@@ -132,7 +132,6 @@ public class GameView extends SurfaceView {
         	d_timePassedBetweenFpsRecounts = 0;
         }
         canvas.drawText("FPS: " + Float.toString(d_fps), 30, 470, debug_paint);
-        
         synchronized (GameData.getLocker()) {
         	if (GameData.prevDrawingQueue != null) {
 	        	for (DrawingPrimitive pr : GameData.prevDrawingQueue)
@@ -158,6 +157,9 @@ public class GameView extends SurfaceView {
 	        
 	        if (m_menuBackground != null)
             	drawMenu(canvas);
+	        canvas.drawText(Integer.toString(Animation.getInstance().getCurrentFrameNumber()) + 
+	        		"/" + Integer.toString(Animation.getInstance().getFramesNumber()), 
+	        		MainActivity.layout_width - 50, GameData.getMenuBottom() + 20, GameData.textPaint);
         }
         canvas.restore();
     }
@@ -181,14 +183,28 @@ public class GameView extends SurfaceView {
 	    	for (int i = 0; i < GameData.numberOfMenuIcons; i++)
 	    		m_menuIcons.get(i).setTouchedBitmap(bitmapList.get(i + 1 + GameData.numberOfMenuIcons));
 	    
-	    	m_menuIcons.get(0).setUnavailableBitmap(bitmapList.get(1 + 2 * GameData.numberOfMenuIcons));
-	    	m_menuIcons.get(2).setUnavailableBitmap(bitmapList.get(2 + 2 * GameData.numberOfMenuIcons));
-	    	m_menuIcons.get(3).setUnavailableBitmap(bitmapList.get(3 + 2 * GameData.numberOfMenuIcons));
+	    	GameData.menuPencil = m_menuIcons.get(0);
+	    	GameData.menuDrag = m_menuIcons.get(1);
+	    	GameData.menuPrev = m_menuIcons.get(2);
+	    	GameData.menuNext = m_menuIcons.get(3);
+	    	GameData.menuNew = m_menuIcons.get(4);
+	    	GameData.menuBin = m_menuIcons.get(5);
+	    	GameData.menuPlay = m_menuIcons.get(6);
+	    	
+	    	GameData.menuPencil.setUnavailableBitmap(bitmapList.get(1 + 2 * GameData.numberOfMenuIcons));
+	    	GameData.menuDrag.setUnavailableBitmap(bitmapList.get(2 + 2 * GameData.numberOfMenuIcons));
+	    	GameData.menuPrev.setUnavailableBitmap(bitmapList.get(3 + 2 * GameData.numberOfMenuIcons));
+	    	GameData.menuNext.setUnavailableBitmap(bitmapList.get(4 + 2 * GameData.numberOfMenuIcons));
+	    	GameData.menuNew.setUnavailableBitmap(bitmapList.get(5 + 2 * GameData.numberOfMenuIcons));
+	    	GameData.menuBin.setUnavailableBitmap(bitmapList.get(6 + 2 * GameData.numberOfMenuIcons));
 	    	
 	    	m_menuIcons.get(0).setTouched();
 	    	m_menuIcons.get(2).setUnavailable();
 	    	m_menuIcons.get(3).setUnavailable();
 	    	GameData.setMenuBottom(m_menuBackground.getHeight());
+	    	
+	    	GameData.menuIcons = m_menuIcons;
+
 	    	
 	    	Bitmap b = bitmapList.get(1);
 	    	float dx = (MainActivity.layout_width - GameData.numberOfMenuIcons * b.getWidth()) / (float)GameData.numberOfMenuIcons;
@@ -233,18 +249,28 @@ public class GameView extends SurfaceView {
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.prev, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.next, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.new_frame, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.bin, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.play, options));
+	        
 	        
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.pencil_touched, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.hand_touched, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.prev_touched, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.next_touched, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.new_frame_touched, options));
-	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.play_touched, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.bin_touched, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.stop_touched, options));
 	        
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.pencil_unavailable, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.hand_unavailable, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.prev_unavailable, options));
 	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.next_unavailable, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.new_frame_unavailable, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.bin_unavailable, options));
+	        
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.stop, options));
+	        output.add(BitmapFactory.decodeResource(getResources(), R.drawable.stop_touched, options));
+	        
 			return output;
 		}
     }

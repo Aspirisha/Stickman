@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.autumncoding.stickman.Animation.AnimationState;
+
 import android.graphics.PointF;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -45,14 +47,6 @@ public class TouchEventThread extends Thread {
 	
 	TouchState currentWorkingState = TouchState.DRAWING;
 	
-	private ArrayList<MenuIcon> menuIcons = null;
-	private MenuIcon menuPencil = null;
-	private MenuIcon menuDrag = null;
-	private MenuIcon menuPrev = null;
-	private MenuIcon menuNext = null;
-	private MenuIcon menuNew = null;
-	private MenuIcon menuPlay = null;
-	
 	public void setRunning(boolean run) {
         isRunning = run;
 	}
@@ -71,13 +65,6 @@ public class TouchEventThread extends Thread {
 	
 	public void init(ArrayList<MenuIcon> icons) {
 		game_data = GameData.getInstance();
-		menuPencil = icons.get(0);
-		menuDrag = icons.get(1);
-		menuPrev = icons.get(2);
-		menuNext = icons.get(3);
-		menuNew = icons.get(4);
-		menuPlay = icons.get(5);
-    	menuIcons = icons;
 	}
 	
 	@Override
@@ -160,7 +147,7 @@ public class TouchEventThread extends Thread {
 			switch (eventCode) {
 			case MotionEvent.ACTION_DOWN: {
 				for (int i = 0; i < GameData.numberOfMenuIcons; ++i) {
-					if (menuIcons.get(i).checkTouchedNoSet(x, y))
+					if (GameData.menuIcons.get(i).checkTouchedNoSet(x, y))
 						touchedMenuIndex = i;
 				}
 
@@ -169,38 +156,41 @@ public class TouchEventThread extends Thread {
 				switch (touchedMenuIndex) {
 				case 0:
 					currentWorkingState = TouchState.DRAWING;
-					menuDrag.setUntouched();
-					menuPlay.setUntouched();
+					GameData.menuDrag.setUntouched();
+					GameData.menuPlay.setUntouched();
 					break;
 				case 1:
 					currentWorkingState = TouchState.DRAGGING;
-					menuPencil.setUntouched();
-					menuPlay.setUntouched();
+					GameData.menuPencil.setUntouched();
+					GameData.menuPlay.setUntouched();
 					break;
 				case 2:
 					Animation.getInstance().switchToPrevFrame();
-					menuNext.setAvailable();
-					if (!Animation.getInstance().hasPrevFrame())
-						menuPrev.setUnavailable();
+					
 					lastTouchMenuIndex = 2;
 					break;
 				case 3:
 					Animation.getInstance().switchToNextFrame();
-					
-					menuPrev.setAvailable();
-					if (!Animation.getInstance().hasNextFrame())
-						menuNext.setUnavailable();
 					lastTouchMenuIndex = 3;
 					break;
 				case 4:
 					Animation.getInstance().addFrame();
-					menuNext.setActive();
+					GameData.menuNext.setActive();
 					lastTouchMenuIndex = 4;
 					break;
 				case 5:
+					Animation.getInstance().removeFrame();
+					if (!Animation.getInstance().hasNextFrame())
+						GameData.menuNext.setUnavailable();
+					if (!Animation.getInstance().hasPrevFrame())
+						GameData.menuPrev.setUnavailable();
+					lastTouchMenuIndex = 5;
+					break;
+				case 6:
 					currentWorkingState = TouchState.WATCHING;
-					menuPencil.setUntouched();
-					menuDrag.setUntouched();
+					Animation.getInstance().Play(true);
+					GameData.menuPencil.setUntouched();
+					GameData.menuDrag.setUntouched();
 					break;
 				default:
 					lastTouchMenuIndex = touchedMenuIndex;
@@ -211,7 +201,7 @@ public class TouchEventThread extends Thread {
 
 			case MotionEvent.ACTION_UP: {
 				if (lastTouchMenuIndex != -1) { // check that needed action was performed (in fact we had to put it to a queue of needed actions)
-					menuIcons.get(lastTouchMenuIndex).setUntouched();
+					GameData.menuIcons.get(lastTouchMenuIndex).setUntouched();
 				}
 			}
 			}
@@ -301,7 +291,7 @@ public class TouchEventThread extends Thread {
 				float r = 30f; //(float) Math.sqrt(dx * dx + dy * dy);
 				r = Math.max(r, GameData.min_circle_radius);
 				
-				circle.setPosition(cx, cy, r, 0);
+				circle.setPosition(cx, cy, cx + r, cy, r);
 				
 				newPrimitive = circle;
 			}
@@ -311,8 +301,8 @@ public class TouchEventThread extends Thread {
 				GameData.drawnPoints.clear();
 				if (GameData.drawing_queue.size() == GameData.maxPrimitivesNumber) {
 					currentWorkingState = TouchState.DRAGGING;
-					menuPencil.setUnavailable();
-					menuDrag.setTouched();
+					GameData.menuPencil.setUnavailable();
+					GameData.menuDrag.setTouched();
 				}
 			}
 			m_drawingHasIntersection = false;
@@ -381,7 +371,7 @@ public class TouchEventThread extends Thread {
 						DrawingPrimitive pr = GameData.drawing_queue.get(index);
 						if (pr.isOutOfBounds()) {
 							Animation.getInstance().getCurrentframe().removePrimitive(pr);
-							menuPencil.setAvailable();
+							GameData.menuPencil.setAvailable();
 						} else {
 							pr.setActiveColour();
 							index++;
@@ -397,7 +387,11 @@ public class TouchEventThread extends Thread {
 	
 	private void processEventPlaying(MotionEvent event)
 	{
-				
+		synchronized (GameData.getLocker()) {
+			if (Animation.getInstance().getState() == AnimationState.EDIT) {
+				currentWorkingState = TouchState.DRAGGING;
+			}
+		}
 	}
 	
 	public void pushEvent(MotionEvent ev) {

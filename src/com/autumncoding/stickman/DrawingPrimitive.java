@@ -95,7 +95,6 @@ public interface DrawingPrimitive  {
 	public void disconnectFromEverybody();
 	
 	public void applyMove(float new_x, float new_y, float prev_x, float prev_y, boolean isScaling);
-	public void copy(DrawingPrimitive p);
 	
 	public ArrayList<Joint> getMyJoints();
 	public void updateSubtreeNumber(int number);

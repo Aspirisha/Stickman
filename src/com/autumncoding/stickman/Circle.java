@@ -11,8 +11,7 @@ public class Circle extends AbstractDrawingPrimitive {
 	private static final long serialVersionUID = 5019188822441365318L;
 	private Vector2DF m_centre;
 	private Vector2DF m_jointPoint;
-	private float r;
-	private float angle;
+	private float m_radius;
 	
 	/*********************** touch data *********************************************/
 	
@@ -30,15 +29,13 @@ public class Circle extends AbstractDrawingPrimitive {
 	public Circle(Context context) {
 		super(context);
 		m_centre = new Vector2DF(100, 100);
-		r = 10;
+		m_radius = 10;
 		
 		joints = new ArrayList<Joint>(1);
 		
-		m_jointPoint = new Vector2DF(m_centre.x + r, m_centre.y);
+		m_jointPoint = new Vector2DF(m_centre.x + m_radius, m_centre.y);
 		joints.add(new Joint(this, m_jointPoint));
-		
-		angle = 0;
-		
+				
 		m_line_paint = GameData.line_paint;
 		m_joint_paint = GameData.joint_paint;
 	}
@@ -57,8 +54,8 @@ public class Circle extends AbstractDrawingPrimitive {
 		boolean circle_touched = false;
 		if (!joint_touched) {
 			float dist = (m_centre.x - touch_x) * (m_centre.x - touch_x) + (m_centre.y - touch_y) * (m_centre.y - touch_y);
-			float min_dist_in = (r - GameData.circle_touchable_dr) * (r - GameData.circle_touchable_dr);
-			float max_dist_in = (r + GameData.circle_touchable_dr) * (r + GameData.circle_touchable_dr);
+			float min_dist_in = (m_radius - GameData.circle_touchable_dr) * (m_radius - GameData.circle_touchable_dr);
+			float max_dist_in = (m_radius + GameData.circle_touchable_dr) * (m_radius + GameData.circle_touchable_dr);
 			circle_touched = (dist >= min_dist_in && dist <= max_dist_in);
 		}
 				
@@ -99,7 +96,7 @@ public class Circle extends AbstractDrawingPrimitive {
 
 	@Override
 	public void draw(Canvas canvas) {
-		canvas.drawCircle(m_centre.x, m_centre.y, r, m_line_paint);
+		canvas.drawCircle(m_centre.x, m_centre.y, m_radius, m_line_paint);
 		canvas.drawCircle(m_jointPoint.x, m_jointPoint.y, GameData.joint_radius_visible, m_joint_paint);
 	}
 
@@ -152,47 +149,22 @@ public class Circle extends AbstractDrawingPrimitive {
 		}
 	}
 	
-	public void setPosition(float _x, float _y, float _r, float _angle) {
+	public void setPosition(float _x, float _y, float joint_x, float joint_y, float _r) {
 		m_centre.x = _x;
 		m_centre.y = _y;
-		r = _r;
+		m_radius = _r;
 		
-		if (r < GameData.min_circle_radius)
-			r = GameData.min_circle_radius;
-		m_jointPoint.x = m_centre.x + r;
-		m_jointPoint.y = m_centre.y;
+		if (m_radius < GameData.min_circle_radius)
+			m_radius = GameData.min_circle_radius;
+		m_jointPoint.x = joint_x;
+		m_jointPoint.y = joint_y;
 		
 		joints.get(0).setMyPoint(m_jointPoint);
-		
-		angle = _angle;
-		rotate(angle, m_centre.x, m_centre.y);
 	}
 
 	@Override
 	public float getDistToMe(float from_x, float from_y) {
 		return (m_jointPoint.x - from_x) * (m_jointPoint.x - from_x) + (m_jointPoint.y - from_y) * (m_jointPoint.y - from_y);
-	}
-	
-	public void copy(DrawingPrimitive primitive) {
-		if (primitive == null)
-			return;
-		
-		if (primitive.GetType() != PrimitiveType.CIRCLE)
-			return;
-		Circle cir = (Circle)primitive;
-		
-		m_centre.x = cir.m_centre.x;
-		m_centre.y = cir.m_centre.y;
-		r = cir.r;
-		
-		m_jointPoint.x = cir.m_jointPoint.x;
-		m_jointPoint.y = cir.m_jointPoint.y;
-		m_centre.y = cir.m_centre.y;
-		
-		angle = cir.angle;
-		m_isTouched = cir.m_isTouched;
-
-		m_touchState = cir.m_touchState;
 	}
 
 	@Override
@@ -206,17 +178,6 @@ public class Circle extends AbstractDrawingPrimitive {
 		if (!m_isOutOfBounds) {
 			m_joint_paint = GameData.joint_paint;
 			m_line_paint = GameData.line_paint;
-		}
-	}
-	
-	public void stretch(float new_x, float new_y) {
-		float new_r = (float)Math.sqrt((m_centre.x - new_x) * (m_centre.x - new_x) + (m_centre.y - new_y) * (m_centre.y - new_y));
-		
-		if (new_r > GameData.min_circle_radius && new_r < GameData.max_circle_radius) {
-			r = new_r;
-			
-			m_jointPoint.x = (float) (m_centre.x + r * Math.cos(angle));
-			m_centre.y = (float) (m_centre.y + r * Math.sin(angle));
 		}
 	}
 	
@@ -235,7 +196,7 @@ public class Circle extends AbstractDrawingPrimitive {
 		case JOINT: {
 			if (!isScaling || !isScalable) {
 				float len1 = (float) Math.sqrt((new_x - m_centre.x) * (new_x - m_centre.x) + (new_y - m_centre.y) * (new_y - m_centre.y));
-				float len2 = r;
+				float len2 = m_radius;
 				float cos_theta = ((new_x - m_centre.x) * (m_jointPoint.x - m_centre.x) + (new_y - m_centre.y) * (m_jointPoint.y - m_centre.y)) / (len1 * len2);
 				
 		    	if (cos_theta > 1.0f)
@@ -246,12 +207,12 @@ public class Circle extends AbstractDrawingPrimitive {
 				float theta = (float) Math.acos(cos_theta); // NB: using acos is not very cool just so: need to be sue fi <= 180
 				if ((m_jointPoint.x - m_centre.x) * (new_y - m_centre.y) - (new_x - m_centre.x) * (m_jointPoint.y - m_centre.y) < 0)
 		    		theta = -theta;
-				angle += theta;
+
 				rotate(theta, m_centre.x, m_centre.y);
 			} else {
 				Vector2DF v = new Vector2DF(new_x, new_y);
 				float newLen = Vector2DF.dist(v, m_centre);
-				scale(m_centre.x, m_centre.y, newLen / r);
+				scale(m_centre.x, m_centre.y, newLen / m_radius);
 			}
 			checkOutOfBounds();
 			break;
@@ -265,11 +226,11 @@ public class Circle extends AbstractDrawingPrimitive {
 
 	@Override
 	public void scale(float cx, float cy, float rate) {
-		float temp_r = r * rate;
+		float temp_r = m_radius * rate;
 		if (temp_r < GameData.min_stick_length)
 		{
 			temp_r = GameData.min_circle_radius;
-			rate = temp_r / r;
+			rate = temp_r / m_radius;
 		}
 		
 		m_jointPoint.x = cx + rate * (m_jointPoint.x - cx);
@@ -277,16 +238,16 @@ public class Circle extends AbstractDrawingPrimitive {
 		
 		joints.get(0).setMyPoint(m_jointPoint);
 		
-    	r = temp_r;
+    	m_radius = temp_r;
 	}
 	
 	public void checkOutOfBounds() {
 		
 		boolean newOutOfBoundsState = false;
-		if (m_centre.x - r < 0 || m_centre.x + r > MainActivity.layout_width) {
+		if (m_centre.x - m_radius < 0 || m_centre.x + m_radius > MainActivity.layout_width) {
 			newOutOfBoundsState = true;
 		}
-		if (m_centre.y - r < GameData.topMenuHeight || m_centre.y + r > MainActivity.layout_height) {
+		if (m_centre.y - m_radius < GameData.topMenuHeight || m_centre.y + m_radius > MainActivity.layout_height) {
 			newOutOfBoundsState = true;
 		}
 		
@@ -327,7 +288,7 @@ public class Circle extends AbstractDrawingPrimitive {
 	public DrawingPrimitive getCopy() {
 		Circle circle = new Circle(m_context);
 		
-		circle.setPosition(m_centre.x, m_centre.y, r, angle); 
+		circle.setPosition(m_centre.x, m_centre.y, m_jointPoint.x, m_jointPoint.y, m_radius); 
 		
 		circle.m_isTouched = m_isTouched;
 		circle.hasParent = hasParent;
@@ -353,16 +314,13 @@ public class Circle extends AbstractDrawingPrimitive {
 	private void writeObject(java.io.ObjectOutputStream  stream) throws IOException {
 		stream.writeObject(m_centre);
 		stream.writeObject(m_jointPoint);
-		stream.writeFloat(r);
-		stream.writeFloat(angle);
-		
+		stream.writeFloat(m_radius);		
 	}
 	
 	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
 		m_centre = (Vector2DF) stream.readObject();
 		m_jointPoint = (Vector2DF) stream.readObject();
-		r = stream.readFloat();
-		angle = stream.readFloat();
+		m_radius = stream.readFloat();
 	}
 }
 	
