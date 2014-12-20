@@ -18,6 +18,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import com.autamncoding.stickman.R;
+import com.autumncoding.stickman.TouchEventThread.CurrentDrawingState;
 
 public class GameView extends SurfaceView {
 	private GameData game_data;
@@ -58,7 +59,7 @@ public class GameView extends SurfaceView {
     	m_pointsLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     	m_pointsLinePaint.setStyle(Paint.Style.STROKE);
     	m_pointsLinePaint.setStrokeWidth(2);
-    	m_pointsLinePaint.setColor(Color.BLACK);
+    	m_pointsLinePaint.setColor(Color.RED);
     	
     	touch_thread = new TouchEventThread(this);
     	touch_thread.init(m_menuIcons);
@@ -133,6 +134,8 @@ public class GameView extends SurfaceView {
         }
         canvas.drawText("FPS: " + Float.toString(d_fps), 30, 470, debug_paint);
         synchronized (GameData.getLocker()) {
+        	CurrentDrawingState ds = touch_thread.getCurrentDrawingState();
+        	
         	if (GameData.prevDrawingQueue != null) {
 	        	for (DrawingPrimitive pr : GameData.prevDrawingQueue)
 	        		pr.draw(canvas);
@@ -152,8 +155,20 @@ public class GameView extends SurfaceView {
 	            }
 	        }
 	        
+	        m_pointsLinePaint.setColor(Color.GRAY);
 	        canvas.drawPath(path, m_pointsLinePaint);
 	        path.reset();
+	        
+	        if (ds.m_isDrawingProcess) {
+		        m_pointsLinePaint.setColor(Color.RED);
+		        if (!ds.m_hasIntersection) {
+		        	canvas.drawLine(ds.m_currentDrawingPoint.x, ds.m_currentDrawingPoint.y, 
+		        			ds.m_startDrawingPoint.x, ds.m_startDrawingPoint.y, m_pointsLinePaint);
+		        } else {
+		        	canvas.drawCircle(ds.m_centre.x, ds.m_centre.y, ds.m_radius, m_pointsLinePaint);
+		        }
+	        }
+	        
 	        
 	        if (m_menuBackground != null)
             	drawMenu(canvas);

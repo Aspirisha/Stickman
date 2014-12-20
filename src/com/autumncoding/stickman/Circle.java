@@ -31,11 +31,19 @@ public class Circle extends AbstractDrawingPrimitive {
 		m_centre = new Vector2DF(100, 100);
 		m_radius = 10;
 		
-		joints = new ArrayList<Joint>(1);
-		
 		m_jointPoint = new Vector2DF(m_centre.x + m_radius, m_centre.y);
 		joints.add(new Joint(this, m_jointPoint));
 				
+		m_line_paint = GameData.line_paint;
+		m_joint_paint = GameData.joint_paint;
+	}
+	
+	public Circle(Circle cir) {
+		super(cir);
+		m_centre = new Vector2DF(cir.m_centre);
+		m_jointPoint = new Vector2DF(cir.m_jointPoint);
+		m_radius = cir.m_radius;
+		joints.add(new Joint(this, m_jointPoint));
 		m_line_paint = GameData.line_paint;
 		m_joint_paint = GameData.joint_paint;
 	}
@@ -286,16 +294,7 @@ public class Circle extends AbstractDrawingPrimitive {
 
 	@Override
 	public DrawingPrimitive getCopy() {
-		Circle circle = new Circle(m_context);
-		
-		circle.setPosition(m_centre.x, m_centre.y, m_jointPoint.x, m_jointPoint.y, m_radius); 
-		
-		circle.m_isTouched = m_isTouched;
-		circle.hasParent = hasParent;
-		circle.m_touchState = m_touchState;
-		
-		circle.m_treeNumber = m_treeNumber;
-		circle.m_number = m_number;
+		Circle circle = new Circle(this);
 		return circle;
 	}
 	

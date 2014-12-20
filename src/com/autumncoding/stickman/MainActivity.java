@@ -22,7 +22,7 @@ public class MainActivity extends Activity {
 	static int layout_width;
 	public static final int	VIEW_INTRO = 0;
 	public static final int	VIEW_GAME  = 1;
-	
+	public static final int VIEW_SETTINGS = 2;
 	int	m_viewCur = -1;
 	AppIntro m_app;
 	ViewIntro m_viewIntro;
@@ -76,14 +76,12 @@ public class MainActivity extends Activity {
 		            int contentViewTop = win.findViewById(Window.ID_ANDROID_CONTENT).getTop(); 
 		            // Calculate titleBarHeight by deducting statusBarHeight from contentViewTop  
 		            int titleBarHeight = contentViewTop - statusBarHeight; 
-		            Log.i("MY", "titleHeight = " + titleBarHeight + " statusHeight = " + statusBarHeight + " contentViewTop = " + contentViewTop); 
-		            
+            
 		            DisplayMetrics metrics = new DisplayMetrics();
 		            getWindowManager().getDefaultDisplay().getMetrics(metrics);   
 		            int screenHeight = metrics.heightPixels;
 		            int screenWidth = metrics.widthPixels;
-		            Log.i("MY", "Actual Screen Height = " + screenHeight + " Width = " + screenWidth);   
-		 
+		            
 		            // Now calculate the height that our layout can be set
 		            // If you know that your application doesn't have statusBar added, then don't add here also. Same applies to application bar also 
 		            layout_height = screenHeight - (titleBarHeight + statusBarHeight);
@@ -98,8 +96,7 @@ public class MainActivity extends Activity {
 	}
 
 	
-	public AppIntro getApp()
-	{
+	public AppIntro getApp() {
 		return m_app;
 	}
 	
@@ -108,6 +105,9 @@ public class MainActivity extends Activity {
 	    // Handle item selection
 		
 	    switch (item.getItemId()) {
+	    	case R.id.action_settings:
+	    		
+	    		return true;
 	        case R.id.action_save:
 	        	synchronized (GameData.getLocker()) {
 	        		SimpleFileDialog FileOpenDialog =  new SimpleFileDialog(MainActivity.this, "FileSave",

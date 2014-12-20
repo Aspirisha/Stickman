@@ -63,14 +63,32 @@ public class Animation implements Serializable {
 		return m_frames.size();
 	}
 	
+	public void addPrimitive(DrawingPrimitive pr) {
+		AnimationFrame frame = null;
+		for (int i = m_currentFrameIndex; i < m_frames.size(); i++) {
+			frame = m_frames.get(i);
+			if (frame.getPrimitives().size() < GameData.maxPrimitivesNumber) {
+				DrawingPrimitive newPrimitive = pr.getCopy();
+				frame.addRoot(newPrimitive);
+				frame.getPrimitives().add(newPrimitive);
+			}
+			else
+				break;
+		}
+	}
+	
 	public void addFrame() {
 		m_currentFrame = m_currentFrame.copy();
 		m_frames.add(m_currentFrameIndex + 1, m_currentFrame);
 	}
 	
 	public void removeFrame() {
-		if (m_frames.size() == 1)
+		if (m_frames.size() == 1) {
+			m_currentFrame.clear();
+			GameData.drawing_queue = m_currentFrame.getPrimitives();
+			GameData.prevDrawingQueue = null;
 			return;
+		}
 		m_frames.remove(m_currentFrameIndex);
 		if (m_currentFrameIndex > 0) {
 			m_currentFrameIndex--;
@@ -226,7 +244,6 @@ public class Animation implements Serializable {
 			
 			for (AnimationFrame fr : m_frames) {
 				ostream.writeObject(fr);
-				ostream.flush();
 			}
 			ostream.close();
 		} catch (Exception e) {

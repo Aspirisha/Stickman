@@ -41,11 +41,45 @@ public class TouchEventThread extends Thread {
 	
 	private PointF m_startDrawingPoint = null;
 	private PointF m_farthestDrawingPoint = null;
+	private PointF m_currentDrawingPoint = null;
 	private float m_maxDist = -1;
 	private boolean m_drawingIsStarted = false;
 	private boolean m_drawingHasIntersection = false;
 	
 	TouchState currentWorkingState = TouchState.DRAWING;
+	
+	class CurrentDrawingState
+	{
+		PointF m_startDrawingPoint = new PointF();
+		PointF m_currentDrawingPoint = new PointF();
+		boolean m_hasIntersection = false;
+		PointF m_centre = new PointF();
+		float m_radius = 0;
+		boolean m_isDrawingProcess = false;
+	}
+	
+	private void CopyPoint(PointF dst, PointF src) {
+		dst.x = src.x;
+		dst.y = src.y;
+	}
+	
+	public CurrentDrawingState getCurrentDrawingState()
+	{
+		CurrentDrawingState drawingState = new CurrentDrawingState();
+
+		drawingState.m_hasIntersection = m_drawingHasIntersection;
+		drawingState.m_isDrawingProcess = m_drawingIsStarted;
+		if (m_drawingHasIntersection) {
+			drawingState.m_radius = 30.0f;
+			drawingState.m_centre.x = (m_farthestDrawingPoint.x + m_startDrawingPoint.x) / 2.0f;
+			drawingState.m_centre.y = (m_farthestDrawingPoint.y + m_startDrawingPoint.y) / 2.0f;
+		} else {
+			CopyPoint(drawingState.m_startDrawingPoint, m_startDrawingPoint);
+			CopyPoint(drawingState.m_currentDrawingPoint, m_currentDrawingPoint);
+		}
+		
+		return drawingState;
+	}
 	
 	public void setRunning(boolean run) {
         isRunning = run;
@@ -61,6 +95,7 @@ public class TouchEventThread extends Thread {
 		setName("Touch thread");
 		m_startDrawingPoint = new PointF();
 		m_farthestDrawingPoint = new PointF();
+		m_currentDrawingPoint = new PointF();
 	}
 	
 	public void init(ArrayList<MenuIcon> icons) {
@@ -220,8 +255,8 @@ public class TouchEventThread extends Thread {
 			synchronized (GameData.getLocker()) {
 				GameData.drawnPoints.add(new PointF(x, y));
 			}
-			m_startDrawingPoint.x = x;
-			m_startDrawingPoint.y = y;
+			m_currentDrawingPoint.x = m_startDrawingPoint.x = x;
+			m_currentDrawingPoint.y = m_startDrawingPoint.y = y;
 			m_maxDist = -1;
 			m_drawingIsStarted = true;
 			break;
@@ -234,6 +269,8 @@ public class TouchEventThread extends Thread {
 				float dist = PointF.length(x - p1.x, y - p1.y);
 				if (dist < 5f) // avoid noise from fingers, slow motions etc
 					break;
+				m_currentDrawingPoint.x = x;
+				m_currentDrawingPoint.y = y;
 				GameData.drawnPoints.add(new PointF(x, y));
 			}
 			if (!m_drawingHasIntersection) {
@@ -296,8 +333,9 @@ public class TouchEventThread extends Thread {
 				newPrimitive = circle;
 			}
 			synchronized (GameData.getLocker()) {
-				GameData.drawing_queue.add(newPrimitive);
+				//GameData.drawing_queue.add(newPrimitive);
 				newPrimitive.setMyNumber(GameData.drawing_queue.size() - 1);
+				Animation.getInstance().addPrimitive(newPrimitive);
 				GameData.drawnPoints.clear();
 				if (GameData.drawing_queue.size() == GameData.maxPrimitivesNumber) {
 					currentWorkingState = TouchState.DRAGGING;

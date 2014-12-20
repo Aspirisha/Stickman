@@ -27,9 +27,19 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 		m_context = context;
 		hasParent = false;
 		isScalable = true;
-		Animation.getInstance().getCurrentframe().addRoot(this);
-		m_treeNumber = Animation.getInstance().getCurrentframe().getTreesNumber();
 		m_number = Animation.getInstance().getCurrentframe().getPrimitives().size();
+		m_isTouched = false;
+	}
+	
+	public AbstractDrawingPrimitive(AbstractDrawingPrimitive pr) {
+		// do NOT copy joints or connection
+		m_context = pr.m_context;
+		joints = new ArrayList<Joint>();
+		m_connections = new ArrayList<DrawingPrimitive.Connection>();
+		hasParent = pr.hasParent;
+		isScalable = pr.isScalable;
+		m_treeNumber = pr.m_treeNumber;
+		m_number = pr.m_number;
 		m_isTouched = false;
 	}
 

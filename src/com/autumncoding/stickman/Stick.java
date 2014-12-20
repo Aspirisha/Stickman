@@ -37,51 +37,30 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	public Stick(Context context) {
 		super(context);
 		
-		m_context = context;
-		p1 = new Vector2DF();
-		p2 = new Vector2DF();
-		
-		p1.x = 100;
-		p1.y = 100;
 		length = 100;
-		p2.x = p1.x + length * (float)Math.cos(angle);
-		p2.y = p1.y + length * (float)Math.sin(angle);
 		angle = 0;
+		p1 = new Vector2DF(100, 100);
+		p2 = new Vector2DF(200, 100);
+
 		m_line_paint = GameData.line_paint;
 		m_joint1_paint = GameData.joint_paint;
 		m_joint2_paint = GameData.joint_paint;
 		
 		joints.add(new Joint(this, p1));
 		joints.add(new Joint(this, p2));
-		m_connections = new ArrayList<DrawingPrimitive.Connection>();
 	}
 	
-	public void copy(DrawingPrimitive primitive) {
-		if (primitive == null)
-			return;
-		if (primitive.GetType() != PrimitiveType.STICK)
-			return;
-		
-		Stick st = (Stick)primitive;
-		angle = st.angle;
-		p1.x = st.p1.x;
-		p1.y = st.p1.y;
-		p2.x = st.p2.x;
-		p2.y = st.p2.y;
+	public Stick(Stick st) { // TODO maybe it should be private?
+		super(st);
+		p1 = new Vector2DF(st.p1);
+		p2 = new Vector2DF(st.p2);
 		length = st.length;
-		m_line_paint = st.m_line_paint;
-		m_joint1_paint = st.m_joint1_paint;
-		m_joint2_paint = st.m_joint2_paint;
-		m_isTouched = st.m_isTouched;
-		m_touchState = st.m_touchState;
-		joints.clear();
+		angle = st.angle;
+		m_line_paint = GameData.line_paint;
+		m_joint1_paint = GameData.joint_paint;
+		m_joint2_paint = GameData.joint_paint;
 		joints.add(new Joint(this, p1));
 		joints.add(new Joint(this, p2));
-		isScalable = true;
-		hasParent = false;
-		m_connections.clear();
-		
-		m_context = primitive.getContext();
 	}
 	
 	@Override
@@ -407,21 +386,7 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 
 	@Override
 	public DrawingPrimitive getCopy() {
-		Stick stick = new Stick(m_context);
-		stick.angle = angle;
-		stick.length = length;
-		stick.setPosition(p1.x, p1.y, p2.x, p2.y);
-		
-		stick.m_line_paint = GameData.line_paint;
-		stick.m_joint1_paint = GameData.joint_paint;
-		stick.m_joint2_paint = GameData.joint_paint;
-		stick.m_isTouched = m_isTouched;
-		stick.m_touchState = m_touchState;
-		stick.isScalable = true;
-		stick.hasParent = hasParent;
-		stick.m_context = m_context;
-		
-		stick.m_treeNumber = m_treeNumber;
+		Stick stick = new Stick(this);
 		return stick;
 	}
 

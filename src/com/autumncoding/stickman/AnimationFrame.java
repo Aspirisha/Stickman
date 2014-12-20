@@ -13,6 +13,11 @@ public class AnimationFrame implements Serializable {
 	private LinkedList<DrawingPrimitive> m_primitives;
 	private LinkedList<DrawingPrimitive> m_roots;
 	
+	public void clear() {
+		m_roots.clear();
+		m_primitives.clear();
+	}
+	
 	public LinkedList<DrawingPrimitive> getPrimitives() {
 		return m_primitives;
 	}
@@ -28,7 +33,13 @@ public class AnimationFrame implements Serializable {
 	
 	public void addRoot(DrawingPrimitive root) {
     	m_roots.add(root);
+    	root.setTreeNumber(m_roots.size() - 1);
     }
+	
+	public void addPrimitive(DrawingPrimitive pr) {
+		m_primitives.add(pr);
+		pr.setMyNumber(m_primitives.size() - 1);
+	}
 	
 
     public DrawingPrimitive getRootWithBiggestTreeNumber() {
@@ -41,7 +52,7 @@ public class AnimationFrame implements Serializable {
     		}
     	}
     	
-    	return ret;
+    	return ret; // return m_treesNumber;
     }
     
     public int getTreesNumber() {
