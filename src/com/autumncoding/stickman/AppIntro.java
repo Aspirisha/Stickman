@@ -777,7 +777,7 @@ public class AppIntro
 			rDst.set(m_scrCenterX - (bw>>1), m_scrH - bh, m_scrCenterX + (bw>>1), m_scrH);
 		if (rDst.contains(x,  y))
 		{
-			m_ctx.setView(MainActivity.VIEW_GAME);
+			m_ctx.setView(ViewType.VIEW_GAME);
 			return false;
 		}
 		
@@ -794,7 +794,7 @@ public class AppIntro
 		}
 		
 		// check simple click => switch to next view
-		m_ctx.setView(MainActivity.VIEW_GAME);
+		m_ctx.setView(ViewType.VIEW_GAME);
 		
 		return true;
 	}	// onTouch

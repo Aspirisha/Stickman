@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import com.autamncoding.stickman.R;
 import android.os.Environment;
 import android.util.Log;
 
@@ -30,7 +31,7 @@ public class Animation implements Serializable {
 	private AnimationFrame m_currentFrame = null;
 	private AnimationFrame m_prevFrame = null;
 	private float m_fps = 1;
-	private AnimationState m_state = AnimationState.EDIT;
+	private volatile AnimationState m_state = AnimationState.EDIT;
 	private Thread m_animationThread = null;
 	
 	private Animation() {
@@ -41,6 +42,12 @@ public class Animation implements Serializable {
 	
 	public AnimationState getState() {
 		return m_state;
+	}
+	
+	public void setAnimationFPS(float fps) {
+		if (fps > R.integer.max_animation_fps || fps < 1)
+			return;
+		m_fps = fps;
 	}
 	
 	public static Animation getInstance() {
@@ -63,12 +70,12 @@ public class Animation implements Serializable {
 		return m_frames.size();
 	}
 	
-	public void addPrimitive(DrawingPrimitive pr) {
+	public void addPrimitive(AbstractDrawingPrimitive pr) {
 		AnimationFrame frame = null;
 		for (int i = m_currentFrameIndex; i < m_frames.size(); i++) {
 			frame = m_frames.get(i);
 			if (frame.getPrimitives().size() < GameData.maxPrimitivesNumber) {
-				DrawingPrimitive newPrimitive = pr.getCopy();
+				AbstractDrawingPrimitive newPrimitive = pr.getCopy();
 				frame.addRoot(newPrimitive);
 				frame.getPrimitives().add(newPrimitive);
 			}
@@ -80,6 +87,8 @@ public class Animation implements Serializable {
 	public void addFrame() {
 		m_currentFrame = m_currentFrame.copy();
 		m_frames.add(m_currentFrameIndex + 1, m_currentFrame);
+		if (GameData.mainActivity != null)
+			GameData.mainActivity.setFramesSeekbarRange(m_frames.size());
 	}
 	
 	public void removeFrame() {
@@ -90,13 +99,15 @@ public class Animation implements Serializable {
 			return;
 		}
 		m_frames.remove(m_currentFrameIndex);
+		if (GameData.mainActivity != null)
+			GameData.mainActivity.setFramesSeekbarRange(m_frames.size());
 		if (m_currentFrameIndex > 0) {
 			m_currentFrameIndex--;
 			if (m_currentFrameIndex > 0) {
 				m_prevFrame = m_frames.get(m_currentFrameIndex - 1);
 				GameData.prevDrawingQueue = m_prevFrame.getPrimitives();
 				
-				for (DrawingPrimitive pr : GameData.prevDrawingQueue)
+				for (AbstractDrawingPrimitive pr : GameData.prevDrawingQueue)
 					pr.setUnactiveColour();
 			}
 		}
@@ -104,8 +115,12 @@ public class Animation implements Serializable {
 		m_currentFrame = m_frames.get(m_currentFrameIndex);
 		GameData.drawing_queue = m_currentFrame.getPrimitives();
 		
-		for (DrawingPrimitive pr : GameData.drawing_queue)
+		for (AbstractDrawingPrimitive pr : GameData.drawing_queue)
 			pr.setActiveColour();
+	}
+	
+	public void stopAnimation() {
+		m_state = AnimationState.EDIT;
 	}
 	
 	private void onStopAnimation() {
@@ -116,7 +131,6 @@ public class Animation implements Serializable {
 		GameData.menuDrag.setTouched();
 		GameData.menuNew.setAvailable();
 		
-		m_animationThread.stop();
 		m_animationThread = null;
 		if (m_currentFrameIndex > 0) {
 			m_prevFrame = m_frames.get(m_currentFrameIndex - 1);
@@ -140,7 +154,7 @@ public class Animation implements Serializable {
 					GameData.menuNew.setUnavailable();
 					GameData.menuPrev.setUnavailable();
 					GameData.menuNext.setUnavailable();
-					while (true) {
+					while (m_state == AnimationState.PLAY) {
 						try {
 							sleep((long) sleepTime);
 						} catch (InterruptedException e) {
@@ -174,12 +188,15 @@ public class Animation implements Serializable {
 		if (m_currentFrameIndex < m_frames.size() - 1) {
 			m_prevFrame = m_frames.get(m_currentFrameIndex);
 			m_currentFrame = m_frames.get(++m_currentFrameIndex);
+			
+			if (null != GameData.mainActivity) 
+				GameData.mainActivity.onCurrentframeChanged(m_currentFrameIndex);
 			GameData.prevDrawingQueue = m_prevFrame.getPrimitives();
 			GameData.drawing_queue = m_currentFrame.getPrimitives();
 					
-			for (DrawingPrimitive pr : GameData.drawing_queue)
+			for (AbstractDrawingPrimitive pr : GameData.drawing_queue)
 				pr.setActiveColour();
-			for (DrawingPrimitive pr : GameData.prevDrawingQueue)
+			for (AbstractDrawingPrimitive pr : GameData.prevDrawingQueue)
 				pr.setUnactiveColour();
 			
 			GameData.menuPrev.setAvailable();
@@ -196,13 +213,16 @@ public class Animation implements Serializable {
 			m_currentFrame = m_frames.get(--m_currentFrameIndex);
 			GameData.drawing_queue = m_currentFrame.getPrimitives();
 			
-			for (DrawingPrimitive pr : GameData.drawing_queue)
+			if (null != GameData.mainActivity) 
+				GameData.mainActivity.onCurrentframeChanged(m_currentFrameIndex);
+			
+			for (AbstractDrawingPrimitive pr : GameData.drawing_queue)
 				pr.setActiveColour();
 			
 			if (m_currentFrameIndex > 0) {
 				m_prevFrame = m_frames.get(m_currentFrameIndex - 1);
 				GameData.prevDrawingQueue = m_prevFrame.getPrimitives();
-				for (DrawingPrimitive pr : GameData.prevDrawingQueue)
+				for (AbstractDrawingPrimitive pr : GameData.prevDrawingQueue)
 					pr.setUnactiveColour();
 			}
 			else {
@@ -217,7 +237,7 @@ public class Animation implements Serializable {
 		return null;
 	}
 	
-	public LinkedList<DrawingPrimitive> getFrame(int index) {		
+	public LinkedList<AbstractDrawingPrimitive> getFrame(int index) {		
 		if (index >= m_frames.size() || index < 0)
 			return null;
 		
@@ -230,6 +250,33 @@ public class Animation implements Serializable {
 	
 	public boolean hasPrevFrame() {
 		return (m_currentFrameIndex > 0);
+	}
+	
+	// can be called only by seekBar in main activity so son't update it
+	public void setCurrentframe(int frameIndex) {
+		if (frameIndex < 0 || frameIndex >= m_frames.size() || frameIndex == m_currentFrameIndex)
+			return;
+		
+		m_currentFrameIndex = frameIndex;
+		m_currentFrame = m_frames.get(m_currentFrameIndex);
+		GameData.drawing_queue = m_currentFrame.getPrimitives();
+				
+		for (AbstractDrawingPrimitive pr : GameData.drawing_queue)
+			pr.setActiveColour();
+		
+		if (m_currentFrameIndex > 0) {
+			m_prevFrame = m_frames.get(m_currentFrameIndex - 1);
+			GameData.prevDrawingQueue = m_prevFrame.getPrimitives();
+			for (AbstractDrawingPrimitive pr : GameData.prevDrawingQueue)
+				pr.setUnactiveColour();
+		}
+		else {
+			m_prevFrame = null;
+			GameData.prevDrawingQueue = null;
+			GameData.menuPrev.setUnavailable();
+		}
+		
+		GameData.menuNext.setAvailable();
 	}
 	
 	public boolean SaveToFile(String fileName) {
@@ -254,7 +301,7 @@ public class Animation implements Serializable {
 		return true;
 	}
 	
-	public void LoadFormFile(String fileName) {
+	public void loadFromFile(String fileName) {
 		ObjectInput input = null;
 		try { 
 			InputStream istream = new FileInputStream(fileName);
@@ -271,11 +318,17 @@ public class Animation implements Serializable {
 		    m_currentFrameIndex = 0;
 		    m_currentFrame = m_frames.get(0); // any saved animation has at least 1 frame
 		    for (AnimationFrame frame : m_frames) {
-		    	LinkedList<DrawingPrimitive> framePrimitives = frame.getPrimitives();
-		    	for (DrawingPrimitive pr: framePrimitives) {
-		    		pr.setTransitiveFields(GameData.context);
+		    	LinkedList<AbstractDrawingPrimitive> framePrimitives = frame.getPrimitives();
+		    	for (AbstractDrawingPrimitive pr: framePrimitives) {
+		    		pr.setTransitiveFields(GameData.mainActivity);
 		    	}
 		    }
+		    
+		    if (null != GameData.mainActivity) {
+				GameData.mainActivity.onCurrentframeChanged(0);
+				GameData.mainActivity.setFramesSeekbarRange(m_frames.size());
+		    }
+		    
 		    GameData.drawing_queue = m_currentFrame.getPrimitives();
 		    GameData.prevDrawingQueue = null;
 		} catch (Exception e) { 

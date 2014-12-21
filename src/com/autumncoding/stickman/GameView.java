@@ -2,7 +2,6 @@ package com.autumncoding.stickman;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -16,6 +15,8 @@ import android.os.AsyncTask;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.widget.SeekBar;
 
 import com.autamncoding.stickman.R;
 import com.autumncoding.stickman.TouchEventThread.CurrentDrawingState;
@@ -30,7 +31,7 @@ public class GameView extends SurfaceView {
     
     private Paint m_pointsLinePaint = null;
     
-    private DrawingPrimitive currently_touched_pimititve = null;
+    private AbstractDrawingPrimitive currently_touched_pimititve = null;
     private Bitmap m_menuBackground = null;
     private Path path = new Path();
     
@@ -41,17 +42,17 @@ public class GameView extends SurfaceView {
     float d_fps = 0f;
     private Paint debug_paint;
     private ArrayList<MenuIcon> m_menuIcons = new ArrayList<MenuIcon>();
+    private boolean canDraw = false;
+    
     
     public GameView(Context context) {
     	super(context);
-    	GameData.context = context;
     	this.setBackgroundColor(Color.WHITE);
     	
     	for (int i = 0; i < GameData.numberOfMenuIcons; ++i)
     		m_menuIcons.add(new MenuIcon());
     	
     	game_data = GameData.getInstance();
-    	gameLoopThread = new GameLoopThread(this);
     	
     	holder = getHolder();
     	debug_paint = GameData.debug_paint;
@@ -61,11 +62,9 @@ public class GameView extends SurfaceView {
     	m_pointsLinePaint.setStrokeWidth(2);
     	m_pointsLinePaint.setColor(Color.RED);
     	
-    	touch_thread = new TouchEventThread(this);
-    	touch_thread.init(m_menuIcons);
-    	
     	setWillNotDraw(true);    	
     	
+ 
     	BitmapWorkerTask task = new BitmapWorkerTask(this);
         task.execute();
         
@@ -74,11 +73,14 @@ public class GameView extends SurfaceView {
     		@Override
     		public void surfaceDestroyed(SurfaceHolder holder) {
     			boolean retry = true;
-    			/*set the flag to false */
+
     			gameLoopThread.setRunning(false);
+    			touch_thread.setRunning(false);
     			while (retry) {
     				try {
     					gameLoopThread.join();
+    					touch_thread.join();
+    					canDraw = false;
     					retry = false;
     				} catch (InterruptedException e) {
     					// we will try it again and again...
@@ -88,10 +90,12 @@ public class GameView extends SurfaceView {
 
     		@Override
     		public void surfaceCreated(SurfaceHolder holder) {
+    			createNewThreads();
     			gameLoopThread.setRunning(true);
     			touch_thread.setRunning(true);
     			gameLoopThread.start(); 
     			touch_thread.start();
+    			canDraw = true;
     		}
 
     		@Override
@@ -102,8 +106,10 @@ public class GameView extends SurfaceView {
     	});
 	}
 
-    public void setMetrics() {
-    	game_data.setMetrics();
+    private void createNewThreads() {
+    	gameLoopThread = new GameLoopThread(this);
+    	touch_thread = new TouchEventThread(this);
+    	touch_thread.init(m_menuIcons);
     }
     
     @Override
@@ -123,67 +129,69 @@ public class GameView extends SurfaceView {
     public void onDraw(Canvas canvas) {   	
         canvas.save();
         
-        // debug info
-        long prevTime = game_data.getPrevDrawingTime();
-        game_data.writeDrawingTime();
-        d_timePassedBetweenFpsRecounts += (game_data.getPrevDrawingTime() - prevTime);
-        if (d_drawsBetweenFpsRecount == ++d_drawsMade) {
-        	d_drawsMade = 0;
-        	d_fps = d_drawsBetweenFpsRecount * 1000f / (float)d_timePassedBetweenFpsRecounts;
-        	d_timePassedBetweenFpsRecounts = 0;
-        }
-        canvas.drawText("FPS: " + Float.toString(d_fps), 30, 470, debug_paint);
-        synchronized (GameData.getLocker()) {
-        	CurrentDrawingState ds = touch_thread.getCurrentDrawingState();
-        	
-        	if (GameData.prevDrawingQueue != null) {
-	        	for (DrawingPrimitive pr : GameData.prevDrawingQueue)
-	        		pr.draw(canvas);
-        	}
-	        for (DrawingPrimitive v : GameData.drawing_queue)
-	        	v.draw(canvas);
-	        
-	       
-	        boolean first = true;
-	        for(PointF point : GameData.drawnPoints){
-	            if(first){
-	                first = false;
-	                path.moveTo(point.x, point.y);
-	            }
-	            else{
-	                path.lineTo(point.x, point.y);
-	            }
+        if (canDraw) {
+	     // debug info
+	        long prevTime = game_data.getPrevDrawingTime();
+	        game_data.writeDrawingTime();
+	        d_timePassedBetweenFpsRecounts += (game_data.getPrevDrawingTime() - prevTime);
+	        if (d_drawsBetweenFpsRecount == ++d_drawsMade) {
+	        	d_drawsMade = 0;
+	        	d_fps = d_drawsBetweenFpsRecount * 1000f / (float)d_timePassedBetweenFpsRecounts;
+	        	d_timePassedBetweenFpsRecounts = 0;
 	        }
-	        
-	        m_pointsLinePaint.setColor(Color.GRAY);
-	        canvas.drawPath(path, m_pointsLinePaint);
-	        path.reset();
-	        
-	        if (ds.m_isDrawingProcess) {
-		        m_pointsLinePaint.setColor(Color.RED);
-		        if (!ds.m_hasIntersection) {
-		        	canvas.drawLine(ds.m_currentDrawingPoint.x, ds.m_currentDrawingPoint.y, 
-		        			ds.m_startDrawingPoint.x, ds.m_startDrawingPoint.y, m_pointsLinePaint);
-		        } else {
-		        	canvas.drawCircle(ds.m_centre.x, ds.m_centre.y, ds.m_radius, m_pointsLinePaint);
+	        canvas.drawText("FPS: " + Float.toString(d_fps), 30, 470, debug_paint);
+	        synchronized (GameData.getLocker()) {
+	        	CurrentDrawingState ds = touch_thread.getCurrentDrawingState();
+	        	
+	        	if (GameData.prevDrawingQueue != null) {
+		        	for (AbstractDrawingPrimitive pr : GameData.prevDrawingQueue)
+		        		pr.draw(canvas);
+	        	}
+		        for (AbstractDrawingPrimitive v : GameData.drawing_queue)
+		        	v.draw(canvas);
+		        
+		       
+		        boolean first = true;
+		        for(PointF point : GameData.drawnPoints){
+		            if(first){
+		                first = false;
+		                path.moveTo(point.x, point.y);
+		            }
+		            else{
+		                path.lineTo(point.x, point.y);
+		            }
 		        }
+		        
+		        m_pointsLinePaint.setColor(Color.GRAY);
+		        canvas.drawPath(path, m_pointsLinePaint);
+		        path.reset();
+		        
+		        if (ds.m_isDrawingProcess) {
+			        m_pointsLinePaint.setColor(Color.RED);
+			        if (!ds.m_hasIntersection) {
+			        	canvas.drawLine(ds.m_currentDrawingPoint.x, ds.m_currentDrawingPoint.y, 
+			        			ds.m_startDrawingPoint.x, ds.m_startDrawingPoint.y, m_pointsLinePaint);
+			        } else {
+			        	canvas.drawCircle(ds.m_centre.x, ds.m_centre.y, ds.m_radius, m_pointsLinePaint);
+			        }
+		        }
+		        
+		        
+		        if (m_menuBackground != null)
+	            	drawMenu(canvas);
+		        canvas.drawText(Integer.toString(Animation.getInstance().getCurrentFrameNumber()) + 
+		        		"/" + Integer.toString(Animation.getInstance().getFramesNumber()), 
+		        		GameData.left_frames_text, GameData.top_frames_text, GameData.textPaint);
 	        }
-	        
-	        
-	        if (m_menuBackground != null)
-            	drawMenu(canvas);
-	        canvas.drawText(Integer.toString(Animation.getInstance().getCurrentFrameNumber()) + 
-	        		"/" + Integer.toString(Animation.getInstance().getFramesNumber()), 
-	        		MainActivity.layout_width - 50, GameData.getMenuBottom() + 20, GameData.textPaint);
         }
         canvas.restore();
     }
     
-    public DrawingPrimitive getTouchedPrimitive() {
+    public AbstractDrawingPrimitive getTouchedPrimitive() {
     	return currently_touched_pimititve;
     }
  
-    public void setTouchedPrimitive(DrawingPrimitive pr) {
+    public void setTouchedPrimitive(AbstractDrawingPrimitive pr) {
     	currently_touched_pimititve = pr;
     }
     

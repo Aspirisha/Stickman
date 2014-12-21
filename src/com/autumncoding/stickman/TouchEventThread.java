@@ -36,7 +36,7 @@ public class TouchEventThread extends Thread {
 	
 	private long startTime = 0;
 	private long lastTouchTime = System.currentTimeMillis();
-	private DrawingPrimitive lastTouchedPrimitive = null;
+	private AbstractDrawingPrimitive lastTouchedPrimitive = null;
 	private boolean movementIsScaling = false;
 	
 	private PointF m_startDrawingPoint = null;
@@ -222,10 +222,15 @@ public class TouchEventThread extends Thread {
 					lastTouchMenuIndex = 5;
 					break;
 				case 6:
-					currentWorkingState = TouchState.WATCHING;
-					Animation.getInstance().Play(true);
-					GameData.menuPencil.setUntouched();
-					GameData.menuDrag.setUntouched();
+					if (currentWorkingState != TouchState.WATCHING) {
+						currentWorkingState = TouchState.WATCHING;
+						Animation.getInstance().Play(true);
+						GameData.menuPencil.setUntouched();
+						GameData.menuDrag.setUntouched();
+					} else {
+						currentWorkingState = TouchState.DRAGGING;
+						Animation.getInstance().stopAnimation();
+					}
 					break;
 				default:
 					lastTouchMenuIndex = touchedMenuIndex;
@@ -311,7 +316,7 @@ public class TouchEventThread extends Thread {
 			if (!m_drawingIsStarted)
 				break;
 			
-			DrawingPrimitive newPrimitive = null;
+			AbstractDrawingPrimitive newPrimitive = null;
 			if (!m_drawingHasIntersection) {
 				Stick stick = new Stick(m_gameView.getContext());
 				
@@ -362,7 +367,7 @@ public class TouchEventThread extends Thread {
 		switch (eventCode) {
 		case MotionEvent.ACTION_DOWN: {
 			
-			for (DrawingPrimitive primitive : GameData.drawing_queue) {
+			for (AbstractDrawingPrimitive primitive : GameData.drawing_queue) {
 				primitive.checkTouch(x, y);
 				if (primitive.isTouched()) {
 					synchronized (GameData.getLocker()) {
@@ -386,7 +391,7 @@ public class TouchEventThread extends Thread {
 		}
 		
 		case MotionEvent.ACTION_MOVE: {
-			DrawingPrimitive touchedPrimitive = m_gameView.getTouchedPrimitive();
+			AbstractDrawingPrimitive touchedPrimitive = m_gameView.getTouchedPrimitive();
 			if (touchedPrimitive != null) {
 				synchronized (GameData.getLocker()) {
 					touchedPrimitive.applyMove(x, y, mLastTouchX, mLastTouchY, movementIsScaling);
@@ -397,7 +402,7 @@ public class TouchEventThread extends Thread {
 		}
 		
 		case MotionEvent.ACTION_UP: {
-			DrawingPrimitive primitive = m_gameView.getTouchedPrimitive();
+			AbstractDrawingPrimitive primitive = m_gameView.getTouchedPrimitive();
 			
 			synchronized (GameData.getLocker()) {
 				if (primitive != null) {
@@ -406,7 +411,7 @@ public class TouchEventThread extends Thread {
 					int index = 0;
 					int size = GameData.drawing_queue.size();
 					for (int i = 0; i < size; i++) {
-						DrawingPrimitive pr = GameData.drawing_queue.get(index);
+						AbstractDrawingPrimitive pr = GameData.drawing_queue.get(index);
 						if (pr.isOutOfBounds()) {
 							Animation.getInstance().getCurrentframe().removePrimitive(pr);
 							GameData.menuPencil.setAvailable();

@@ -1,12 +1,7 @@
 package com.autumncoding.stickman;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-
-import com.autumncoding.stickman.DrawingPrimitive.Connection;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -78,9 +73,8 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
     	
 		joints.get(0).setMyPoint(p1);
 		joints.get(1).setMyPoint(p2);
-		for (Connection con : m_connections) {
-			if (con.myRelation == Relation.PRIMITIVE_IS_CHILD)
-				con.primitive.rotate(fi, cx, cy);
+		for (Connection con : m_childrenConnections) {
+			con.primitive.rotate(fi, cx, cy);
 		}
 		
 	}
@@ -134,9 +128,8 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		joints.get(0).setMyPoint(p1);
 		joints.get(1).setMyPoint(p2);
 		
-		for (Connection con : m_connections) {
-			if (con.myRelation == Relation.PRIMITIVE_IS_CHILD)
-				con.primitive.translate(dx, dy);
+		for (Connection con : m_childrenConnections) {
+			con.primitive.translate(dx, dy);
 		}
 	}
 	
@@ -282,7 +275,7 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	}
 
 	@Override
-	public float distTo(DrawingPrimitive primitive) {
+	public float distTo(AbstractDrawingPrimitive primitive) {
 		return Math.min(primitive.getDistToMe(p1.x, p1.y), primitive.getDistToMe(p2.x, p2.y));
 	}
 
@@ -385,7 +378,7 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	}
 
 	@Override
-	public DrawingPrimitive getCopy() {
+	public AbstractDrawingPrimitive getCopy() {
 		Stick stick = new Stick(this);
 		return stick;
 	}

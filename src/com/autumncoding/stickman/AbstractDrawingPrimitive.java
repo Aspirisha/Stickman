@@ -5,37 +5,65 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import com.autumncoding.stickman.DrawingPrimitive.Connection;
 
 import android.content.Context;
+import android.graphics.Canvas;
 
-public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Serializable {
+enum PrimitiveType {
+	STICK,
+	CIRCLE,
+};
+
+public abstract class AbstractDrawingPrimitive implements Serializable {
 	private static final long serialVersionUID = 6036735876597370696L;
 	protected ArrayList<Joint> joints;
 	protected boolean hasParent;
-	protected ArrayList<Connection> m_connections;
+	//protected ArrayList<Connection> m_connections;
 	protected int m_treeNumber;
 	protected boolean isScalable;
 	protected int m_number = 0;
 	protected transient boolean m_isTouched;
 	protected transient boolean m_isOutOfBounds = false;
 	protected transient Context m_context;
+	protected int m_ancestorsNumber; // not only childrem, all ancestors
+	protected Connection m_parentConnection;
+	protected ArrayList<Connection> m_childrenConnections;
+	
+	
+	
+	abstract void translate(float x, float y);
+	abstract public boolean checkTouch(float touch_x, float touch_y);
+	abstract public void draw(Canvas canvas);
+	abstract public PrimitiveType GetType();
+	abstract public float getDistToMe(float from_x, float from_y);
+	abstract public void setUntouched();
+	abstract public void scale(float cx, float cy, float rate);
+	abstract public AbstractDrawingPrimitive getCopy(); 
+	abstract public void setActiveColour();
+	abstract public void setUnactiveColour();
+	abstract public void rotate(float fi, float cx, float cy);
+	abstract public void applyMove(float new_x, float new_y, float prev_x, float prev_y, boolean isScaling);
+	abstract float distTo(AbstractDrawingPrimitive pr);
+	
 	
 	AbstractDrawingPrimitive(Context context) {
-		m_connections = new ArrayList<DrawingPrimitive.Connection>();
+		m_childrenConnections = new ArrayList<Connection>();
 		joints = new ArrayList<Joint>();
 		m_context = context;
 		hasParent = false;
 		isScalable = true;
 		m_number = Animation.getInstance().getCurrentframe().getPrimitives().size();
 		m_isTouched = false;
+		m_ancestorsNumber = 0;
+		m_parentConnection = null;
 	}
 	
 	public AbstractDrawingPrimitive(AbstractDrawingPrimitive pr) {
 		// do NOT copy joints or connection
 		m_context = pr.m_context;
 		joints = new ArrayList<Joint>();
-		m_connections = new ArrayList<DrawingPrimitive.Connection>();
+		m_childrenConnections = new ArrayList<Connection>();
+		m_parentConnection = null;
 		hasParent = pr.hasParent;
 		isScalable = pr.isScalable;
 		m_treeNumber = pr.m_treeNumber;
@@ -43,16 +71,14 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 		m_isTouched = false;
 	}
 
-	@Override
 	public Context getContext() {
 		return m_context;
 	}
 	
-	@Override
-	public boolean tryConnection(LinkedList<DrawingPrimitive> neighbours) {
+	public boolean tryConnection(LinkedList<AbstractDrawingPrimitive> neighbours) {
 		float min_dist = 10000;
-		DrawingPrimitive closest_primitive = null;
-		for (DrawingPrimitive pr : neighbours) {
+		AbstractDrawingPrimitive closest_primitive = null;
+		for (AbstractDrawingPrimitive pr : neighbours) {
 			if (pr.getTreeNumber() == m_treeNumber) // we don't want cycles
 				continue;
 			float cur_dist = distTo(pr);
@@ -70,13 +96,13 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 		return false;
 	}
 
-	@Override
+	
 	public boolean isTouched() {
 		return m_isTouched;
 	}
 	
-	@Override
-	public boolean connectToParent(DrawingPrimitive primitive) {
+	
+	public boolean connectToParent(AbstractDrawingPrimitive primitive) {
 		// Do not allow cycles to appear in primitive forest
 		if (hasParent || m_treeNumber == primitive.getTreeNumber())
 			return false;
@@ -103,17 +129,17 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 		dv = Vector2DF.sub(newParentJoint.getMyPoint(), myChildJoint.getMyPoint());
 		// here be accurate: 
 		// primitive is not a must to be parent! For it can be his parent for example 
-		DrawingPrimitive newParent = newParentJoint.getMyPrimitive(); 
+		AbstractDrawingPrimitive newParent = newParentJoint.getMyPrimitive(); 
 				
-		ArrayList<Connection> temp = new ArrayList<DrawingPrimitive.Connection>();
-		temp.addAll(m_connections);
+		ArrayList<Connection> temp = new ArrayList<Connection>();
+		temp.addAll(m_childrenConnections);
 		
 		for (Connection con : temp) {
 			if (con.myJoint == myChildJoint && con.myRelation == Relation.PRIMITIVE_IS_CHILD) {
 				Joint ch = con.primitiveJoint;
 				ch.connectToParent(newParentJoint);
 				newParentJoint.addChild(ch);
-				DrawingPrimitive reattachedChild = ch.getMyPrimitive();
+				AbstractDrawingPrimitive reattachedChild = ch.getMyPrimitive();
 				reattachedChild.disconnectFromParent();
 				reattachedChild.ConnectToParent(newParent, ch, newParentJoint);
 				newParent.ConnectToChild(reattachedChild, newParentJoint, ch);
@@ -137,7 +163,7 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 		return true;
 	}
 
-	public void ConnectToParent(DrawingPrimitive primitive, Joint myJoint, Joint primitiveJoint) {
+	public void ConnectToParent(AbstractDrawingPrimitive primitive, Joint myJoint, Joint primitiveJoint) {
 		hasParent = true;
 		isScalable = false;
 		Connection newConnection = new Connection();
@@ -145,25 +171,25 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 		newConnection.myJoint = myJoint;
 		newConnection.primitiveJoint = primitiveJoint;
 		newConnection.primitive = primitive;
-		m_connections.add(newConnection);
+		m_parentConnection = newConnection;
 	}
 	
-	@Override
-	public void ConnectToChild(DrawingPrimitive primitive, Joint myJoint, Joint primitiveJoint) {
+	
+	public void ConnectToChild(AbstractDrawingPrimitive primitive, Joint myJoint, Joint primitiveJoint) {
 		Connection con = new Connection();
 		con.myRelation = Relation.PRIMITIVE_IS_CHILD;
 		con.myJoint = myJoint;
 		con.primitive = primitive;
 		con.primitiveJoint = primitiveJoint;
-		m_connections.add(con);
+		m_childrenConnections.add(con);
 		isScalable = false;
 	}
 
-	@Override
-	public void disconnectFromChild(DrawingPrimitive p) {
+	
+	public void disconnectFromChild(AbstractDrawingPrimitive p) {
 		Connection toRemove = null;
 		
-		for (Connection con : m_connections) {
+		for (Connection con : m_childrenConnections) {
 			if (con.primitive == p) {
 				con.primitiveJoint.setFree();
 				con.myJoint.removeChild(con.primitiveJoint);
@@ -172,100 +198,116 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 			}
 		}
 		
-		m_connections.remove(toRemove);
-		isScalable = m_connections.isEmpty();
+		m_childrenConnections.remove(toRemove);
+		isScalable = (m_childrenConnections.isEmpty() && m_parentConnection == null);
 	}
 
-	@Override
+	protected void incAncestorsNumber() {
+		m_ancestorsNumber++;
+		if (m_parentConnection != null)
+			m_parentConnection.primitive.incAncestorsNumber();
+	}
+	
+	
 	public void disconnectFromParent() {
 		if (hasParent) {
 			hasParent = false;
-			DrawingPrimitive exParent = null;
+			AbstractDrawingPrimitive exParent = null;
 			
-			Connection toRemove = null;
-			for (Connection con : m_connections) {
-				if (con.myRelation == Relation.PRIMITIVE_IS_PARENT) {
-					con.myJoint.setFree();
-					con.primitiveJoint.removeChild(con.myJoint);
-					exParent = con.primitiveJoint.getMyPrimitive();
-					toRemove = con;
-					break;
-				}
-			}
-			m_connections.remove(toRemove);
+			
+			m_parentConnection.myJoint.setFree();
+			m_parentConnection.primitiveJoint.removeChild(m_parentConnection.myJoint);
+			exParent = m_parentConnection.primitiveJoint.getMyPrimitive();
 			exParent.disconnectFromChild(this);
+			m_parentConnection = null;
 			
 			Animation.getInstance().getCurrentframe().addRoot(this);
 			updateSubtreeNumber(Animation.getInstance().getCurrentframe().getTreesNumber());
-			isScalable = m_connections.isEmpty();
+			isScalable = (m_childrenConnections.isEmpty());
 		}
 	}
 
 
-	@Override
+	
 	public ArrayList<Joint> getMyJoints() {
 		return joints;
 	}
 
-	@Override
+	
 	public void updateSubtreeNumber(int number) {
 		m_treeNumber = number;
-		for (Connection con : m_connections) {
-			if (con.myRelation == Relation.PRIMITIVE_IS_CHILD)
-				con.primitive.updateSubtreeNumber(number);
+		for (Connection con : m_childrenConnections) {
+			con.primitive.updateSubtreeNumber(number);
 		}
 	}
 
-	@Override
+	
 	public int getTreeNumber() {
 		return m_treeNumber;
 	}
 
-	@Override
+	
 	public void setTreeNumber(int number) {
 		m_treeNumber = number;
 	}
 
-	@Override
+	
 	public boolean isOutOfBounds() {
 		return m_isOutOfBounds;
 	}
 	
-	@Override
+	
 	public void checkOutOfBounds() {
-		for (Connection con : m_connections) {
-			if (con.myRelation == Relation.PRIMITIVE_IS_CHILD)
-				con.primitive.checkOutOfBounds();
+		for (Connection con : m_childrenConnections) {
+			con.primitive.checkOutOfBounds();
 		}
 	}
 	
-	@Override
+	
 	public void disconnectFromEverybody() {
-		while (!m_connections.isEmpty()) {
-			Connection con = m_connections.get(0);
-			if (con.myRelation == Relation.PRIMITIVE_IS_CHILD) {
-				con.primitive.disconnectFromParent();
-			} else {
-				disconnectFromParent();
-			}
+		while (!m_childrenConnections.isEmpty()) {
+			Connection con = m_childrenConnections.get(0);
+			con.primitive.disconnectFromParent();
 		}
+		disconnectFromParent();
+		m_parentConnection = null;
+		hasParent = false;
 	}
 	
-	@Override
+	
 	public void setTransitiveFields(Context context) {
 		m_context = context;
 		m_isTouched = false;
 		m_isOutOfBounds = false;
 	}
 	
-	@Override
-	public ArrayList<Connection> getMyConnections() {
-		return m_connections;
+	
+	public ArrayList<Connection> getMyChildrenConnections() {
+		return m_childrenConnections;
 	}
 	
-	private void writeObject(java.io.ObjectOutputStream  stream) throws IOException {
-		stream.writeInt(m_connections.size());
-		for (Connection con : m_connections)
+	public void addChildConnection(Connection childCon) {
+		m_childrenConnections.add(childCon);
+	}
+	
+	public Connection getMyParentConnection() {
+		return m_parentConnection;
+	}
+	
+	public void setParentConnection(Connection parentCon) {
+		m_parentConnection = parentCon;
+		if (parentCon != null)
+			hasParent = true;
+	}
+	
+	private void writeObject(java.io.ObjectOutputStream  stream) throws IOException {		
+		if (m_parentConnection != null) {
+			stream.writeInt(m_childrenConnections.size() + 1);
+			stream.writeObject(m_parentConnection);
+		} else
+			stream.writeInt(m_childrenConnections.size());
+			
+		for (Connection con : m_childrenConnections)
 			stream.writeObject(con);
 		stream.writeInt(joints.size());
 		for (Joint j : joints)
@@ -277,10 +319,24 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 	}
 	
 	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
-		m_connections = new ArrayList<DrawingPrimitive.Connection>();
+		m_childrenConnections = new ArrayList<Connection>();
+		m_parentConnection = null;
 		int sz = stream.readInt();
-		for (int i = 0; i < sz; i++) 
-			m_connections.add((Connection)stream.readObject());
+		
+		if (sz > 0) {
+			Connection newConnection = null;
+			newConnection = (Connection)stream.readObject();
+			if (newConnection.myRelation == Relation.PRIMITIVE_IS_PARENT) // first goes parent if he exists
+				m_parentConnection = newConnection;
+			else 
+				m_childrenConnections.add(newConnection);
+
+			
+			for (int i = 1; i < sz; i++) {
+				newConnection = (Connection)stream.readObject();
+				m_childrenConnections.add(newConnection);
+			}
+		}
 		
 		sz = stream.readInt();
 		joints = new ArrayList<Joint>();
@@ -294,22 +350,24 @@ public abstract class AbstractDrawingPrimitive implements DrawingPrimitive, Seri
 		m_number = stream.readInt();
 	}
 	
-	public void restoreMyFieldsByIndexes(LinkedList<DrawingPrimitive> q) { // should be called after all the primitives of the frame are loaded
-		for (Connection con: m_connections)
+	public void restoreMyFieldsByIndexes(LinkedList<AbstractDrawingPrimitive> q) { // should be called after all the primitives of the frame are loaded
+		for (Connection con: m_childrenConnections)
 			con.reastoreMyFieldsMyIndexes(q, this);	
+		if (m_parentConnection != null)
+			m_parentConnection.reastoreMyFieldsMyIndexes(q, this);
 	}
 	
-	@Override
+	
 	public void setMyNumber(int newNumber) {
 		m_number = newNumber;
 	}
 
-	@Override
+	
 	public int getMyNumber() {
 		return m_number;
 	}
 	
-	@Override
+	
 	public boolean hasParent() {
 		return hasParent;
 	}

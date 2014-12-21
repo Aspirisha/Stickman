@@ -10,4 +10,13 @@
     <string name="str_start">Start</string>
     <string name="str_load">Load</string>
     <string name="str_save">Save</string>
+    <string name="choose_language">Choose language</string>
+    <string name="str_anim_fps">Animation frames per second:</string>
+    <string name="str_lang_spinner">Language:</string>
+    
+     <string-array name="languages_array">
+        <item>English</item>
+        <item>Русский</item>
+        <item>Deutsch</item>
+    </string-array>
 </resources>

@@ -114,7 +114,7 @@ public class Circle extends AbstractDrawingPrimitive {
 	}
 
 	@Override
-	public float distTo(DrawingPrimitive primitive) {
+	public float distTo(AbstractDrawingPrimitive primitive) {
 		return primitive.getDistToMe(m_jointPoint.x, m_jointPoint.y);
 	}
 
@@ -124,6 +124,7 @@ public class Circle extends AbstractDrawingPrimitive {
 		return PrimitiveType.CIRCLE;
 	}
 	
+	@Override
 	public void rotate(float fi, float cx, float cy) {
 		float new_x = (float) (cx + (m_jointPoint.x - cx) * Math.cos(fi) - (m_jointPoint.y - cy) * Math.sin(fi));
 		float new_y = (float) (cy + (m_jointPoint.x - cx) * Math.sin(fi) + (m_jointPoint.y - cy) * Math.cos(fi));
@@ -137,9 +138,8 @@ public class Circle extends AbstractDrawingPrimitive {
     	
 		joints.get(0).setMyPoint(m_jointPoint);
 		
-		for (Connection con : m_connections) {
-			if (con.myRelation == Relation.PRIMITIVE_IS_CHILD)
-				con.primitive.rotate(fi, cx, cy);
+		for (Connection con : m_childrenConnections) {
+			con.primitive.rotate(fi, cx, cy);
 		}
 	}
 	
@@ -151,9 +151,8 @@ public class Circle extends AbstractDrawingPrimitive {
 		
 		joints.get(0).setMyPoint(m_jointPoint);
     	
-		for (Connection con : m_connections) {
-			if (con.myRelation == Relation.PRIMITIVE_IS_CHILD)
-				con.primitive.translate(dx, dy);
+		for (Connection con : m_childrenConnections) {
+			con.primitive.translate(dx, dy);
 		}
 	}
 	
@@ -189,6 +188,7 @@ public class Circle extends AbstractDrawingPrimitive {
 		}
 	}
 	
+	@Override
 	public void applyMove(float new_x, float new_y, float prev_x, float prev_y, boolean isScaling) {
 		switch (m_touchState) {
 		case CIRCLE: {
@@ -293,7 +293,7 @@ public class Circle extends AbstractDrawingPrimitive {
 	}
 
 	@Override
-	public DrawingPrimitive getCopy() {
+	public AbstractDrawingPrimitive getCopy() {
 		Circle circle = new Circle(this);
 		return circle;
 	}

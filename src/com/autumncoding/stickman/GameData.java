@@ -3,16 +3,16 @@ package com.autumncoding.stickman;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import com.autamncoding.stickman.R;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
 
 public class GameData {
-	public static LinkedList<DrawingPrimitive> drawing_queue;
-	public static LinkedList<DrawingPrimitive> prevDrawingQueue = null;
-	public static Context context = null;
-    private boolean is_inited = false;
+	public static LinkedList<AbstractDrawingPrimitive> drawing_queue;
+	public static LinkedList<AbstractDrawingPrimitive> prevDrawingQueue = null;
     private static GameData instance = null;
     private static Object locker;// object for touch thread and ui thread synchronization
     private long prevDrawingTime = System.currentTimeMillis();
@@ -23,12 +23,14 @@ public class GameData {
     public static final float min_dist_to_connect_square = 100;
     
     //menu lines
-    public float bottom_menu_y = 0;
-    public float bottom_menu_x1 = 0;
-    public float bottom_menu_x2 = 0;
-    public float top_menu_y = 0;
-    public float top_menu_x1 = 0;
-    public float top_menu_x2 = 0;
+    public static float bottom_menu_y = 0;
+    public static float bottom_menu_x1 = 0;
+    public static float bottom_menu_x2 = 0;
+    public static float top_menu_y = 0;
+    public static float top_menu_x1 = 0;
+    public static float top_menu_x2 = 0;
+    public static float top_frames_text = 0;
+    public static float left_frames_text = 0;
     
     public static final int maxPrimitivesNumber = 15; 
     
@@ -82,6 +84,8 @@ public class GameData {
 	public static MenuIcon menuPlay = null;
 	public static MenuIcon menuBin = null;
 	public static ArrayList<MenuIcon> menuIcons;
+	
+	public static MainActivity mainActivity;
 	
     static {
     	instance = new GameData();
@@ -169,7 +173,11 @@ public class GameData {
     	return locker;
     }
     
-    public LinkedList<DrawingPrimitive> getDrawingQueue() {
+    static void setContext(MainActivity cont) {
+    	mainActivity = cont;
+    }
+    
+    public LinkedList<AbstractDrawingPrimitive> getDrawingQueue() {
     	return drawing_queue;
     }
     
@@ -185,7 +193,7 @@ public class GameData {
     	return System.currentTimeMillis() - prevDrawingTime;
     }
     
-    public synchronized void setMetrics() {
+    public static void setMetrics() {
     	float dy = 40; /// HARDCODE
     	float dx = 20; /// HARDCODE
     	
@@ -196,6 +204,12 @@ public class GameData {
     	top_menu_y = dy;
     	top_menu_x2 = MainActivity.layout_width - dx;
     	top_menu_x1 = dx;
+    	
+    	if (mainActivity != null) {
+    		topMenuHeight = mainActivity.getResources().getDimensionPixelSize(R.dimen.game_view_menu_height);
+    		left_frames_text = mainActivity.getResources().getDimensionPixelSize(R.dimen.frames_text_position_left_padding);
+    		top_frames_text = topMenuHeight + mainActivity.getResources().getDimensionPixelSize(R.dimen.frames_text_position_top_padding);
+    	}
     }
 
 	public static float getMenuBottom() {
@@ -206,7 +220,7 @@ public class GameData {
 		GameData.menuBottom = menuBottom;
 	}
 	
-	public void setDrawingQueue(LinkedList<DrawingPrimitive> q) {
+	public void setDrawingQueue(LinkedList<AbstractDrawingPrimitive> q) {
 		drawing_queue = q;
 	}
 }

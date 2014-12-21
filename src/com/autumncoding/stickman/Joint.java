@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+
 /**
  * This class represents joints that connect different drawing primitives. 
  * @author Andy
@@ -19,6 +23,7 @@ public class Joint implements Serializable {
 	private transient ArrayList<Joint> m_childrenJoints;
 	private transient AbstractDrawingPrimitive m_primitive; // primitive, to which this joint belongs
 	private Vector2DF m_point;
+	private Paint m_paint;
 	
 	private void writeObject(java.io.ObjectOutputStream  stream) throws IOException {
 		stream.writeBoolean(isParentJoint);
@@ -37,12 +42,15 @@ public class Joint implements Serializable {
 		m_parent = null;
 		m_childrenJoints = new ArrayList<Joint>();
 		m_primitive = null;
+		m_paint = new Paint();
 	}
 	
 	public Joint(AbstractDrawingPrimitive pr, Vector2DF p) {
 		m_childrenJoints = new ArrayList<Joint>();
 		m_primitive = pr;
 		m_point = new Vector2DF(p);
+		m_paint = new Paint(GameData.joint_paint);
+		m_paint.setColor(Color.argb(200, 10, 250, 0)); // delta color = 8 for each new child
 	}
 	
 	public void setMyPrimitive(AbstractDrawingPrimitive pr) {
@@ -85,6 +93,7 @@ public class Joint implements Serializable {
 		isFreeJoint = false;
 		m_parent = newParent;
 		m_childrenJoints.clear(); 
+		m_paint.setColor(Color.argb(0,0,0,0));
 	}
 	
 	public boolean isParent() {
@@ -115,7 +124,7 @@ public class Joint implements Serializable {
 		return m_childrenJoints;
 	}
 	
-	public DrawingPrimitive getMyPrimitive() {
+	public AbstractDrawingPrimitive getMyPrimitive() {
 		return m_primitive;
 	}
 	
@@ -137,6 +146,10 @@ public class Joint implements Serializable {
 	
 	public void translate() {
 		
+	}
+	
+	public void draw(Canvas canvas) {
+		canvas.drawCircle(m_point.x, m_point.y, GameData.joint_radius_visible, m_paint);
 	}
 	
 	public void removeChild(Joint ch) {
