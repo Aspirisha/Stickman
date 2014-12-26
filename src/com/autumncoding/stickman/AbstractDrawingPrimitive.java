@@ -3,11 +3,16 @@ package com.autumncoding.stickman;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 
+
+import java.util.List;
+
 import android.content.Context;
 import android.graphics.Canvas;
+import android.util.Log;
 
 enum PrimitiveType {
 	STICK,
@@ -25,7 +30,6 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	protected transient boolean m_isTouched;
 	protected transient boolean m_isOutOfBounds = false;
 	protected transient Context m_context;
-	protected int m_ancestorsNumber; // not only childrem, all ancestors
 	protected Connection m_parentConnection;
 	protected ArrayList<Connection> m_childrenConnections;
 	
@@ -54,7 +58,6 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		isScalable = true;
 		m_number = Animation.getInstance().getCurrentframe().getPrimitives().size();
 		m_isTouched = false;
-		m_ancestorsNumber = 0;
 		m_parentConnection = null;
 	}
 	
@@ -73,6 +76,10 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 
 	public Context getContext() {
 		return m_context;
+	}
+	
+	public void translate(Vector2DF v) {
+		translate(v.x, v.y);
 	}
 	
 	public boolean tryConnection(LinkedList<AbstractDrawingPrimitive> neighbours) {
@@ -95,7 +102,6 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 
 		return false;
 	}
-
 	
 	public boolean isTouched() {
 		return m_isTouched;
@@ -126,105 +132,111 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 			}
 		}
 		
-		dv = Vector2DF.sub(newParentJoint.getMyPoint(), myChildJoint.getMyPoint());
-		// here be accurate: 
-		// primitive is not a must to be parent! For it can be his parent for example 
-		AbstractDrawingPrimitive newParent = newParentJoint.getMyPrimitive(); 
-				
-		ArrayList<Connection> temp = new ArrayList<Connection>();
-		temp.addAll(m_childrenConnections);
-		
-		for (Connection con : temp) {
-			if (con.myJoint == myChildJoint && con.myRelation == Relation.PRIMITIVE_IS_CHILD) {
-				Joint ch = con.primitiveJoint;
-				ch.connectToParent(newParentJoint);
-				newParentJoint.addChild(ch);
-				AbstractDrawingPrimitive reattachedChild = ch.getMyPrimitive();
-				reattachedChild.disconnectFromParent();
-				reattachedChild.ConnectToParent(newParent, ch, newParentJoint);
-				newParent.ConnectToChild(reattachedChild, newParentJoint, ch);
-				disconnectFromChild(reattachedChild);
-				reattachedChild.translate(dv.x, dv.y);
-			}
-		}
-
-		translate(dv.x, dv.y);
-
-		myChildJoint.connectToParent(newParentJoint);
-		newParentJoint.addChild(myChildJoint);
-		ConnectToParent(newParent, myChildJoint, newParentJoint);
-		newParent.ConnectToChild(this, newParentJoint, myChildJoint);
-		
-		hasParent = true;
-		isScalable = false;
-		
-		Animation.getInstance().getCurrentframe().removeRoot(this); // TODO same when removing primitive
-		newParent.updateSubtreeNumber(newParent.getTreeNumber());
+		AbstractDrawingPrimitive.connect(newParentJoint, myChildJoint);
 		return true;
 	}
 
-	public void ConnectToParent(AbstractDrawingPrimitive primitive, Joint myJoint, Joint primitiveJoint) {
-		hasParent = true;
-		isScalable = false;
-		Connection newConnection = new Connection();
-		newConnection.myRelation = Relation.PRIMITIVE_IS_PARENT;
-		newConnection.myJoint = myJoint;
-		newConnection.primitiveJoint = primitiveJoint;
-		newConnection.primitive = primitive;
-		m_parentConnection = newConnection;
-	}
-	
-	
-	public void ConnectToChild(AbstractDrawingPrimitive primitive, Joint myJoint, Joint primitiveJoint) {
-		Connection con = new Connection();
-		con.myRelation = Relation.PRIMITIVE_IS_CHILD;
-		con.myJoint = myJoint;
-		con.primitive = primitive;
-		con.primitiveJoint = primitiveJoint;
-		m_childrenConnections.add(con);
-		isScalable = false;
+	protected void updateJointColors() {
+		for (Joint j : joints)
+			j.updateColor();
 	}
 
+	public boolean disconnectFromParent() {
+		if (hasParent)
+			return disconnect(m_parentConnection.primitive, this);
+		return false;
+	}
 	
-	public void disconnectFromChild(AbstractDrawingPrimitive p) {
-		Connection toRemove = null;
+	/**
+	 * This function disconnects parent and child and leaves both of them in correct state
+	 * @param parent
+	 * @param child
+	 * @return
+	 */
+	static boolean disconnect(AbstractDrawingPrimitive parent, AbstractDrawingPrimitive child) {
+		if (!child.hasParent)
+			return false;
+		if (parent != child.m_parentConnection.primitive)
+			return false;
 		
-		for (Connection con : m_childrenConnections) {
-			if (con.primitive == p) {
-				con.primitiveJoint.setFree();
-				con.myJoint.removeChild(con.primitiveJoint);
+		child.hasParent = false;
+		child.m_parentConnection.myJoint.setFree();
+		child.m_parentConnection.primitiveJoint.removeChild(child.m_parentConnection.myJoint);
+		child.m_parentConnection = null;
+		
+		
+		Connection toRemove = null;
+		for (Connection con : parent.m_childrenConnections) {
+			if (con.primitive == child) {
 				toRemove = con;
 				break;
 			}
 		}
+		parent.m_childrenConnections.remove(toRemove);
+		parent.isScalable = (parent.m_childrenConnections.isEmpty() && parent.m_parentConnection == null);
+		child.isScalable = (child.m_childrenConnections.isEmpty() && child.m_parentConnection == null);
 		
-		m_childrenConnections.remove(toRemove);
-		isScalable = (m_childrenConnections.isEmpty() && m_parentConnection == null);
-	}
-
-	protected void incAncestorsNumber() {
-		m_ancestorsNumber++;
-		if (m_parentConnection != null)
-			m_parentConnection.primitive.incAncestorsNumber();
+		Animation.getInstance().getCurrentframe().addRoot(child);
+		child.updateSubtreeNumber(Animation.getInstance().getCurrentframe().getTreesNumber()); // TODO check if it's ok
+		child.updateJointColors();
+		return true;
 	}
 	
+	public void addParentConnection(AbstractDrawingPrimitive parent, Joint hisJoint, Joint myJoint) {
+		m_parentConnection = new Connection();
+		m_parentConnection.primitive = parent;
+		m_parentConnection.myJoint = myJoint;
+		m_parentConnection.primitiveJoint = hisJoint;
+		m_parentConnection.myRelation = Relation.PRIMITIVE_IS_PARENT;
+	}
 	
-	public void disconnectFromParent() {
-		if (hasParent) {
-			hasParent = false;
-			AbstractDrawingPrimitive exParent = null;
-			
-			
-			m_parentConnection.myJoint.setFree();
-			m_parentConnection.primitiveJoint.removeChild(m_parentConnection.myJoint);
-			exParent = m_parentConnection.primitiveJoint.getMyPrimitive();
-			exParent.disconnectFromChild(this);
-			m_parentConnection = null;
-			
-			Animation.getInstance().getCurrentframe().addRoot(this);
-			updateSubtreeNumber(Animation.getInstance().getCurrentframe().getTreesNumber());
-			isScalable = (m_childrenConnections.isEmpty());
+	public void addChildConnection(AbstractDrawingPrimitive child, Joint hisJoint, Joint myJoint) {
+		Connection con = new Connection();
+		con.primitive = child;
+		con.myJoint = myJoint;
+		con.primitiveJoint = hisJoint;
+		con.myRelation = Relation.PRIMITIVE_IS_CHILD;
+		
+		m_childrenConnections.add(con);
+	}
+	
+	static boolean connect(Joint parentJoint, Joint childJoint) {
+		AbstractDrawingPrimitive child = childJoint.getMyPrimitive();
+		AbstractDrawingPrimitive parent = parentJoint.getMyPrimitive();
+		
+		if (child.hasParent || parent.m_treeNumber == child.m_treeNumber)
+			return false;
+		
+		child.hasParent = true;
+		child.addParentConnection(parent, parentJoint, childJoint);
+		parent.addChildConnection(child, childJoint, parentJoint);
+		
+		LinkedList<Connection> toRemove = new LinkedList<Connection>();
+		
+		Vector2DF dv = Vector2DF.sub(parentJoint.getMyPoint(), childJoint.getMyPoint());
+		
+		ArrayList<Connection> tempChildChildCons = new ArrayList<Connection>();
+		tempChildChildCons.addAll(child.m_childrenConnections);
+		for (Connection con : tempChildChildCons) {
+			if (con.myJoint == childJoint) {
+				Joint tempChildJoint = con.primitiveJoint;
+				AbstractDrawingPrimitive tempChild = con.primitive;
+				disconnect(child, tempChild);
+				connect(parentJoint, tempChildJoint);
+			}
 		}
+		
+		child.translate(dv);
+		parentJoint.addChild(childJoint);
+		childJoint.connectToParent(parentJoint);
+		child.m_childrenConnections.removeAll(toRemove);
+		child.updateJointColors();
+		child.isScalable = false;
+		parent.isScalable = false;
+		Animation.getInstance().getCurrentframe().removeRoot(child);
+		
+		parent.updateSubtreeNumber(parent.m_treeNumber);
+		return true;
 	}
 
 
@@ -264,14 +276,30 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	}
 	
 	
-	public void disconnectFromEverybody() {
-		while (!m_childrenConnections.isEmpty()) {
-			Connection con = m_childrenConnections.get(0);
-			con.primitive.disconnectFromParent();
+	public void disconnectBeforeDeleting() {
+		HashMap<Joint, AbstractDrawingPrimitive> newParentsForChildrenFromJoints = new HashMap<Joint, AbstractDrawingPrimitive>();
+		HashMap<Joint, Joint> newParentJoints = new HashMap<Joint, Joint>();
+		
+		if (!m_childrenConnections.isEmpty()) {
+			while (!m_childrenConnections.isEmpty()) {
+				Connection con = m_childrenConnections.get(0);
+				AbstractDrawingPrimitive child = con.primitive;
+				Joint prevParentJoint = con.myJoint;
+				Joint childJoint = con.primitiveJoint;
+				
+				disconnect(this, child);
+				if (!newParentsForChildrenFromJoints.containsKey(prevParentJoint)) {
+					newParentsForChildrenFromJoints.put(prevParentJoint, child);
+					newParentJoints.put(prevParentJoint, childJoint);
+				} else {
+					connect(newParentJoints.get(prevParentJoint), childJoint);
+				}
+			}
+		
 		}
-		disconnectFromParent();
-		m_parentConnection = null;
-		hasParent = false;
+		if (hasParent) 
+			disconnect(m_parentConnection.primitive, this);
+		
 	}
 	
 	
@@ -288,6 +316,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	
 	public void addChildConnection(Connection childCon) {
 		m_childrenConnections.add(childCon);
+		childCon.myJoint.updateColor();
 	}
 	
 	public Connection getMyParentConnection() {
@@ -296,6 +325,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	
 	public void setParentConnection(Connection parentCon) {
 		m_parentConnection = parentCon;
+		parentCon.myJoint.updateColor();
 		if (parentCon != null)
 			hasParent = true;
 	}
@@ -337,7 +367,6 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 				m_childrenConnections.add(newConnection);
 			}
 		}
-		
 		sz = stream.readInt();
 		joints = new ArrayList<Joint>();
 		for (int i = 0; i < sz; i++) 

@@ -15,10 +15,9 @@ import android.os.AsyncTask;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
-import android.widget.SeekBar;
 
 import com.autamncoding.stickman.R;
+import com.autumncoding.stickman.Animation.AnimationState;
 import com.autumncoding.stickman.TouchEventThread.CurrentDrawingState;
 
 public class GameView extends SurfaceView {
@@ -43,7 +42,7 @@ public class GameView extends SurfaceView {
     private Paint debug_paint;
     private ArrayList<MenuIcon> m_menuIcons = new ArrayList<MenuIcon>();
     private boolean canDraw = false;
-    
+
     
     public GameView(Context context) {
     	super(context);
@@ -95,6 +94,9 @@ public class GameView extends SurfaceView {
     			touch_thread.setRunning(true);
     			gameLoopThread.start(); 
     			touch_thread.start();
+    			CountMetrics();
+    			GameData.mainActivity.UpdateFramesInfo(Animation.getInstance().getCurrentFrameNumber(), 
+						Animation.getInstance().getFramesNumber());
     			canDraw = true;
     		}
 
@@ -112,6 +114,10 @@ public class GameView extends SurfaceView {
     	touch_thread.init(m_menuIcons);
     }
     
+    void CountMetrics() {
+    	GameData.mainActivity.CountMetrics();
+    }
+    
     @Override
     public boolean onTouchEvent(final MotionEvent ev) {    	
     	touch_thread.pushEvent(ev);
@@ -124,13 +130,14 @@ public class GameView extends SurfaceView {
     	for (MenuIcon icon : m_menuIcons)
     		icon.Draw(canvas);
     }
+
     
     @Override  
     public void onDraw(Canvas canvas) {   	
         canvas.save();
         
         if (canDraw) {
-	     // debug info
+	        // debug info
 	        long prevTime = game_data.getPrevDrawingTime();
 	        game_data.writeDrawingTime();
 	        d_timePassedBetweenFpsRecounts += (game_data.getPrevDrawingTime() - prevTime);
@@ -139,11 +146,13 @@ public class GameView extends SurfaceView {
 	        	d_fps = d_drawsBetweenFpsRecount * 1000f / (float)d_timePassedBetweenFpsRecounts;
 	        	d_timePassedBetweenFpsRecounts = 0;
 	        }
-	        canvas.drawText("FPS: " + Float.toString(d_fps), 30, 470, debug_paint);
+	        canvas.drawText("FPS: " + Float.toString(d_fps), 30, MainActivity.layout_height - 20, debug_paint);
+	        // end of debug info
+	        
 	        synchronized (GameData.getLocker()) {
 	        	CurrentDrawingState ds = touch_thread.getCurrentDrawingState();
 	        	
-	        	if (GameData.prevDrawingQueue != null) {
+	        	if (GameData.prevDrawingQueue != null && Animation.getInstance().getState() != AnimationState.PLAY) {
 		        	for (AbstractDrawingPrimitive pr : GameData.prevDrawingQueue)
 		        		pr.draw(canvas);
 	        	}
@@ -179,9 +188,13 @@ public class GameView extends SurfaceView {
 		        
 		        if (m_menuBackground != null)
 	            	drawMenu(canvas);
-		        canvas.drawText(Integer.toString(Animation.getInstance().getCurrentFrameNumber()) + 
-		        		"/" + Integer.toString(Animation.getInstance().getFramesNumber()), 
-		        		GameData.left_frames_text, GameData.top_frames_text, GameData.textPaint);
+		        if (GameData.framesChanged) {
+		        	GameData.framesChanged = false;
+		        	GameData.mainActivity.setFramesSeekbarRange(Animation.getInstance().getFramesNumber());
+		        	GameData.mainActivity.onCurrentframeChanged(Animation.getInstance().getCurrentFrameNumber() - 1);
+					GameData.mainActivity.UpdateFramesInfo(Animation.getInstance().getCurrentFrameNumber(), 
+							Animation.getInstance().getFramesNumber());
+		        }
 	        }
         }
         canvas.restore();
@@ -230,6 +243,14 @@ public class GameView extends SurfaceView {
 
 	    	
 	    	Bitmap b = bitmapList.get(1);
+	    	while (!GameData.metricsSet) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	    	}
 	    	float dx = (MainActivity.layout_width - GameData.numberOfMenuIcons * b.getWidth()) / (float)GameData.numberOfMenuIcons;
 	    	float left = dx / 2f;
 	    	for (int i = 0; i < m_menuIcons.size(); i++) {
@@ -238,7 +259,7 @@ public class GameView extends SurfaceView {
 	    	}
     	}
     }
-    
+
     class BitmapWorkerTask extends AsyncTask<Void, Void, ArrayList<Bitmap>> {
         private final WeakReference<GameView> imageViewReference;
 

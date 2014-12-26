@@ -13,10 +13,20 @@
     <string name="choose_language">Choose language</string>
     <string name="str_anim_fps">Animation frames per second:</string>
     <string name="str_lang_spinner">Language:</string>
+    <string name="current_fps_text">Current FPS: </string>
+    <string name="settings_header">Settings</string>
+    <string name="file_saved_to">Animation was saved to file </string>
+    <string name="file_opened_from">Animation was loaded from file </string>
     
      <string-array name="languages_array">
         <item>English</item>
         <item>Русский</item>
         <item>Deutsch</item>
+    </string-array>
+    
+    <string-array name="lang_codes">
+        <item>en</item>
+        <item>ru</item>
+        <item>de</item>
     </string-array>
 </resources>

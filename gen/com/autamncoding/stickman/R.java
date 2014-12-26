@@ -9,12 +9,19 @@ package com.autamncoding.stickman;
 
 public final class R {
     public static final class array {
+        public static final int lang_codes=0x7f080001;
         public static final int languages_array=0x7f080000;
     }
     public static final class attr {
     }
     public static final class color {
+        public static final int child_joint=0x7f040001;
+        public static final int drop_color=0x7f040006;
         public static final int label_color=0x7f040000;
+        public static final int prev_frame_element=0x7f040004;
+        public static final int primitive_line=0x7f040005;
+        public static final int root_joint=0x7f040002;
+        public static final int touched_element=0x7f040003;
     }
     public static final class dimen {
         /**  Default screen margins, per the Android Design guidelines. 
@@ -26,12 +33,19 @@ public final class R {
         public static final int activity_horizontal_margin=0x7f060000;
         public static final int activity_vertical_margin=0x7f060001;
         public static final int debug_font_size=0x7f060002;
+        public static final int frames_counter_right_padding=0x7f060007;
         public static final int frames_seek_bar_left_padding=0x7f060005;
         public static final int frames_seek_bar_right_padding=0x7f060006;
         public static final int frames_seek_bar_top_padding=0x7f060004;
-        public static final int frames_text_position_left_padding=0x7f060007;
-        public static final int frames_text_position_top_padding=0x7f060008;
+        public static final int frames_text_position_left_padding=0x7f060008;
+        public static final int frames_text_position_top_padding=0x7f060009;
         public static final int game_view_menu_height=0x7f060003;
+        public static final int gane_view_frames_text_font_size=0x7f06000a;
+        public static final int settings_header_font_size=0x7f06000f;
+        public static final int settings_padding_left=0x7f06000c;
+        public static final int settings_padding_right=0x7f06000d;
+        public static final int settings_padding_top=0x7f06000e;
+        public static final int zero=0x7f06000b;
     }
     public static final class drawable {
         public static final int background=0x7f020000;
@@ -71,15 +85,17 @@ public final class R {
         public static final int stop_touched=0x7f020022;
     }
     public static final class id {
-        public static final int action_load=0x7f0b0008;
-        public static final int action_save=0x7f0b0007;
-        public static final int action_settings=0x7f0b0005;
-        public static final int animation_fps_label=0x7f0b0002;
-        public static final int animation_fps_seekbar=0x7f0b0003;
-        public static final int fps_text=0x7f0b0004;
-        public static final int group1=0x7f0b0006;
-        public static final int language_spinner=0x7f0b0001;
-        public static final int language_spinner_label=0x7f0b0000;
+        public static final int RelativeLayout1=0x7f0b0001;
+        public static final int action_load=0x7f0b000a;
+        public static final int action_save=0x7f0b0009;
+        public static final int action_settings=0x7f0b0007;
+        public static final int animation_fps_label=0x7f0b0004;
+        public static final int animation_fps_seekbar=0x7f0b0005;
+        public static final int fps_text=0x7f0b0006;
+        public static final int group1=0x7f0b0008;
+        public static final int language_spinner=0x7f0b0003;
+        public static final int language_spinner_label=0x7f0b0002;
+        public static final int textView1=0x7f0b0000;
     }
     public static final class integer {
         public static final int default_anim_fps=0x7f050001;
@@ -95,7 +111,11 @@ public final class R {
         public static final int action_settings=0x7f070001;
         public static final int app_name=0x7f070000;
         public static final int choose_language=0x7f070009;
+        public static final int current_fps_text=0x7f07000c;
+        public static final int file_opened_from=0x7f07000f;
+        public static final int file_saved_to=0x7f07000e;
         public static final int hello_world=0x7f070002;
+        public static final int settings_header=0x7f07000d;
         public static final int str_anim_fps=0x7f07000a;
         public static final int str_depth=0x7f070003;
         public static final int str_lang_spinner=0x7f07000b;

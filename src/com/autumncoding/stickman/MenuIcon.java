@@ -69,11 +69,17 @@ public class MenuIcon {
 		return false;
 	}
 	
+	/**
+	 * Sets icon to available not touched state
+	 */
 	public void setActive() {
 		m_state = IconState.ACTIVE;
 		m_currentBitmap = m_activeBitmap;
 	}
 	
+	/**
+	 * Sets icon to unavailable state
+	 */
 	public void setUnavailable() {
 		m_state = IconState.UNAVAILABLE;
 		m_currentBitmap = m_unavailableBitmap;

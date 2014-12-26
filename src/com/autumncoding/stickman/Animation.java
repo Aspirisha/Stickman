@@ -87,8 +87,7 @@ public class Animation implements Serializable {
 	public void addFrame() {
 		m_currentFrame = m_currentFrame.copy();
 		m_frames.add(m_currentFrameIndex + 1, m_currentFrame);
-		if (GameData.mainActivity != null)
-			GameData.mainActivity.setFramesSeekbarRange(m_frames.size());
+		GameData.framesChanged = true;
 	}
 	
 	public void removeFrame() {
@@ -99,8 +98,7 @@ public class Animation implements Serializable {
 			return;
 		}
 		m_frames.remove(m_currentFrameIndex);
-		if (GameData.mainActivity != null)
-			GameData.mainActivity.setFramesSeekbarRange(m_frames.size());
+		GameData.framesChanged = true;
 		if (m_currentFrameIndex > 0) {
 			m_currentFrameIndex--;
 			if (m_currentFrameIndex > 0) {
@@ -124,7 +122,6 @@ public class Animation implements Serializable {
 	}
 	
 	private void onStopAnimation() {
-		m_state = AnimationState.EDIT;
 		GameData.menuPencil.setActive();
 		GameData.menuPlay.setActive();
 		GameData.menuBin.setAvailable();
@@ -141,8 +138,8 @@ public class Animation implements Serializable {
 			GameData.menuNext.setAvailable();
 	}
 	
-	public void Play(boolean play) {
-		if (play && m_state == AnimationState.EDIT) {
+	public void Play() {
+		if (m_state == AnimationState.EDIT) {
 			m_state = AnimationState.PLAY;
 			m_animationThread = new Thread() {
 				@Override
@@ -161,25 +158,29 @@ public class Animation implements Serializable {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+						if (m_state != AnimationState.PLAY)
+							break;
 						synchronized (GameData.getLocker()) {
 							if (!hasNextFrame())
 								break;
 							switchToNextFrame();
 							GameData.prevDrawingQueue = null;
-							GameData.menuPrev.setUnavailable();
+							//GameData.menuPrev.setAvailable();
 						}
 						
 					}
 					synchronized (GameData.getLocker()) {
-						 onStopAnimation();
+						m_state = AnimationState.EDIT;
+						onStopAnimation();
 					}
 					
 				}
 			};
 			m_animationThread.start();
-		} else if (!play && m_state == AnimationState.PLAY) {
+		} else if (m_state == AnimationState.PLAY) {
 			synchronized (GameData.getLocker()) {
-				 onStopAnimation();
+				m_state = AnimationState.EDIT;
+				onStopAnimation();
 			}
 		}
 	}
@@ -189,8 +190,8 @@ public class Animation implements Serializable {
 			m_prevFrame = m_frames.get(m_currentFrameIndex);
 			m_currentFrame = m_frames.get(++m_currentFrameIndex);
 			
-			if (null != GameData.mainActivity) 
-				GameData.mainActivity.onCurrentframeChanged(m_currentFrameIndex);
+			GameData.currentFrameIndex = m_currentFrameIndex + 1;
+			GameData.framesChanged = true;
 			GameData.prevDrawingQueue = m_prevFrame.getPrimitives();
 			GameData.drawing_queue = m_currentFrame.getPrimitives();
 					
@@ -199,9 +200,11 @@ public class Animation implements Serializable {
 			for (AbstractDrawingPrimitive pr : GameData.prevDrawingQueue)
 				pr.setUnactiveColour();
 			
-			GameData.menuPrev.setAvailable();
-			if (!hasNextFrame())
-				GameData.menuNext.setUnavailable();
+			if (m_state != AnimationState.PLAY) {
+				GameData.menuPrev.setAvailable();
+				if (!hasNextFrame())
+					GameData.menuNext.setUnavailable();
+			}
 			return m_currentFrame;
 		}
 		
@@ -211,10 +214,10 @@ public class Animation implements Serializable {
 	public AnimationFrame switchToPrevFrame() {
 		if (m_currentFrameIndex > 0) {
 			m_currentFrame = m_frames.get(--m_currentFrameIndex);
+			GameData.currentFrameIndex = m_currentFrameIndex + 1;
 			GameData.drawing_queue = m_currentFrame.getPrimitives();
 			
-			if (null != GameData.mainActivity) 
-				GameData.mainActivity.onCurrentframeChanged(m_currentFrameIndex);
+			GameData.framesChanged = true;
 			
 			for (AbstractDrawingPrimitive pr : GameData.drawing_queue)
 				pr.setActiveColour();
@@ -258,9 +261,13 @@ public class Animation implements Serializable {
 			return;
 		
 		m_currentFrameIndex = frameIndex;
+		GameData.currentFrameIndex = frameIndex + 1;
+		
 		m_currentFrame = m_frames.get(m_currentFrameIndex);
 		GameData.drawing_queue = m_currentFrame.getPrimitives();
-				
+		
+		GameData.framesChanged = true;
+		
 		for (AbstractDrawingPrimitive pr : GameData.drawing_queue)
 			pr.setActiveColour();
 		
@@ -276,8 +283,17 @@ public class Animation implements Serializable {
 			GameData.menuPrev.setUnavailable();
 		}
 		
-		GameData.menuNext.setAvailable();
+		if (hasNextFrame())
+			GameData.menuNext.setAvailable();
+		else
+			GameData.menuNext.setUnavailable();
+		
+		if (hasPrevFrame())
+			GameData.menuPrev.setAvailable();
+		else
+			GameData.menuPrev.setUnavailable();
 	}
+	
 	
 	public boolean SaveToFile(String fileName) {
 		try {

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Спичечная анимашка</string>
+    <string name="action_settings">Настройки</string>
+    <string name="hello_world">Привет, мир!</string>
+	<string name="str_depth">Кафедра прикладной математики</string>
+	<string name="str_university">Санкт-Петерургский Политехнический Университет</string>
+    <string name="str_toweb">Перейти на сайт</string>
+    <string name="str_start">Играть</string>
+    <string name="str_load">Загрузить</string>
+    <string name="str_save">Сохранить</string>
+    <string name="choose_language">Выберите язык</string>
+    <string name="str_anim_fps">Частота кадров анимации:</string>
+    <string name="str_lang_spinner">Язык:</string>
+    <string name="current_fps_text">Текущая частота: </string>
+    <string name="settings_header">Настройки</string>
+    <string name="file_saved_to">Анимация сохранена в файл </string>
+    <string name="file_opened_from">Анимация загружена из файла </string>
+    
+     <string-array name="languages_array">
+        <item>English</item>
+        <item>Русский</item>
+        <item>Deutsch</item>
+    </string-array>
+</resources>

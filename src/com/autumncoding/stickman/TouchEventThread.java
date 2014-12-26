@@ -13,8 +13,7 @@ import android.view.MotionEvent;
 public class TouchEventThread extends Thread {
 	enum TouchState {
 		DRAWING,
-		DRAGGING,
-		WATCHING
+		DRAGGING
 	}
 	
 	private GameData game_data;
@@ -158,9 +157,6 @@ public class TouchEventThread extends Thread {
 				}
 				break;
 			}
-			case WATCHING:
-				processEventPlaying(event);
-				break;
 			default:
 				break;
 			
@@ -201,7 +197,6 @@ public class TouchEventThread extends Thread {
 					break;
 				case 2:
 					Animation.getInstance().switchToPrevFrame();
-					
 					lastTouchMenuIndex = 2;
 					break;
 				case 3:
@@ -222,15 +217,7 @@ public class TouchEventThread extends Thread {
 					lastTouchMenuIndex = 5;
 					break;
 				case 6:
-					if (currentWorkingState != TouchState.WATCHING) {
-						currentWorkingState = TouchState.WATCHING;
-						Animation.getInstance().Play(true);
-						GameData.menuPencil.setUntouched();
-						GameData.menuDrag.setUntouched();
-					} else {
-						currentWorkingState = TouchState.DRAGGING;
-						Animation.getInstance().stopAnimation();
-					}
+					Animation.getInstance().Play();
 					break;
 				default:
 					lastTouchMenuIndex = touchedMenuIndex;
@@ -250,6 +237,9 @@ public class TouchEventThread extends Thread {
 	
 	private void processEventDrawing(MotionEvent event)
 	{
+		if (Animation.getInstance().getState() == AnimationState.PLAY)
+			return;
+		
 		int eventCode = event.getAction() & MotionEvent.ACTION_MASK;
 		float x = event.getX();
 		float y = event.getY();
@@ -360,6 +350,9 @@ public class TouchEventThread extends Thread {
 	
 	private void processEventDragging(MotionEvent event, long eventTime)
 	{
+		if (Animation.getInstance().getState() == AnimationState.PLAY)
+			return;
+		
 		int eventCode = event.getAction() & MotionEvent.ACTION_MASK;
 		float x = event.getX();
 		float y = event.getY();
@@ -426,15 +419,6 @@ public class TouchEventThread extends Thread {
 			break;
 		}
 		}	
-	}
-	
-	private void processEventPlaying(MotionEvent event)
-	{
-		synchronized (GameData.getLocker()) {
-			if (Animation.getInstance().getState() == AnimationState.EDIT) {
-				currentWorkingState = TouchState.DRAGGING;
-			}
-		}
 	}
 	
 	public void pushEvent(MotionEvent ev) {

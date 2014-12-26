@@ -16,7 +16,6 @@ public class Circle extends AbstractDrawingPrimitive {
 	/*********************** touch data *********************************************/
 	
 	private transient Paint m_line_paint;
-	private transient Paint m_joint_paint;
 	
 	enum CircleTouches {
 		JOINT, 
@@ -35,7 +34,6 @@ public class Circle extends AbstractDrawingPrimitive {
 		joints.add(new Joint(this, m_jointPoint));
 				
 		m_line_paint = GameData.line_paint;
-		m_joint_paint = GameData.joint_paint;
 	}
 	
 	public Circle(Circle cir) {
@@ -45,7 +43,6 @@ public class Circle extends AbstractDrawingPrimitive {
 		m_radius = cir.m_radius;
 		joints.add(new Joint(this, m_jointPoint));
 		m_line_paint = GameData.line_paint;
-		m_joint_paint = GameData.joint_paint;
 	}
 	
 	private CircleTouches m_checkTouched(float touch_x, float touch_y) {
@@ -83,15 +80,15 @@ public class Circle extends AbstractDrawingPrimitive {
 		m_touchState = m_checkTouched(touch_x, touch_y);
 		
 		m_isTouched = true;
-		m_joint_paint = GameData.joint_paint;
 		m_line_paint = GameData.line_paint;
+		joints.get(0).setTouched(false);
 		
 		switch (m_touchState) {
 		case CIRCLE:
 			m_line_paint = GameData.line_touched_paint;
 			break;
 		case JOINT:
-			m_joint_paint = GameData.joint_touched_paint;
+			joints.get(0).setTouched(true);
 			break;
 		case NONE:
 			m_isTouched = false;
@@ -105,7 +102,8 @@ public class Circle extends AbstractDrawingPrimitive {
 	@Override
 	public void draw(Canvas canvas) {
 		canvas.drawCircle(m_centre.x, m_centre.y, m_radius, m_line_paint);
-		canvas.drawCircle(m_jointPoint.x, m_jointPoint.y, GameData.joint_radius_visible, m_joint_paint);
+		joints.get(0).draw(canvas);
+		//canvas.drawCircle(m_jointPoint.x, m_jointPoint.y, GameData.joint_radius_visible, m_joint_paint);
 	}
 
 	@Override
@@ -183,7 +181,7 @@ public class Circle extends AbstractDrawingPrimitive {
 		m_touchState = CircleTouches.NONE;
 		
 		if (!m_isOutOfBounds) {
-			m_joint_paint = GameData.joint_paint;
+			joints.get(0).setTouched(false);
 			m_line_paint = GameData.line_paint;
 		}
 	}
@@ -262,14 +260,14 @@ public class Circle extends AbstractDrawingPrimitive {
 		if (newOutOfBoundsState != m_isOutOfBounds) {
 			m_isOutOfBounds = newOutOfBoundsState;
 			if (m_isOutOfBounds) {
-				m_line_paint = GameData.drop_line_paint;
-				m_joint_paint = GameData.drop_joint_paint;
+				m_line_paint = GameData.line_drop_paint;
+				joints.get(0).setOutOfBounds(true);
 			} else {
-				m_line_paint = GameData.drop_line_paint;
-				m_joint_paint = GameData.drop_joint_paint;
+				m_line_paint = GameData.line_paint;
+				joints.get(0).setOutOfBounds(false);
 				switch (m_touchState) {
 				case JOINT:
-					m_joint_paint = GameData.joint_touched_paint;
+					joints.get(0).setTouched(true);
 					break;
 				case CIRCLE:
 					m_line_paint = GameData.line_touched_paint;
@@ -288,7 +286,6 @@ public class Circle extends AbstractDrawingPrimitive {
 	public void setTransitiveFields(Context context) {
 		super.setTransitiveFields(context);
 		m_line_paint = GameData.line_paint;
-		m_joint_paint = GameData.joint_paint;
 		m_touchState = CircleTouches.NONE;
 	}
 
@@ -300,14 +297,14 @@ public class Circle extends AbstractDrawingPrimitive {
 	
 	@Override
 	public void setActiveColour() {
-		m_joint_paint = GameData.joint_paint;
+		joints.get(0).updateColor();
 		m_line_paint = GameData.line_paint;
 	}
 
 	@Override
 	public void setUnactiveColour() {
-		m_joint_paint = GameData.prev_frame_joint_paint;
-		m_line_paint = GameData.prev_frame_line_paint;
+		joints.get(0).setUnactive(true);
+		m_line_paint = GameData.line_prev_frame_paint;
 	}
 
 	private void writeObject(java.io.ObjectOutputStream  stream) throws IOException {

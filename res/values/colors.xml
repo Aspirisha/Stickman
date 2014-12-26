@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="label_color">#FFC973</color>
+    <color name="child_joint">#C8FFD300</color>
+    <color name="root_joint">#C8008500</color>
+    <color name="touched_element">#C8510FAD</color>
+    <color name="prev_frame_element">#C8AAAAAA</color>
+    <color name="primitive_line">#C8000000</color>
+    <color name="drop_color">#C8FF0000</color>
 </resources>

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import com.autamncoding.stickman.R;
+
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -18,7 +20,6 @@ public class Joint implements Serializable {
 	private boolean isParentJoint = false;
 	private boolean isChildJoint = false;
 	private boolean isFreeJoint = true;
-	private int distToFreeJoint;
 	private transient Joint m_parent;
 	private transient ArrayList<Joint> m_childrenJoints;
 	private transient AbstractDrawingPrimitive m_primitive; // primitive, to which this joint belongs
@@ -29,7 +30,6 @@ public class Joint implements Serializable {
 		stream.writeBoolean(isParentJoint);
 		stream.writeBoolean(isChildJoint);
 		stream.writeBoolean(isFreeJoint);
-		stream.writeInt(distToFreeJoint);
 		stream.writeObject(m_point);
 	}
 	
@@ -37,20 +37,27 @@ public class Joint implements Serializable {
 		isParentJoint = stream.readBoolean();
 		isChildJoint = stream.readBoolean();
 		isFreeJoint = stream.readBoolean();
-		distToFreeJoint = stream.readInt();
 		m_point = (Vector2DF) stream.readObject();
 		m_parent = null;
 		m_childrenJoints = new ArrayList<Joint>();
 		m_primitive = null;
-		m_paint = new Paint();
+		m_paint = GameData.root_joint_paint;
 	}
 	
 	public Joint(AbstractDrawingPrimitive pr, Vector2DF p) {
 		m_childrenJoints = new ArrayList<Joint>();
 		m_primitive = pr;
 		m_point = new Vector2DF(p);
-		m_paint = new Paint(GameData.joint_paint);
-		m_paint.setColor(Color.argb(200, 10, 250, 0)); // delta color = 8 for each new child
+		m_paint = GameData.root_joint_paint;
+	}
+	
+	public void updateColor() {
+		if (!m_primitive.hasParent())
+			m_paint = GameData.root_joint_paint;
+		else if (!isChildJoint)
+			m_paint = GameData.child_joint_paint; // TODO rename to free joint paint
+		else 
+			m_paint = m_parent.m_paint;
 	}
 	
 	public void setMyPrimitive(AbstractDrawingPrimitive pr) {
@@ -64,7 +71,6 @@ public class Joint implements Serializable {
 		isParentJoint = false;
 		isChildJoint = false;
 		isFreeJoint = true;
-		distToFreeJoint = 0;
 		m_parent = null;
 		m_childrenJoints.clear();
 	}
@@ -93,7 +99,27 @@ public class Joint implements Serializable {
 		isFreeJoint = false;
 		m_parent = newParent;
 		m_childrenJoints.clear(); 
-		m_paint.setColor(Color.argb(0,0,0,0));
+	}
+	
+	public void setTouched(boolean touched) {
+		if (touched)
+			m_paint = GameData.joint_touched_paint;
+		else
+			updateColor();
+	}
+	
+	public void setOutOfBounds(boolean outOfBounds) {
+		if (outOfBounds)
+			m_paint = GameData.joint_drop_paint;
+		else
+			updateColor();
+	}
+	
+	public void setUnactive(boolean unactive) {
+		if (unactive)
+			m_paint = GameData.joint_prev_frame_paint;
+		else
+			updateColor();
 	}
 	
 	public boolean isParent() {
@@ -108,14 +134,6 @@ public class Joint implements Serializable {
 		return isChildJoint;
 	}
 
-	public int getDistToFreeJoint() {
-		return distToFreeJoint;
-	}
-	
-	public void setDistToFreeJoint(int dist) {
-		distToFreeJoint = dist;
-	}
-	
 	public Joint getMyParent() {
 		return m_parent;
 	}

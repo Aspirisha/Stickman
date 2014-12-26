@@ -16,8 +16,6 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	private float angle;
 	
 	private transient Paint m_line_paint;
-	private transient Paint m_joint1_paint;
-	private transient Paint m_joint2_paint;
 	
 	/*********************** touch data *********************************************/
 	enum StickTouches {
@@ -38,8 +36,6 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		p2 = new Vector2DF(200, 100);
 
 		m_line_paint = GameData.line_paint;
-		m_joint1_paint = GameData.joint_paint;
-		m_joint2_paint = GameData.joint_paint;
 		
 		joints.add(new Joint(this, p1));
 		joints.add(new Joint(this, p2));
@@ -52,8 +48,6 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		length = st.length;
 		angle = st.angle;
 		m_line_paint = GameData.line_paint;
-		m_joint1_paint = GameData.joint_paint;
-		m_joint2_paint = GameData.joint_paint;
 		joints.add(new Joint(this, p1));
 		joints.add(new Joint(this, p2));
 	}
@@ -156,8 +150,8 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	@Override
 	public void draw(Canvas canvas) { 
 		canvas.drawLine(p1.x, p1.y, p2.x, p2.y, m_line_paint);
-		canvas.drawCircle(p2.x, p2.y, GameData.joint_radius_visible, m_joint2_paint);
-		canvas.drawCircle(p1.x, p1.y, GameData.joint_radius_visible, m_joint1_paint);
+		for (Joint j : joints)
+			j.draw(canvas);
 	}
 	
 	private StickTouches m_checkTouched(float touch_x, float touch_y) {
@@ -205,16 +199,16 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		m_touchState = m_checkTouched(touch_x, touch_y);
 		
 		m_isTouched = true;
-		m_joint1_paint = GameData.joint_paint;
-		m_joint2_paint = GameData.joint_paint;
 		m_line_paint = GameData.line_paint;
+		for (Joint j : joints)
+			j.setTouched(false);
 		
 		switch (m_touchState) {
 		case JOINT1:
-			m_joint1_paint = GameData.joint_touched_paint;
+			joints.get(0).setTouched(true);
 			break;
 		case JOINT2:
-			m_joint2_paint = GameData.joint_touched_paint;
+			joints.get(1).setTouched(true);
 			break;
 		case NONE:
 			m_isTouched = false;
@@ -240,8 +234,8 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		m_isTouched = false;
 		m_touchState = StickTouches.NONE;
 		if (!m_isOutOfBounds) {
-			m_joint1_paint = GameData.joint_paint;
-			m_joint2_paint = GameData.joint_paint;
+			for (Joint j : joints)
+				j.setTouched(false);
 			m_line_paint = GameData.line_paint;
 		}
 	}
@@ -341,19 +335,19 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		if (newOutOfBoundsState != m_isOutOfBounds) {
 			m_isOutOfBounds = newOutOfBoundsState;
 			if (m_isOutOfBounds) {
-				m_line_paint = GameData.drop_line_paint;
-				m_joint1_paint = GameData.drop_joint_paint;
-				m_joint2_paint = GameData.drop_joint_paint;
+				m_line_paint = GameData.line_drop_paint;
+				for (Joint j : joints)
+					j.setOutOfBounds(true);
 			} else {
 				m_line_paint = GameData.line_paint;
-				m_joint1_paint = GameData.joint_paint;
-				m_joint2_paint = GameData.joint_paint;
+				for (Joint j : joints)
+					j.setOutOfBounds(false);
 				switch (m_touchState) {
 				case JOINT1:
-					m_joint1_paint = GameData.joint_touched_paint;
+					joints.get(0).setTouched(true);
 					break;
 				case JOINT2:
-					m_joint2_paint = GameData.joint_touched_paint;
+					joints.get(1).setTouched(true);
 					break;
 				case STICK:
 					m_line_paint = GameData.line_touched_paint;
@@ -372,8 +366,6 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	public void setTransitiveFields(Context context) {
 		super.setTransitiveFields(context);
 		m_line_paint = GameData.line_paint;
-		m_joint1_paint = GameData.joint_paint;
-		m_joint2_paint = GameData.joint_paint;
 		m_touchState = StickTouches.NONE;
 	}
 
@@ -385,15 +377,16 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 
 	@Override
 	public void setActiveColour() {
-		m_joint1_paint = GameData.joint_paint;
-		m_joint2_paint = GameData.joint_paint;
+		for (Joint j : joints)
+			j.setUnactive(false);
 		m_line_paint = GameData.line_paint;
 	}
 
 	@Override
 	public void setUnactiveColour() {
-		m_joint1_paint = m_joint2_paint = GameData.prev_frame_joint_paint;
-		m_line_paint = GameData.prev_frame_line_paint;
+		for (Joint j : joints)
+			j.setUnactive(true);
+		m_line_paint = GameData.line_prev_frame_paint;
 	}
 
 	private void writeObject(java.io.ObjectOutputStream  stream) throws IOException {

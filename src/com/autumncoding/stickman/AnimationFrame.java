@@ -29,12 +29,12 @@ public class AnimationFrame implements Serializable {
 	
 	public void addRoot(AbstractDrawingPrimitive root) {
     	m_roots.add(root);
-    	root.setTreeNumber(m_roots.size() - 1);
+    	root.updateSubtreeNumber(m_roots.size());
     }
 	
 	public void addPrimitive(AbstractDrawingPrimitive pr) {
 		m_primitives.add(pr);
-		pr.setMyNumber(m_primitives.size() - 1);
+		pr.setMyNumber(m_primitives.size());
 	}
 	
     public int getTreesNumber() {
@@ -48,7 +48,7 @@ public class AnimationFrame implements Serializable {
     		return false;
     	int oldNumber = root.getTreeNumber();
     	for (AbstractDrawingPrimitive pr : m_roots) {
-    		if (pr.getTreeNumber() >= oldNumber) {
+    		if (pr.getTreeNumber() > oldNumber) {
     			pr.updateSubtreeNumber(pr.getTreeNumber() - 1);
     		}
     	}
@@ -79,6 +79,10 @@ public class AnimationFrame implements Serializable {
 				newCon.primitiveJoint = newFrame.m_primitives.get(primitiveIndex).getMyJoints().get(primJointIndex);
 				newCon.myRelation = con.myRelation;
 				newCon.primitive = newFrame.m_primitives.get(primitiveIndex);
+				
+				// managing joints
+				newCon.myJoint.addChild(newCon.primitiveJoint);
+				newCon.primitiveJoint.connectToParent(newCon.myJoint);
 				newPrimitive.addChildConnection(newCon);
 			}
 			
@@ -97,13 +101,14 @@ public class AnimationFrame implements Serializable {
 				newCon.primitive = newFrame.m_primitives.get(primitiveIndex);
 				newPrimitive.setParentConnection(newCon);
 				
+				// managing joints
 				newCon.myJoint.connectToParent(newCon.primitiveJoint);
 				newCon.primitiveJoint.addChild(newCon.myJoint);
 			}
-			
-			
 		}
 		
+		for (AbstractDrawingPrimitive pr : newFrame.m_primitives)
+			pr.updateJointColors();
 		return newFrame;
 	}
 	
@@ -128,10 +133,14 @@ public class AnimationFrame implements Serializable {
 			if (!pr.hasParent())
 				m_roots.add(pr);
 		}
+		for (AbstractDrawingPrimitive pr : m_primitives) {
+			pr.updateJointColors();
+		}
+		
 	}
 	
 	void removePrimitive(AbstractDrawingPrimitive pr) {
-		pr.disconnectFromEverybody();
+		pr.disconnectBeforeDeleting();
 		m_primitives.remove(pr);
 		removeRoot(pr);
 		for (AbstractDrawingPrimitive v : m_primitives) {
