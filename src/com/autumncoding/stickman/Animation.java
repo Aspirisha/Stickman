@@ -340,10 +340,7 @@ public class Animation implements Serializable {
 		    	}
 		    }
 		    
-		    if (null != GameData.mainActivity) {
-				GameData.mainActivity.onCurrentframeChanged(0);
-				GameData.mainActivity.setFramesSeekbarRange(m_frames.size());
-		    }
+		    GameData.framesChanged = true;
 		    
 		    GameData.drawing_queue = m_currentFrame.getPrimitives();
 		    GameData.prevDrawingQueue = null;

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout1"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/background"
+    android:orientation="vertical"
+    android:scrollbars="vertical" >
+
+    <TextView
+        android:id="@+id/TextView06"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center"
+        android:background="@drawable/label_back"
+        android:gravity="center"
+        android:text="Help"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="@color/label_color"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:layout_marginLeft="5dp"
+        android:src="@drawable/quest" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/imageView2"
+        android:layout_marginBottom="14dp"
+        android:layout_marginLeft="10dp"
+        android:layout_toRightOf="@+id/imageView2"
+        android:text="@string/how1"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/label_color" />
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/imageView1"
+        android:layout_alignLeft="@+id/textView2"
+        android:layout_marginBottom="14dp"
+        android:text="@string/how2"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/label_color" />
+
+    <ImageView
+        android:id="@+id/ImageView01"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/imageView1"
+        android:layout_below="@+id/imageView1"
+        android:layout_marginTop="5dp"
+        android:src="@drawable/hand1" />
+
+    <ImageView
+        android:id="@+id/ImageView02"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/ImageView03"
+        android:layout_below="@+id/ImageView03"
+        android:layout_marginTop="5dp"
+        android:src="@drawable/pult" />
+
+    <TextView
+        android:id="@+id/TextView03"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/ImageView02"
+        android:layout_alignLeft="@+id/TextView02"
+        android:layout_marginBottom="14dp"
+        android:text="@string/how5"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/label_color" />
+
+    <ImageView
+        android:id="@+id/ImageView04"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/ImageView02"
+        android:layout_below="@+id/ImageView02"
+        android:layout_marginTop="5dp"
+        android:src="@drawable/play1" />
+
+    <ImageView
+        android:id="@+id/ImageView05"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/ImageView04"
+        android:layout_below="@+id/ImageView04"
+        android:layout_marginTop="5dp"
+        android:src="@drawable/save1" />
+
+    <TextView
+        android:id="@+id/TextView04"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/ImageView04"
+        android:layout_alignLeft="@+id/TextView03"
+        android:layout_marginBottom="14dp"
+        android:text="@string/how6"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/label_color" />
+
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/imageView2"
+        android:layout_below="@+id/imageView2"
+        android:layout_marginTop="5dp"
+        android:src="@drawable/pencil1" />
+
+    <TextView
+        android:id="@+id/TextView02"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView1"
+        android:layout_alignBottom="@+id/ImageView03"
+        android:layout_marginBottom="14dp"
+        android:text="@string/how4"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/label_color" />
+
+    <ImageView
+        android:id="@+id/ImageView03"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/ImageView01"
+        android:layout_below="@+id/ImageView01"
+        android:layout_marginTop="5dp"
+        android:src="@drawable/socket" />
+
+    <TextView
+        android:id="@+id/TextView01"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView1"
+        android:layout_alignBottom="@+id/ImageView01"
+        android:layout_marginBottom="14dp"
+        android:text="@string/how3"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/label_color" />
+
+    <TextView
+        android:id="@+id/TextView05"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/ImageView05"
+        android:layout_alignLeft="@+id/TextView04"
+        android:text="@string/how7"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/label_color" />
+
+</RelativeLayout>

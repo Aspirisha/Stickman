@@ -10,6 +10,7 @@
     <string name="str_start">Start</string>
     <string name="str_load">Load</string>
     <string name="str_save">Save</string>
+    <string name="str_help">Help</string>
     <string name="choose_language">Choose language</string>
     <string name="str_anim_fps">Animation frames per second:</string>
     <string name="str_lang_spinner">Language:</string>
@@ -18,6 +19,74 @@
     <string name="file_saved_to">Animation was saved to file </string>
     <string name="file_opened_from">Animation was loaded from file </string>
     
+    <!-- Help strings -->
+    <string name="how1"><u>What is this app about?</u></string>
+    <string name="how2"><u>How do I draw objects?</u></string>
+    <string name="how3"><u>How do I move objects?</u></string>
+    <string name="how4"><u>How do I connect objects?</u></string>
+    <string name="how5"><u>How do I control frames?</u></string>
+    <string name="how6"><u>How do I watch animation?</u></string>
+    <string name="how7"><u>How do I save and \n load results?</u></string>
+    
+    <string name="ans1">About app</string>
+    <string name="ans2">Drawing objects</string>
+    <string name="ans3">Moving objects</string>
+    <string name="ans4">Connecting objects</string>
+    <string name='ans5'>Controlling frames</string>
+    <string name="ans6">Watching animation</string>
+    <string name="ans7">Saving results</string>
+    
+    <string name="about1">Stickman application will help you easily create simple animations, like those that almost everyone 
+        tried to draw in her notebook. Besides drawing, you can save your animation for future usage and watch it whenever you want.</string>
+        
+    <string name="draw1">To draw an object, first choose drawing mode by clicking this button in top menu. Not more than
+        15 objects can be drawn on a single frame.</string>
+    <string name="draw2">You can draw two types of objects: sticks and circles, like on the picture below:</string>
+    <string name="draw3">Now you can touch the screen in arbitrary point and drag your finger
+        to another arbitrary point on the screen. You will see a red and gray lines appearing: red line indicates result primitive, which will be drawn
+        if you pull off your finger. Gray line indicates current path of your finger. If your path has self-intersections,
+        a circle will be drawn, else you will get stick. Below you an see an example of what you can see while drawing an object.</string>
+    <string name="draw4">Notice, that all the objects you have drawn on the current frame, will appear on all frames after the current one.</string>
+    
+    <string name="move1">To move objects, first choose moving mode by clicking this button in top menu.</string>
+    <string name="move2">You can move objects in two different ways: drag or rotate them. Also, you can scale objects (see below).</string>
+    <string name="move3">To drag an object, touch it\'s black part (not joint, but line) and drag wherever you want. When touched for dragging,
+        objects\'s line colour turns to violet.</string>
+    <string name="move4">To rotate an object, touch it\'s joint and move your finger over the screen. When touched for rotating, objects\'s 
+        joint colour turns to violet.</string>
+    <string name="move5">To scale an object, quickly tap twice any of it\'s joints, and then drag. When touched for scaling, object\'s 
+        joint colour turns to blue.</string>
+    
+    <string name="connect1">To connect objects, first choose moving mode by clicking this button in top menu.</string>
+    <string name="connect2">Connected onjects form a hierarchy: attached object becomes a child of object, to which it is attached 
+        (the latter object becomes parent for the former).</string>
+    <string name="connect3">
+        We call object\'s joint a <i>free joint</i>, if it has green colour. More precizely, this means,
+        that this joint belongs to a parent object, i.e. object, that is not attached to any other object as a child. So, after 
+        object became a child, it\'s joints are recoloured into yellow.</string>
+    <string name="connect4">To attach one object to another, move first object so that one of it\'s free joints
+        overlaps with some joint of second object. After connection, the object you moved becomes child of an object, that was stationary.</string>
+    <string name="connect5">When parent object is moved, all it\'s children are also moved. On the other hand, you can\'t drag child object explicitely,
+        you can rather rotate it around connection joint or disconnect it from parent by dragging it rather fast.</string>
+    <string name="connect6">Note, that you can scale object, only if it\'s absolutely free, i.e. is not a parent nor a child.</string>
+    <string name="connect7">As mentioned above, to disconnect objects, quickly pull child object away from parent.</string>
+        
+    <string name="frames1">There are four buttons in top menu to control frames (the third is New frame button, and the right most is Delete frame button).</string>
+    <string name="frames2">Left and right arrows simply allow you to switch between frames. Also under the top menu there is a trackbar
+        that allows rapid navigation, and frame counter on the right of it.</string>
+    <string name="frames3">Pressing New frame button you can add frames to your animation. Notice that new frames will appear right after the current frame, 
+        and will contain all the objects from the current frame you have drawn so far.</string>
+    <string name="frames4">Pressing Delete frame button you can remove current frame. Notice, that if you have only one frame, removing it equivalent to
+        clearing the frame, yet it will be still present (animation can\'t has less than one frame).</string>
+    
+     <string name="animation1">To play animation you have created, push Play button in top menu.</string>
+     <string name="animation2">To stop playing animation, push the same button (it has become red after playing had started).</string>
+     <string name="animation3">You can change animation speed in settings choosing animation frames per second (FPS). 
+         Settings are available from the bottom menu.</string>
+     <string name="animation4">Notice that you can\'t draw or move objects while watching animation.</string>
+    
+     <string name="save1">To save or load animation, go to bottom menu and select appropriate item.</string>
+        
      <string-array name="languages_array">
         <item>English</item>
         <item>Русский</item>

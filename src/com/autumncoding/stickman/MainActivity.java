@@ -99,7 +99,6 @@ public class MainActivity extends Activity {
 	
 	private void initSettingsView() {
 		m_settingsView = new SettingsView(this);
-		
 	}
 	
 	void UpdateFramesInfo(int cur, int max) {
@@ -250,6 +249,9 @@ public class MainActivity extends Activity {
 	        	FileOpenDialog.Default_File_Name = "";
 	        		
 	            return true;
+	        case R.id.action_help:
+	        	startActivity(new Intent(this, HelperActivity.class));
+	        	return true;
 	        default:
 	            return super.onOptionsItemSelected(item);
 	    }
