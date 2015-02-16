@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 import com.autamncoding.stickman.R;
+import com.autumncoding.stickman.TouchEventThread.TouchState;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -19,7 +20,7 @@ public class GameData {
     private long prevDrawingTime = System.currentTimeMillis();
     
     public static final long FPS = 30;
-    
+    public static TouchState touchState = TouchState.DRAWING;
     //lengths
     public static final float min_dist_to_connect_square = 100;
     
@@ -69,6 +70,8 @@ public class GameData {
 	public static Paint joint_drop_paint; 
 	public static Paint joint_touched_paint;
 	
+	public static Paint blended_line_paint;
+	public static Paint blended_joint_paint;
 	
 	// menu info
 	public static final int numberOfMenuIcons = 7;
@@ -135,6 +138,7 @@ public class GameData {
     	menu_line_paint.setDither(true);
     	menu_line_paint.setStrokeWidth(3f);
 		
+    	blended_line_paint = new Paint(line_paint);
 		
 		// joints paints
 		root_joint_paint = new Paint(line_paint);
@@ -142,6 +146,8 @@ public class GameData {
 		root_joint_paint.setShadowLayer(2, 0, 0, 0x6A8F00);
 		root_joint_paint.setStyle(Paint.Style.FILL);
 
+		blended_joint_paint = new Paint(root_joint_paint);
+		
 		child_joint_paint = new Paint(root_joint_paint);
 		child_joint_paint.setColor(res.getColor(R.color.child_joint));
 		
@@ -230,5 +236,31 @@ public class GameData {
 	
 	public void setDrawingQueue(LinkedList<AbstractDrawingPrimitive> q) {
 		drawing_queue = q;
+	}
+	
+	public static int mixTwoColors(int color1, int color2, float amount)
+	{
+	    final byte ALPHA_CHANNEL = 24;
+	    final byte RED_CHANNEL   = 16;
+	    final byte GREEN_CHANNEL =  8;
+	    final byte BLUE_CHANNEL  =  0;
+
+	    final float inverseAmount = 1.0f - amount;
+
+	    int a = ((int)(((float)(color1 >> ALPHA_CHANNEL & 0xff )*amount) +
+	                   ((float)(color2 >> ALPHA_CHANNEL & 0xff )*inverseAmount))) & 0xff;
+	    int r = ((int)(((float)(color1 >> RED_CHANNEL & 0xff )*amount) +
+	                   ((float)(color2 >> RED_CHANNEL & 0xff )*inverseAmount))) & 0xff;
+	    int g = ((int)(((float)(color1 >> GREEN_CHANNEL & 0xff )*amount) +
+	                   ((float)(color2 >> GREEN_CHANNEL & 0xff )*inverseAmount))) & 0xff;
+	    int b = ((int)(((float)(color1 & 0xff )*amount) +
+	                   ((float)(color2 & 0xff )*inverseAmount))) & 0xff;
+
+	    int newColor = a << ALPHA_CHANNEL | r << RED_CHANNEL | g << GREEN_CHANNEL | b << BLUE_CHANNEL;
+	    
+	    blended_line_paint.setColor(newColor);
+	    blended_joint_paint.setColor(newColor);
+	    
+	    return newColor;
 	}
 }

@@ -45,8 +45,6 @@ public class TouchEventThread extends Thread {
 	private boolean m_drawingIsStarted = false;
 	private boolean m_drawingHasIntersection = false;
 	
-	TouchState currentWorkingState = TouchState.DRAWING;
-	
 	class CurrentDrawingState
 	{
 		PointF m_startDrawingPoint = new PointF();
@@ -147,7 +145,7 @@ public class TouchEventThread extends Thread {
 		if (event.getY() < GameData.getMenuBottom()) {
 			processEventInMenu(event);
 		} else {
-			switch (currentWorkingState) {
+			switch (GameData.touchState) {
 			case DRAGGING:
 				processEventDragging(event, eventTime);
 				break;
@@ -186,12 +184,12 @@ public class TouchEventThread extends Thread {
 					return;
 				switch (touchedMenuIndex) {
 				case 0:
-					currentWorkingState = TouchState.DRAWING;
+					GameData.touchState = TouchState.DRAWING;
 					GameData.menuDrag.setUntouched();
 					GameData.menuPlay.setUntouched();
 					break;
 				case 1:
-					currentWorkingState = TouchState.DRAGGING;
+					GameData.touchState = TouchState.DRAGGING;
 					GameData.menuPencil.setUntouched();
 					GameData.menuPlay.setUntouched();
 					break;
@@ -205,7 +203,7 @@ public class TouchEventThread extends Thread {
 					break;
 				case 4:
 					Animation.getInstance().addFrame();
-					GameData.menuNext.setActive();
+					GameData.menuPrev.setActive();
 					lastTouchMenuIndex = 4;
 					break;
 				case 5:
@@ -329,11 +327,11 @@ public class TouchEventThread extends Thread {
 			}
 			synchronized (GameData.getLocker()) {
 				//GameData.drawing_queue.add(newPrimitive);
-				newPrimitive.setMyNumber(GameData.drawing_queue.size() - 1);
+				newPrimitive.setMyNumber(GameData.drawing_queue.size());
 				Animation.getInstance().addPrimitive(newPrimitive);
 				GameData.drawnPoints.clear();
 				if (GameData.drawing_queue.size() == GameData.maxPrimitivesNumber) {
-					currentWorkingState = TouchState.DRAGGING;
+					GameData.touchState = TouchState.DRAGGING;
 					GameData.menuPencil.setUnavailable();
 					GameData.menuDrag.setTouched();
 				}

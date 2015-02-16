@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 
 public class Circle extends AbstractDrawingPrimitive {
@@ -317,6 +318,32 @@ public class Circle extends AbstractDrawingPrimitive {
 		m_centre = (Vector2DF) stream.readObject();
 		m_jointPoint = (Vector2DF) stream.readObject();
 		m_radius = stream.readFloat();
+	}
+
+	@Override
+	public void drawBlendingWithSuccessor(Canvas canvas, float t) {
+		if (m_successor != null) {
+			Circle suc = (Circle)m_successor;
+			GameData.mixTwoColors(m_line_paint.getColor(), suc.m_line_paint.getColor(), 1 - t);
+			canvas.drawCircle((1 - t) * m_centre.x + t * suc.m_centre.x, (1 - t) * m_centre.y + t * suc.m_centre.y, (1 - t) * m_radius + t * suc.m_radius, GameData.blended_line_paint);
+			joints.get(0).drawBlendingWithSuccessor(canvas, t, suc.joints.get(0));
+		} else {
+			drawBlendingWithNoSuccessor(canvas, t);
+		}
+	}
+
+	@Override
+	public void drawBlendingWithNoPredecessor(Canvas canvas, float t) {
+		GameData.mixTwoColors(Color.argb(0, 0, 0, 0), m_line_paint.getColor(), 1 - t);
+		canvas.drawCircle(m_centre.x, m_centre.y, m_radius, GameData.blended_line_paint);
+		joints.get(0).drawBlendingWithNoPredecessor(canvas, t);
+	}
+	
+	@Override
+	public void drawBlendingWithNoSuccessor(Canvas canvas, float t) {
+		GameData.mixTwoColors(Color.argb(0, 0, 0, 0), m_line_paint.getColor(), t);
+		canvas.drawCircle(m_centre.x, m_centre.y, m_radius, GameData.blended_line_paint);
+		joints.get(0).drawBlendingWithNoSuccessor(canvas, t);
 	}
 }
 	

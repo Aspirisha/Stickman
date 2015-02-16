@@ -5,6 +5,7 @@ import java.io.Serializable;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 
 public class Stick extends AbstractDrawingPrimitive implements Serializable {
@@ -402,5 +403,34 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		p2 = (Vector2DF) stream.readObject();
 		length = stream.readFloat();
 		angle = stream.readFloat();
+	}
+	
+	@Override
+	public void drawBlendingWithSuccessor(Canvas canvas, float t) {
+		if (m_successor != null) {
+			Stick suc = (Stick)m_successor;
+			GameData.mixTwoColors(m_line_paint.getColor(), suc.m_line_paint.getColor(), 1 - t);
+			
+			canvas.drawLine((1 - t) * p1.x + t * suc.p1.x, (1 - t) * p1.y+ t * suc.p1.y, 
+					(1 - t) * p2.x + t * suc.p2.x, (1 - t) * p2.y+ t * suc.p2.y, GameData.blended_line_paint);
+			joints.get(0).drawBlendingWithSuccessor(canvas, t, suc.joints.get(0));
+			joints.get(1).drawBlendingWithSuccessor(canvas, t, suc.joints.get(1));
+		} else {
+			drawBlendingWithNoSuccessor(canvas, t);
+		}
+	}
+
+	@Override
+	public void drawBlendingWithNoPredecessor(Canvas canvas, float t) {
+		GameData.mixTwoColors(Color.argb(0, 0, 0, 0), m_line_paint.getColor(), 1 - t);
+		canvas.drawLine(p1.x, p1.y, p2.x, p2.y, GameData.blended_line_paint);
+		joints.get(0).drawBlendingWithNoPredecessor(canvas, t);
+	}
+	
+	@Override
+	public void drawBlendingWithNoSuccessor(Canvas canvas, float t) {
+		GameData.mixTwoColors(Color.argb(0, 0, 0, 0), m_line_paint.getColor(), t);
+		canvas.drawLine(p1.x, p1.y, p2.x, p2.y, GameData.blended_line_paint);
+		joints.get(0).drawBlendingWithNoSuccessor(canvas, t);
 	}
 }

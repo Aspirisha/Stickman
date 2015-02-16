@@ -34,7 +34,7 @@ public class Connection implements Serializable{
 		___tempPrimitiveJointIndex = stream.readInt();
 	}
 
-	public void reastoreMyFieldsMyIndexes(LinkedList<AbstractDrawingPrimitive> q, AbstractDrawingPrimitive myPrimitive) {
+	public void restoreMyFieldsMyIndexes(LinkedList<AbstractDrawingPrimitive> q, AbstractDrawingPrimitive myPrimitive) {
 		primitive = null; // TODO make it efficient
 		for (AbstractDrawingPrimitive pr : q) {
 			if (pr.getMyNumber() == ___tempPrimitiveIndex) {

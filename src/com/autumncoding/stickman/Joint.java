@@ -170,6 +170,21 @@ public class Joint implements Serializable {
 		canvas.drawCircle(m_point.x, m_point.y, GameData.joint_radius_visible, m_paint);
 	}
 	
+	public void drawBlendingWithSuccessor(Canvas canvas, float t, Joint suc) {
+		GameData.mixTwoColors(m_paint.getColor(), suc.m_paint.getColor(), 1 - t);
+		canvas.drawCircle((1 - t) * m_point.x + t * suc.m_point.x, (1 - t) * m_point.y + t * suc.m_point.y, GameData.joint_radius_visible, GameData.blended_joint_paint);
+	}
+	
+	public void drawBlendingWithNoPredecessor(Canvas canvas, float t) {
+		GameData.mixTwoColors(Color.argb(0, 0, 0, 0), m_paint.getColor(), 1 - t);
+		canvas.drawCircle(m_point.x, m_point.y, GameData.joint_radius_visible, GameData.blended_joint_paint);
+	}
+	
+	public void drawBlendingWithNoSuccessor(Canvas canvas, float t) {
+		GameData.mixTwoColors(Color.argb(0, 0, 0, 0), m_paint.getColor(), t);
+		canvas.drawCircle(m_point.x, m_point.y, GameData.joint_radius_visible, GameData.blended_joint_paint);
+	}
+	
 	public void removeChild(Joint ch) {
 		m_childrenJoints.remove(ch);
 		if (m_childrenJoints.isEmpty()) {

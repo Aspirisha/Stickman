@@ -34,7 +34,7 @@ public class AnimationFrame implements Serializable {
 	
 	public void addPrimitive(AbstractDrawingPrimitive pr) {
 		m_primitives.add(pr);
-		pr.setMyNumber(m_primitives.size());
+		pr.setMyNumber(m_primitives.size() - 1);
 	}
 	
     public int getTreesNumber() {
@@ -59,9 +59,12 @@ public class AnimationFrame implements Serializable {
 		AnimationFrame newFrame = new AnimationFrame();
 		
 		for (int i = 0; i < m_primitives.size(); ++i) {
-			AbstractDrawingPrimitive newPrimitive = m_primitives.get(i).getCopy();
+			AbstractDrawingPrimitive currentPrimitive = m_primitives.get(i);
+			AbstractDrawingPrimitive newPrimitive = currentPrimitive.getCopy();
 			newFrame.m_primitives.add(newPrimitive);
-			if (m_roots.contains(m_primitives.get(i)))
+			AbstractDrawingPrimitive.setSuccessorAndPredecessor(currentPrimitive.m_successor, newPrimitive);
+			AbstractDrawingPrimitive.setSuccessorAndPredecessor(newPrimitive, currentPrimitive);
+			if (m_roots.contains(currentPrimitive))
 				newFrame.m_roots.add(newPrimitive);
 		}
 		
@@ -127,9 +130,9 @@ public class AnimationFrame implements Serializable {
 		
 	}
 	
-	public void restorePrimitivesFieldsByIndexes(){
+	public void restorePrimitivesFieldsByIndexes(LinkedList<AbstractDrawingPrimitive> nextPrimitives){
 		for (AbstractDrawingPrimitive pr : m_primitives) {
-			pr.restoreMyFieldsByIndexes(m_primitives);
+			pr.restoreMyFieldsByIndexes(m_primitives, nextPrimitives);
 			if (!pr.hasParent())
 				m_roots.add(pr);
 		}
@@ -143,6 +146,13 @@ public class AnimationFrame implements Serializable {
 		pr.disconnectBeforeDeleting();
 		m_primitives.remove(pr);
 		removeRoot(pr);
+		if (pr.m_successor != null) {
+			pr.m_successor.m_predecessor = null;
+		}
+		if (pr.m_predecessor != null) {
+			pr.m_predecessor.m_successor = null;
+		}
+		
 		for (AbstractDrawingPrimitive v : m_primitives) {
 			if (v.getMyNumber() > pr.getMyNumber())
 				v.setMyNumber(v.getMyNumber() - 1);

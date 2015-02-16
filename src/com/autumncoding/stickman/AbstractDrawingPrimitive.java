@@ -26,18 +26,25 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	//protected ArrayList<Connection> m_connections;
 	protected int m_treeNumber;
 	protected boolean isScalable;
-	protected int m_number = 0;
+	protected int m_number = 0; // if primitive belongs to frame, it is >= 0
 	protected transient boolean m_isTouched;
 	protected transient boolean m_isOutOfBounds = false;
 	protected transient Context m_context;
+	protected transient int m_successorNumber = -1;
+	protected transient int m_predecessorNumber = -1;
+	
 	protected Connection m_parentConnection;
 	protected ArrayList<Connection> m_childrenConnections;
-	
+	protected AbstractDrawingPrimitive m_successor = null;
+	protected AbstractDrawingPrimitive m_predecessor = null;
 	
 	
 	abstract void translate(float x, float y);
 	abstract public boolean checkTouch(float touch_x, float touch_y);
 	abstract public void draw(Canvas canvas);
+	abstract public void drawBlendingWithSuccessor(Canvas canvas, float t); // t in [0, 1]
+	abstract public void drawBlendingWithNoPredecessor(Canvas canvas, float t);
+	abstract public void drawBlendingWithNoSuccessor(Canvas canvas, float t);
 	abstract public PrimitiveType GetType();
 	abstract public float getDistToMe(float from_x, float from_y);
 	abstract public void setUntouched();
@@ -59,6 +66,13 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		m_number = Animation.getInstance().getCurrentframe().getPrimitives().size();
 		m_isTouched = false;
 		m_parentConnection = null;
+	}
+	
+	public static void setSuccessorAndPredecessor(AbstractDrawingPrimitive s, AbstractDrawingPrimitive p) {
+		if (s != null)
+			s.m_predecessor = p;
+		if (p != null)
+			p.m_successor = s;
 	}
 	
 	public AbstractDrawingPrimitive(AbstractDrawingPrimitive pr) {
@@ -346,6 +360,16 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		stream.writeInt(m_treeNumber);
 		stream.writeBoolean(isScalable);
 		stream.writeInt(m_number);
+		
+		if (m_successor != null)
+			stream.writeInt(m_successor.getMyNumber());
+		else
+			stream.writeInt(-1);
+		
+		if (m_predecessor != null)
+			stream.writeInt(m_predecessor.getMyNumber());
+		else
+			stream.writeInt(-1);
 	}
 	
 	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
@@ -377,13 +401,19 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		m_treeNumber = stream.readInt();
 		isScalable = stream.readBoolean();
 		m_number = stream.readInt();
+		m_successorNumber = stream.readInt();
+		m_predecessorNumber = stream.readInt();
 	}
 	
-	public void restoreMyFieldsByIndexes(LinkedList<AbstractDrawingPrimitive> q) { // should be called after all the primitives of the frame are loaded
+	public void restoreMyFieldsByIndexes(LinkedList<AbstractDrawingPrimitive> q, 
+			LinkedList<AbstractDrawingPrimitive> nextPrimitives) { // should be called after all the primitives of all frames are loaded
 		for (Connection con: m_childrenConnections)
-			con.reastoreMyFieldsMyIndexes(q, this);	
+			con.restoreMyFieldsMyIndexes(q, this);	
 		if (m_parentConnection != null)
-			m_parentConnection.reastoreMyFieldsMyIndexes(q, this);
+			m_parentConnection.restoreMyFieldsMyIndexes(q, this);
+		
+		if (nextPrimitives != null && m_successorNumber != -1) 
+			AbstractDrawingPrimitive.setSuccessorAndPredecessor(nextPrimitives.get(m_successorNumber), this);
 	}
 	
 	

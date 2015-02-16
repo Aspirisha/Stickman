@@ -131,35 +131,37 @@ public class GameView extends SurfaceView {
     		icon.Draw(canvas);
     }
 
+    public void debugDraw(Canvas canvas) {
+        // debug info
+        long prevTime = game_data.getPrevDrawingTime();
+        game_data.writeDrawingTime();
+        d_timePassedBetweenFpsRecounts += (game_data.getPrevDrawingTime() - prevTime);
+        if (d_drawsBetweenFpsRecount == ++d_drawsMade) {
+        	d_drawsMade = 0;
+        	d_fps = d_drawsBetweenFpsRecount * 1000f / (float)d_timePassedBetweenFpsRecounts;
+        	d_timePassedBetweenFpsRecounts = 0;
+        }
+        canvas.drawText("FPS: " + Float.toString(d_fps), 30, MainActivity.layout_height - 20, debug_paint);
+        // end of debug info
+    }
     
     @Override  
     public void onDraw(Canvas canvas) {   	
         canvas.save();
+        debugDraw(canvas);
         
-        if (canDraw) {
-	        // debug info
-	        long prevTime = game_data.getPrevDrawingTime();
-	        game_data.writeDrawingTime();
-	        d_timePassedBetweenFpsRecounts += (game_data.getPrevDrawingTime() - prevTime);
-	        if (d_drawsBetweenFpsRecount == ++d_drawsMade) {
-	        	d_drawsMade = 0;
-	        	d_fps = d_drawsBetweenFpsRecount * 1000f / (float)d_timePassedBetweenFpsRecounts;
-	        	d_timePassedBetweenFpsRecounts = 0;
-	        }
-	        canvas.drawText("FPS: " + Float.toString(d_fps), 30, MainActivity.layout_height - 20, debug_paint);
-	        // end of debug info
-	        
-	        synchronized (GameData.getLocker()) {
-	        	CurrentDrawingState ds = touch_thread.getCurrentDrawingState();
+        if (canDraw) {	        
+	        synchronized (GameData.getLocker()) {	 
+	            if (GameData.framesChanged) {
+		        	GameData.framesChanged = false;
+		        	GameData.mainActivity.setFramesSeekbarRange(Animation.getInstance().getFramesNumber());
+		        	GameData.mainActivity.onCurrentframeChanged(Animation.getInstance().getCurrentFrameNumber() - 1);
+					GameData.mainActivity.UpdateFramesInfo(Animation.getInstance().getCurrentFrameNumber(), 
+							Animation.getInstance().getFramesNumber());
+		        }
 	        	
-	        	if (GameData.prevDrawingQueue != null && Animation.getInstance().getState() != AnimationState.PLAY) {
-		        	for (AbstractDrawingPrimitive pr : GameData.prevDrawingQueue)
-		        		pr.draw(canvas);
-	        	}
-		        for (AbstractDrawingPrimitive v : GameData.drawing_queue)
-		        	v.draw(canvas);
+	        	Animation.getInstance().DrawFrame(canvas);
 		        
-		       
 		        boolean first = true;
 		        for(PointF point : GameData.drawnPoints){
 		            if(first){
@@ -175,6 +177,7 @@ public class GameView extends SurfaceView {
 		        canvas.drawPath(path, m_pointsLinePaint);
 		        path.reset();
 		        
+	        	CurrentDrawingState ds = touch_thread.getCurrentDrawingState();
 		        if (ds.m_isDrawingProcess) {
 			        m_pointsLinePaint.setColor(Color.RED);
 			        if (!ds.m_hasIntersection) {
@@ -188,13 +191,6 @@ public class GameView extends SurfaceView {
 		        
 		        if (m_menuBackground != null)
 	            	drawMenu(canvas);
-		        if (GameData.framesChanged) {
-		        	GameData.framesChanged = false;
-		        	GameData.mainActivity.setFramesSeekbarRange(Animation.getInstance().getFramesNumber());
-		        	GameData.mainActivity.onCurrentframeChanged(Animation.getInstance().getCurrentFrameNumber() - 1);
-					GameData.mainActivity.UpdateFramesInfo(Animation.getInstance().getCurrentFrameNumber(), 
-							Animation.getInstance().getFramesNumber());
-		        }
 	        }
         }
         canvas.restore();
