@@ -17,7 +17,7 @@
         android:layout_gravity="center"
         android:background="@drawable/label_back"
         android:gravity="center"
-        android:text="Help"
+        android:text="@string/str_help"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@color/label_color"
         android:textStyle="bold" />

@@ -3,13 +3,15 @@ package com.autumncoding.stickman;
 import java.io.File;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
@@ -30,6 +32,7 @@ enum ViewType {
 }
 
 public class MainActivity extends Activity {
+	public static final String PREFS_NAME = "MyPrefsFile";
 	static int layout_height;
 	static int layout_width;
 	ViewType m_viewCur = ViewType.NONE;
@@ -49,7 +52,9 @@ public class MainActivity extends Activity {
         m_app = new AppIntro(this, AppIntro.LANGUAGE_ENG);
         setView(ViewType.VIEW_INTRO);
         m_gameLayout = new FrameLayout(this);
-        m_gameWidgetsLayout = new LinearLayout(this);
+        LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        m_gameWidgetsLayout = (LinearLayout) inflater.inflate(R.layout.frames_layout, null);
+        
         GameData.init(this);
         Animation.getInstance().setAnimationFPS(getResources().getInteger(R.integer.default_anim_fps));
 	}
@@ -58,13 +63,18 @@ public class MainActivity extends Activity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main, menu);
 		m_menu = menu;
+		m_settingsView.updateSettings();
 		return true;
 	}
 	
 	private void initGameView() {
 		m_gameView = new GameView(this);
-		m_framesInfo = new TextView(this);
-    	m_frameSeekBar = new SeekBar(this);
+		m_gameLayout.addView(m_gameView);
+    	m_gameLayout.addView(m_gameWidgetsLayout);
+		m_framesInfo = (TextView)m_gameWidgetsLayout.getChildAt(1);
+    	m_frameSeekBar = (SeekBar) m_gameWidgetsLayout.getChildAt(0);
+    	
+    	m_framesInfo.setTextColor(getResources().getColor(R.color.label_color));
     	m_frameSeekBar.setMax(0);
     	m_frameSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			
@@ -83,17 +93,8 @@ public class MainActivity extends Activity {
 				GameData.currentFrameIndex = progress + 1;
 			}
 		});
-    	
-    	m_gameWidgetsLayout.setOrientation(LinearLayout.VERTICAL);
-    	m_gameWidgetsLayout.addView(m_frameSeekBar);
-    	m_gameWidgetsLayout.addView(m_framesInfo);
-    	m_framesInfo.setGravity(Gravity.RIGHT);
-    	m_framesInfo.setTextColor(getResources().getColor(R.color.label_color));
-    	m_gameLayout.addView(m_gameView);
-    	m_gameLayout.addView(m_gameWidgetsLayout);
-    	
+    	    	
     	setContentView(m_gameLayout);
-    	
 		m_gameView.setBackgroundResource(R.drawable.background);
 	}
 	
@@ -127,15 +128,6 @@ public class MainActivity extends Activity {
 		layout_width = screenWidth;
 		Log.i("MY", "Layout Height = " + layout_height);   
 		GameData.setMetrics();
-		LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 
-				LinearLayout.LayoutParams.WRAP_CONTENT);
-		lp.setMargins(getResources().getDimensionPixelSize(R.dimen.frames_seek_bar_left_padding), 
-				GameData.topMenuHeight + m_frameSeekBar.getHeight() / 2,
-				getResources().getDimensionPixelSize(R.dimen.frames_seek_bar_right_padding), 0); //getResources().getDimensionPixelSize(R.dimen.frames_seek_bar_top_padding
-		m_frameSeekBar.setLayoutParams(lp);
-		lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 
-				LinearLayout.LayoutParams.WRAP_CONTENT);
-		m_framesInfo.setPadding(0, 0, getResources().getDimensionPixelSize(R.dimen.frames_counter_right_padding), 0);
 	}
 	
 	public void setFramesSeekbarRange(int framesNumber) {
@@ -148,8 +140,7 @@ public class MainActivity extends Activity {
 			m_frameSeekBar.setProgress(currentFrameIndex);
 	}
 	
-	public void setView(ViewType viewType)
-	{
+	public void setView(ViewType viewType) {
 		if (m_viewCur == viewType) {
 			return;
 		}
@@ -206,11 +197,10 @@ public class MainActivity extends Activity {
 	        				new SimpleFileDialog.SimpleFileDialogListener()
 	        		{
 	        			@Override
-	        			public void onChosenDir(String chosenDir) 
-	        			{
+	        			public void onChosenDir(String chosenDir) {
 	        				// The code in this function will be executed when the dialog OK button is pushed 
 	        				//m_chosen = chosenDir;
-	        				Animation.getInstance().SaveToFile(chosenDir);
+	        				Animation.getInstance().SaveToFile(chosenDir, false);
 	        				Toast.makeText(MainActivity.this, getResources().getString(R.string.file_saved_to) + 
 	        						chosenDir, Toast.LENGTH_LONG).show();
 	        			}
@@ -234,7 +224,7 @@ public class MainActivity extends Activity {
 	        			// The code in this function will be executed when the dialog OK button is pushed 
 	        			//m_chosen = chosenDir;
 	        			synchronized (GameData.getLocker()) {
-	        				Animation.getInstance().loadFromFile(chosenDir);
+	        				Animation.getInstance().loadFromFile(chosenDir, false);
 	        			}
 	        			Toast.makeText(MainActivity.this, getResources().getString(R.string.file_opened_from) + 
 	        					chosenDir, Toast.LENGTH_LONG).show();
@@ -263,9 +253,8 @@ public class MainActivity extends Activity {
 		case NONE:
 			break;
 		case VIEW_GAME:
-			finish();
-			break;
 		case VIEW_INTRO:
+			finish();
 			break;
 		case VIEW_SETTINGS:
 			setView(ViewType.VIEW_GAME);
@@ -278,24 +267,48 @@ public class MainActivity extends Activity {
 	
 	@Override
 	protected void onPause() {
-		// TODO Auto-generated method stub
+		if (GameData.saveToTemp)
+			Animation.getInstance().SaveToFile("", true);
+		
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		SharedPreferences.Editor editor = settings.edit();
+	    editor.putBoolean("SaveTemp", GameData.saveToTemp);
+	    editor.putString("Lang", GameData.lang);
+	    editor.commit();
 		super.onPause();
 	}
 	
 	@Override
 	protected void onResume() {
-		// TODO Auto-generated method stub
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+	    GameData.saveToTemp = settings.getBoolean("SaveTemp", true);
+	    GameData.lang = settings.getString("Lang", "English");
+	    
+		if (GameData.saveToTemp) {
+			synchronized (GameData.getLocker()) {
+				try {
+					Animation.getInstance().loadFromFile("", true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		} else {
+			Animation.getInstance().clear();
+		}
+		
+	    initSettingsView();
+		m_settingsView.updateSettings();
 		super.onResume();
 	}
 	
-	public void UpdateTexts() {
+	public void updateTexts() {
 		if (m_menu == null)
 			return;
 		
 		m_menu.getItem(0).setTitle(GameData.res.getString(R.string.action_settings));
 		m_menu.getItem(1).setTitle(GameData.res.getString(R.string.str_load));
 		m_menu.getItem(2).setTitle(GameData.res.getString(R.string.str_save));
-		
+		m_menu.getItem(3).setTitle(GameData.res.getString(R.string.str_help));
 		m_settingsView.UpdateTexts();
 	}
 

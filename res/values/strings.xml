@@ -14,10 +14,12 @@
     <string name="choose_language">Choose language</string>
     <string name="str_anim_fps">Animation frames per second:</string>
     <string name="str_lang_spinner">Language:</string>
-    <string name="current_fps_text">Current FPS: </string>
+    <string name="current_fps_text">Current FPS:  </string>
     <string name="settings_header">Settings</string>
     <string name="file_saved_to">Animation was saved to file </string>
     <string name="file_opened_from">Animation was loaded from file </string>
+    
+    <string name="save_or_not">Save animation automatically before exit.</string>
     
     <!-- Help strings -->
     <string name="how1"><u>What is this app about?</u></string>
@@ -42,7 +44,7 @@
     <string name="draw1">To draw an object, first choose drawing mode by clicking this button in top menu. Not more than
         15 objects can be drawn on a single frame.</string>
     <string name="draw2">You can draw two types of objects: sticks and circles, like on the picture below:</string>
-    <string name="draw3">Now you can touch the screen in arbitrary point and drag your finger
+    <string name="draw3">Now you can touch the screen in arbitrary point inside the drawing field (black box, bounding almost all the screen) and drag your finger
         to another arbitrary point on the screen. You will see a red and gray lines appearing: red line indicates result primitive, which will be drawn
         if you pull off your finger. Gray line indicates current path of your finger. If your path has self-intersections,
         a circle will be drawn, else you will get stick. Below you an see an example of what you can see while drawing an object.</string>
@@ -56,23 +58,25 @@
         joint colour turns to violet.</string>
     <string name="move5">To scale an object, quickly tap twice any of it\'s joints, and then drag. When touched for scaling, object\'s 
         joint colour turns to blue.</string>
+    <string name="move6">To remove object from the frame, simply move it so that any of it\'s points gets out of drawing field. After that object will turn to red,
+        and if you pull of your finger, it will be removed from the screen.</string>
     
     <string name="connect1">To connect objects, first choose moving mode by clicking this button in top menu.</string>
-    <string name="connect2">Connected onjects form a hierarchy: attached object becomes a child of object, to which it is attached 
+    <string name="connect2">Connected objects form a hierarchy: attached object becomes a child of object, to which it is attached 
         (the latter object becomes parent for the former).</string>
     <string name="connect3">
-        We call object\'s joint a <i>free joint</i>, if it has green colour. More precizely, this means,
+        We call object\'s joint a <i>free joint</i>, if it has green colour. More precisely, this means,
         that this joint belongs to a parent object, i.e. object, that is not attached to any other object as a child. So, after 
         object became a child, it\'s joints are recoloured into yellow.</string>
     <string name="connect4">To attach one object to another, move first object so that one of it\'s free joints
         overlaps with some joint of second object. After connection, the object you moved becomes child of an object, that was stationary.</string>
-    <string name="connect5">When parent object is moved, all it\'s children are also moved. On the other hand, you can\'t drag child object explicitely,
+    <string name="connect5">When parent object is moved, all it\'s children are also moved. On the other hand, you can\'t drag child object explicitly,
         you can rather rotate it around connection joint or disconnect it from parent by dragging it rather fast.</string>
     <string name="connect6">Note, that you can scale object, only if it\'s absolutely free, i.e. is not a parent nor a child.</string>
     <string name="connect7">As mentioned above, to disconnect objects, quickly pull child object away from parent.</string>
         
     <string name="frames1">There are four buttons in top menu to control frames (the third is New frame button, and the right most is Delete frame button).</string>
-    <string name="frames2">Left and right arrows simply allow you to switch between frames. Also under the top menu there is a trackbar
+    <string name="frames2">Left and right arrows simply allow you to switch between frames. Also under the top menu there is a seekbar
         that allows rapid navigation, and frame counter on the right of it.</string>
     <string name="frames3">Pressing New frame button you can add frames to your animation. Notice that new frames will appear right after the current frame, 
         and will contain all the objects from the current frame you have drawn so far.</string>
@@ -90,12 +94,10 @@
      <string-array name="languages_array">
         <item>English</item>
         <item>Русский</item>
-        <item>Deutsch</item>
     </string-array>
     
     <string-array name="lang_codes">
         <item>en</item>
         <item>ru</item>
-        <item>de</item>
     </string-array>
 </resources>

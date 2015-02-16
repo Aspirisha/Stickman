@@ -346,8 +346,7 @@ public class TouchEventThread extends Thread {
 	
 		
 	
-	private void processEventDragging(MotionEvent event, long eventTime)
-	{
+	private void processEventDragging(MotionEvent event, long eventTime) {
 		if (Animation.getInstance().getState() == AnimationState.PLAY)
 			return;
 		

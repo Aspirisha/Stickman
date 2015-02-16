@@ -248,15 +248,10 @@ public class Circle extends AbstractDrawingPrimitive {
     	m_radius = temp_r;
 	}
 	
-	public void checkOutOfBounds() {
-		
-		boolean newOutOfBoundsState = false;
-		if (m_centre.x - m_radius < 0 || m_centre.x + m_radius > MainActivity.layout_width) {
-			newOutOfBoundsState = true;
-		}
-		if (m_centre.y - m_radius < GameData.topMenuHeight || m_centre.y + m_radius > MainActivity.layout_height) {
-			newOutOfBoundsState = true;
-		}
+	public void checkOutOfBounds() {	
+		boolean newOutOfBoundsState = !GameData.fieldRect.contains(m_centre.x - m_radius, m_centre.y - m_radius, m_centre.x + m_radius, m_centre.y + m_radius);
+		newOutOfBoundsState |= !GameData.fieldRect.contains(m_jointPoint.x - GameData.joint_radius_visible, m_jointPoint.y - GameData.joint_radius_visible, 
+				m_jointPoint.x + GameData.joint_radius_visible, m_jointPoint.y + GameData.joint_radius_visible);
 		
 		if (newOutOfBoundsState != m_isOutOfBounds) {
 			m_isOutOfBounds = newOutOfBoundsState;

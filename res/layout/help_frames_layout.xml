@@ -68,7 +68,8 @@
         android:layout_below="@+id/textView4"
         android:layout_marginTop="18dp"
         android:layout_marginRight="5dp"
-        android:text="@string/frames4" />
+        android:text="@string/frames4"
+        android:textColor="@color/label_color" />
 
     <ImageView
         android:id="@+id/imageView1"

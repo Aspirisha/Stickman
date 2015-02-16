@@ -6,14 +6,14 @@
 	<dimen name="debug_font_size">16dp</dimen>
 	
 	<dimen name="game_view_menu_height">30dp</dimen>
-	<dimen name="frames_seek_bar_top_padding">10dp</dimen>
-	<dimen name="frames_seek_bar_left_padding">10dp</dimen>
-	<dimen name="frames_seek_bar_right_padding">10dp</dimen>
+	<dimen name="frames_seek_bar_top_padding">40dp</dimen>
+	<dimen name="frames_seek_bar_left_padding">5dp</dimen>
+	<dimen name="frames_seek_bar_right_padding">50dp</dimen>
 	
 	<dimen name="frames_counter_right_padding">10dp</dimen>
 	
-	<dimen name="frames_text_position_left_padding">280dp</dimen>
-	<dimen name="frames_text_position_top_padding">35dp</dimen>
+	<dimen name="frames_text_position_left_padding">10dp</dimen>
+	<dimen name="frames_text_position_top_padding">45dp</dimen>
 	<dimen name="gane_view_frames_text_font_size">15sp</dimen>
 	<dimen name="zero">0px</dimen>
 	

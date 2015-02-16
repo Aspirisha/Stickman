@@ -29,6 +29,7 @@ public class GameView extends SurfaceView {
 	private TouchEventThread touch_thread;
     
     private Paint m_pointsLinePaint = null;
+    private Paint m_boundRectPaint = null;
     
     private AbstractDrawingPrimitive currently_touched_pimititve = null;
     private Bitmap m_menuBackground = null;
@@ -60,6 +61,9 @@ public class GameView extends SurfaceView {
     	m_pointsLinePaint.setStyle(Paint.Style.STROKE);
     	m_pointsLinePaint.setStrokeWidth(2);
     	m_pointsLinePaint.setColor(Color.RED);
+    	
+    	m_boundRectPaint = new Paint(m_pointsLinePaint);
+    	m_boundRectPaint.setColor(Color.BLACK);
     	
     	setWillNotDraw(true);    	
     	
@@ -94,7 +98,7 @@ public class GameView extends SurfaceView {
     			touch_thread.setRunning(true);
     			gameLoopThread.start(); 
     			touch_thread.start();
-    			CountMetrics();
+    			GameData.mainActivity.CountMetrics();
     			GameData.mainActivity.UpdateFramesInfo(Animation.getInstance().getCurrentFrameNumber(), 
 						Animation.getInstance().getFramesNumber());
     			canDraw = true;
@@ -112,10 +116,6 @@ public class GameView extends SurfaceView {
     	gameLoopThread = new GameLoopThread(this);
     	touch_thread = new TouchEventThread(this);
     	touch_thread.init(m_menuIcons);
-    }
-    
-    void CountMetrics() {
-    	GameData.mainActivity.CountMetrics();
     }
     
     @Override
@@ -150,7 +150,8 @@ public class GameView extends SurfaceView {
         canvas.save();
         debugDraw(canvas);
         
-        if (canDraw) {	        
+        if (canDraw) {	    
+            canvas.drawRect(GameData.fieldRect, m_boundRectPaint);
 	        synchronized (GameData.getLocker()) {	 
 	            if (GameData.framesChanged) {
 		        	GameData.framesChanged = false;
@@ -160,7 +161,7 @@ public class GameView extends SurfaceView {
 							Animation.getInstance().getFramesNumber());
 		        }
 	        	
-	        	Animation.getInstance().DrawFrame(canvas);
+	        	Animation.getInstance().drawFrame(canvas);
 		        
 		        boolean first = true;
 		        for(PointF point : GameData.drawnPoints){

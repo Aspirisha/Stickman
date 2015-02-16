@@ -16,6 +16,7 @@ import java.util.LinkedList;
 import com.autamncoding.stickman.R;
 import com.autumncoding.stickman.TouchEventThread.TouchState;
 
+import android.content.Context;
 import android.graphics.Canvas;
 import android.os.Environment;
 import android.util.Log;
@@ -102,6 +103,8 @@ public class Animation implements Serializable {
 		m_currentFrameIndex++;
 		GameData.drawing_queue = m_currentFrame.getPrimitives();
 		GameData.prevDrawingQueue = m_prevFrame.getPrimitives();
+		for (AbstractDrawingPrimitive pr : GameData.prevDrawingQueue)
+			pr.setUnactiveColour();
 		GameData.framesChanged = true;
 	}
 	
@@ -130,6 +133,12 @@ public class Animation implements Serializable {
 		
 		for (AbstractDrawingPrimitive pr : GameData.drawing_queue)
 			pr.setActiveColour();
+	}
+	
+	void clear() {
+		int framesNumber = m_frames.size();
+		for (int i = 0; i < framesNumber; i++)
+			removeFrame();
 	}
 	
 	public void stopAnimation() {
@@ -335,7 +344,7 @@ public class Animation implements Serializable {
 			GameData.menuPrev.setUnavailable();
 	}
 	
-	public void DrawFrame(Canvas canvas) {
+	public void drawFrame(Canvas canvas) {
 		float t = getTimePassedFromFrameStart();
 		if (getState() == AnimationState.EDIT) {
         	if (GameData.prevDrawingQueue != null) {
@@ -362,14 +371,18 @@ public class Animation implements Serializable {
     	}
 	}
 	
-	public boolean SaveToFile(String fileName) {
+	public boolean SaveToFile(String fileName, boolean isTemp) {
 		try {
 			String state = Environment.getExternalStorageState();
 		    if (!Environment.MEDIA_MOUNTED.equals(state)) {
 		        return false;
 		    }
-			ObjectOutputStream ostream = new ObjectOutputStream(new FileOutputStream(fileName));
-			
+		    ObjectOutputStream ostream = null;
+		    if (!isTemp)
+		    	ostream = new ObjectOutputStream(new FileOutputStream(fileName));
+		    else
+		    	ostream = new ObjectOutputStream(GameData.mainActivity.openFileOutput("temp.ani", Context.MODE_PRIVATE));
+		    	
 			ostream.writeInt(m_frames.size());
 			
 			for (AnimationFrame fr : m_frames) {
@@ -384,10 +397,15 @@ public class Animation implements Serializable {
 		return true;
 	}
 	
-	public void loadFromFile(String fileName) {
+	public void loadFromFile(String fileName, boolean isTemp) {
 		ObjectInput input = null;
 		try { 
-			InputStream istream = new FileInputStream(fileName);
+			InputStream istream = null;
+			if (!isTemp)
+				istream = new FileInputStream(fileName);
+			else
+				istream = GameData.mainActivity.openFileInput("temp.ani");
+			
 		    InputStream buffer = new BufferedInputStream(istream);
 		    input = new ObjectInputStream (buffer);
 		    

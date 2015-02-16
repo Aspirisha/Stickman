@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="@dimen/frames_seek_bar_top_padding"
+    android:orientation="horizontal" >
+
+    <SeekBar
+        android:id="@+id/seekBar1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/frames_seek_bar_left_padding"
+        android:layout_marginTop="@dimen/frames_seek_bar_top_padding"
+        android:layout_weight="0.46" />
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="@dimen/frames_counter_right_padding"
+        android:layout_marginTop="@dimen/frames_text_position_top_padding"
+        android:text="23/23"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+</LinearLayout>

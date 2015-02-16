@@ -84,9 +84,19 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/animation_fps_seekbar"
             android:text="Bla"
-            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="@color/label_color" />
 
     </RelativeLayout>
+
+    <CheckBox
+        android:id="@+id/checkBox1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="@string/save_or_not"
+        android:layout_marginTop="10dp"
+        android:textColor="@color/label_color"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
 </LinearLayout>

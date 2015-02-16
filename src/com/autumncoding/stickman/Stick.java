@@ -323,15 +323,12 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	}
 	
 	
-	public void checkOutOfBounds() {
+	public void checkOutOfBounds() {		
+		boolean newOutOfBoundsState = !GameData.fieldRect.contains(p1.x - GameData.joint_radius_visible, p1.y - GameData.joint_radius_visible, 
+			p1.x + GameData.joint_radius_visible, p1.y + GameData.joint_radius_visible);
 		
-		boolean newOutOfBoundsState = false;
-		if (p1.x < 0 || p1.x > MainActivity.layout_width || p2.x < 0 || p2.x > MainActivity.layout_width) {
-			newOutOfBoundsState = true;
-		}
-		if (p1.y < GameData.topMenuHeight || p1.y > MainActivity.layout_height || p2.y < GameData.topMenuHeight || p2.y > MainActivity.layout_height) {
-			newOutOfBoundsState = true;
-		}
+		newOutOfBoundsState |= !GameData.fieldRect.contains(p2.x - GameData.joint_radius_visible, p2.y - GameData.joint_radius_visible, 
+				p2.x + GameData.joint_radius_visible, p2.y + GameData.joint_radius_visible);
 		
 		if (newOutOfBoundsState != m_isOutOfBounds) {
 			m_isOutOfBounds = newOutOfBoundsState;
@@ -425,6 +422,7 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		GameData.mixTwoColors(Color.argb(0, 0, 0, 0), m_line_paint.getColor(), 1 - t);
 		canvas.drawLine(p1.x, p1.y, p2.x, p2.y, GameData.blended_line_paint);
 		joints.get(0).drawBlendingWithNoPredecessor(canvas, t);
+		joints.get(1).drawBlendingWithNoPredecessor(canvas, t);
 	}
 	
 	@Override
@@ -432,5 +430,6 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		GameData.mixTwoColors(Color.argb(0, 0, 0, 0), m_line_paint.getColor(), t);
 		canvas.drawLine(p1.x, p1.y, p2.x, p2.y, GameData.blended_line_paint);
 		joints.get(0).drawBlendingWithNoSuccessor(canvas, t);
+		joints.get(1).drawBlendingWithNoSuccessor(canvas, t);
 	}
 }

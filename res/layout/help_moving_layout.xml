@@ -115,5 +115,35 @@
     android:layout_marginTop="5dp"
     android:src="@drawable/circle_rotate" />
 
+<TextView
+        android:id="@+id/textView8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/imageView3"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginBottom="10dp"
+        android:text="@string/move6"
+        android:textColor="@color/label_color" />
+
+<ImageView
+    android:id="@+id/imageView4"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentLeft="true"
+    android:layout_marginLeft="5dp"
+    android:layout_below="@+id/textView8"
+    android:src="@drawable/drop1" />
+
+<ImageView
+    android:id="@+id/imageView5"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_alignParentRight="true"
+    android:layout_marginRight="5dp"
+    android:layout_below="@+id/textView8"
+    android:src="@drawable/drop2" />
+
 </RelativeLayout>
 </ScrollView>

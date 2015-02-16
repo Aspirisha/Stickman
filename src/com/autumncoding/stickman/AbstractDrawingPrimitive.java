@@ -365,11 +365,6 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 			stream.writeInt(m_successor.getMyNumber());
 		else
 			stream.writeInt(-1);
-		
-		if (m_predecessor != null)
-			stream.writeInt(m_predecessor.getMyNumber());
-		else
-			stream.writeInt(-1);
 	}
 	
 	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
@@ -402,7 +397,6 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		isScalable = stream.readBoolean();
 		m_number = stream.readInt();
 		m_successorNumber = stream.readInt();
-		m_predecessorNumber = stream.readInt();
 	}
 	
 	public void restoreMyFieldsByIndexes(LinkedList<AbstractDrawingPrimitive> q, 
@@ -412,8 +406,16 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		if (m_parentConnection != null)
 			m_parentConnection.restoreMyFieldsMyIndexes(q, this);
 		
-		if (nextPrimitives != null && m_successorNumber != -1) 
-			AbstractDrawingPrimitive.setSuccessorAndPredecessor(nextPrimitives.get(m_successorNumber), this);
+		if (nextPrimitives != null && m_successorNumber != -1) {
+			AbstractDrawingPrimitive suc = null;
+			for (AbstractDrawingPrimitive pr : nextPrimitives) {
+				if (pr.m_number == m_successorNumber) {
+					suc = pr;
+					break;
+				}
+			}
+			AbstractDrawingPrimitive.setSuccessorAndPredecessor(suc, this);
+		}
 	}
 	
 	

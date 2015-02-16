@@ -11,6 +11,9 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
 
 public class GameData {
 	public static LinkedList<AbstractDrawingPrimitive> drawing_queue;
@@ -38,9 +41,13 @@ public class GameData {
     
     public static Resources res;
     
+    public static RectF fieldRect = null;
+    
     // visible sizes
     public static final float joint_radius_visible = 7;
     public static final float min_stick_length = 20;
+    public static int rectDeltaX = 5;
+    public static int rectDeltaY = 5;
     
     // touchable sizes
     public static float circle_touchable_dr; // +- so make it 0.5 of needed delta
@@ -94,6 +101,10 @@ public class GameData {
 	public static int currentFrameIndex = 1; // for GameView, starting from 1
 	public static volatile boolean metricsSet = false;
 	public static volatile boolean framesChanged = false;
+	
+	// settings info
+	public static boolean saveToTemp = true;
+	public static String lang = "English"; 
 	
 	public static void init(MainActivity m) {
 		mainActivity = m;
@@ -205,17 +216,21 @@ public class GameData {
     }
     
     public static void setMetrics() {
-    	float dy = 40; /// HARDCODE
     	float dx = 20; /// HARDCODE
+    	int Yoffset = 20;
     	
-    	bottom_menu_y = MainActivity.layout_height - dy;
+    	Drawable d = res.getDrawable(R.drawable.menu_back);
+    	int h = d.getIntrinsicHeight();
+    	
+    	top_menu_y = h; 
+    	bottom_menu_y = MainActivity.layout_height - top_menu_y;
     	bottom_menu_x2 = MainActivity.layout_width - dx;
     	bottom_menu_x1 = dx;
     	
-    	top_menu_y = dy;
     	top_menu_x2 = MainActivity.layout_width - dx;
     	top_menu_x1 = dx;
     	
+    	fieldRect = new RectF(rectDeltaX, top_menu_y + rectDeltaY + Yoffset, MainActivity.layout_width - rectDeltaX, MainActivity.layout_height - rectDeltaY);
 		Resources res = mainActivity.getResources();
 		
 		textPaint.setTextSize(res.getDimension(R.dimen.gane_view_frames_text_font_size));
