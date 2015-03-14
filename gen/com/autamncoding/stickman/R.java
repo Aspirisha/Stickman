@@ -16,12 +16,14 @@ public final class R {
     }
     public static final class color {
         public static final int child_joint=0x7f040001;
-        public static final int drop_color=0x7f040006;
+        public static final int drop_color=0x7f040008;
+        public static final int glow_color1=0x7f040003;
+        public static final int glow_color2=0x7f040004;
         public static final int label_color=0x7f040000;
-        public static final int prev_frame_element=0x7f040004;
-        public static final int primitive_line=0x7f040005;
+        public static final int prev_frame_element=0x7f040006;
+        public static final int primitive_line=0x7f040007;
         public static final int root_joint=0x7f040002;
-        public static final int touched_element=0x7f040003;
+        public static final int touched_element=0x7f040005;
     }
     public static final class dimen {
         /**  Default screen margins, per the Android Design guidelines. 
@@ -156,6 +158,12 @@ public final class R {
     public static final class integer {
         public static final int default_anim_fps=0x7f050001;
         public static final int max_animation_fps=0x7f050000;
+        /**  plus one for seekbar starts  from 0 
+         */
+        public static final int max_delay_between_touches_scale=0x7f050002;
+        /**  in milliseconds 
+         */
+        public static final int min_delay_between_touch_and_drop_centre=0x7f050003;
     }
     public static final class layout {
         public static final int about_layout=0x7f030000;

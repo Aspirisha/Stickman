@@ -1,6 +1,7 @@
 package com.autumncoding.stickman;
 
 import java.io.File;
+import java.io.IOException;
 
 import android.app.Activity;
 import android.content.Context;
@@ -22,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.autamncoding.stickman.R;
+import com.autumncoding.stickman.TouchEventThread.TouchState;
 import com.scorchworks.demo.SimpleFileDialog;
 
 enum ViewType {
@@ -224,7 +226,15 @@ public class MainActivity extends Activity {
 	        			// The code in this function will be executed when the dialog OK button is pushed 
 	        			//m_chosen = chosenDir;
 	        			synchronized (GameData.getLocker()) {
-	        				Animation.getInstance().loadFromFile(chosenDir, false);
+	        				try {
+	        					Animation.getInstance().loadFromFile(chosenDir, false);
+	        				} catch (IOException e) {
+	        					e.printStackTrace();
+	        					Animation.getInstance().clear();
+	        				} catch (ClassNotFoundException e) {
+	        					e.printStackTrace();
+	        					Animation.getInstance().clear();
+	        				}
 	        			}
 	        			Toast.makeText(MainActivity.this, getResources().getString(R.string.file_opened_from) + 
 	        					chosenDir, Toast.LENGTH_LONG).show();
@@ -283,6 +293,7 @@ public class MainActivity extends Activity {
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 	    GameData.saveToTemp = settings.getBoolean("SaveTemp", true);
 	    GameData.lang = settings.getString("Lang", "English");
+	    GameData.touchState = TouchState.DRAWING;
 	    
 		if (GameData.saveToTemp) {
 			synchronized (GameData.getLocker()) {
@@ -290,6 +301,7 @@ public class MainActivity extends Activity {
 					Animation.getInstance().loadFromFile("", true);
 				} catch (Exception e) {
 					e.printStackTrace();
+					Animation.getInstance().clear();
 				}
 			}
 		} else {
@@ -306,8 +318,8 @@ public class MainActivity extends Activity {
 			return;
 		
 		m_menu.getItem(0).setTitle(GameData.res.getString(R.string.action_settings));
-		m_menu.getItem(1).setTitle(GameData.res.getString(R.string.str_load));
-		m_menu.getItem(2).setTitle(GameData.res.getString(R.string.str_save));
+		m_menu.getItem(2).setTitle(GameData.res.getString(R.string.str_load));
+		m_menu.getItem(1).setTitle(GameData.res.getString(R.string.str_save));
 		m_menu.getItem(3).setTitle(GameData.res.getString(R.string.str_help));
 		m_settingsView.UpdateTexts();
 	}

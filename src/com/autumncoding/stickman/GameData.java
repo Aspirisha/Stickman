@@ -71,6 +71,7 @@ public class GameData {
 	public static Paint line_paint;  // normal paint for stick line
 	public static Paint root_joint_paint;
 	public static Paint child_joint_paint;
+	public static Paint invisible_paint;
 	// touched paints:
 	public static Paint line_drop_paint;  // paint used to show that element is going to be dropped to the bin
 	public static Paint line_touched_paint;
@@ -105,6 +106,7 @@ public class GameData {
 	// settings info
 	public static boolean saveToTemp = true;
 	public static String lang = "English"; 
+	public static float debugValue = 0; // TODO delete
 	
 	public static void init(MainActivity m) {
 		mainActivity = m;
@@ -181,6 +183,9 @@ public class GameData {
 		drawnPoints = new ArrayList<PointF>();
 		
     	menuBitmapPaint = new Paint();
+    	
+    	invisible_paint = new Paint();
+    	invisible_paint.setColor(Color.argb(0, 0, 0, 0));
 	}
    
     

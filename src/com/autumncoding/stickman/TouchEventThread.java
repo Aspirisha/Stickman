@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.autamncoding.stickman.R;
 import com.autumncoding.stickman.Animation.AnimationState;
 
 import android.graphics.PointF;
@@ -45,8 +46,7 @@ public class TouchEventThread extends Thread {
 	private boolean m_drawingIsStarted = false;
 	private boolean m_drawingHasIntersection = false;
 	
-	class CurrentDrawingState
-	{
+	class CurrentDrawingState {
 		PointF m_startDrawingPoint = new PointF();
 		PointF m_currentDrawingPoint = new PointF();
 		boolean m_hasIntersection = false;
@@ -233,8 +233,7 @@ public class TouchEventThread extends Thread {
 		}
 	}
 	
-	private void processEventDrawing(MotionEvent event)
-	{
+	private void processEventDrawing(MotionEvent event) {
 		if (Animation.getInstance().getState() == AnimationState.PLAY)
 			return;
 		
@@ -366,8 +365,12 @@ public class TouchEventThread extends Thread {
 						m_gameView.setTouchedPrimitive(primitive);
 					}
 					
-					if (eventTime - lastTouchTime < 400) 
+					if (eventTime - lastTouchTime < 400) {
 						movementIsScaling = true;
+						Joint j = primitive.getTouchedJoint();
+						if (j != null) 
+							primitive.setJointAsCentre(j);
+					}
 					else
 						movementIsScaling = false;
 					
@@ -395,7 +398,7 @@ public class TouchEventThread extends Thread {
 			AbstractDrawingPrimitive primitive = m_gameView.getTouchedPrimitive();
 			
 			synchronized (GameData.getLocker()) {
-				if (primitive != null) {
+				if (primitive != null) {					
 					primitive.setUntouched();
 					m_gameView.setTouchedPrimitive(null);
 					int index = 0;

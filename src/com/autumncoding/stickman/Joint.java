@@ -9,6 +9,7 @@ import com.autamncoding.stickman.R;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Paint.Join;
 
 /**
  * This class represents joints that connect different drawing primitives. 
@@ -16,6 +17,12 @@ import android.graphics.Paint;
  *
  */
 public class Joint implements Serializable {
+	private enum JointState {
+		CENTRAL,
+		FREE,
+		CHILD
+	}
+	
 	private static final long serialVersionUID = 1L;
 	private boolean isParentJoint = false;
 	private boolean isChildJoint = false;
@@ -23,13 +30,22 @@ public class Joint implements Serializable {
 	private transient Joint m_parent;
 	private transient ArrayList<Joint> m_childrenJoints;
 	private transient AbstractDrawingPrimitive m_primitive; // primitive, to which this joint belongs
+	private transient long glowStartTime;
+	private transient int glowColor1;
+	private transient int glowColor2;
 	private Vector2DF m_point;
 	private Paint m_paint;
+	private boolean m_isCentral = false;
+	private JointState m_state = JointState.FREE;
+	private boolean m_isTouched = false;
+	private boolean m_isGlowing = false;
 	
 	private void writeObject(java.io.ObjectOutputStream  stream) throws IOException {
 		stream.writeBoolean(isParentJoint);
 		stream.writeBoolean(isChildJoint);
 		stream.writeBoolean(isFreeJoint);
+		stream.writeBoolean(m_isCentral);
+		stream.writeBoolean(m_isGlowing);
 		stream.writeObject(m_point);
 	}
 	
@@ -37,23 +53,30 @@ public class Joint implements Serializable {
 		isParentJoint = stream.readBoolean();
 		isChildJoint = stream.readBoolean();
 		isFreeJoint = stream.readBoolean();
+		m_isCentral = stream.readBoolean();
+		m_isGlowing = stream.readBoolean();
 		m_point = (Vector2DF) stream.readObject();
 		m_parent = null;
 		m_childrenJoints = new ArrayList<Joint>();
 		m_primitive = null;
-		m_paint = GameData.root_joint_paint;
+		
+		if (m_isCentral)
+			m_paint = GameData.root_joint_paint;
+		else
+			m_paint = GameData.child_joint_paint;
 	}
 	
 	public Joint(AbstractDrawingPrimitive pr, Vector2DF p) {
 		m_childrenJoints = new ArrayList<Joint>();
 		m_primitive = pr;
 		m_point = new Vector2DF(p);
-		m_paint = GameData.root_joint_paint;
+		m_paint = GameData.child_joint_paint;
 	}
 	
 	public void updateColor() {
-		if (!m_primitive.hasParent())
+		if (!m_primitive.hasParent() && m_isCentral) {
 			m_paint = GameData.root_joint_paint;
+		}
 		else if (!isChildJoint)
 			m_paint = GameData.child_joint_paint; // TODO rename to free joint paint
 		else 
@@ -102,10 +125,17 @@ public class Joint implements Serializable {
 	}
 	
 	public void setTouched(boolean touched) {
-		if (touched)
-			m_paint = GameData.joint_touched_paint;
-		else
-			updateColor();
+		if (touched != m_isTouched) {
+			m_isTouched = touched;
+			if (touched)
+				m_paint = GameData.joint_touched_paint;
+			else
+				updateColor();
+		}
+	}
+	
+	public void setInvisible() {
+		m_paint = GameData.invisible_paint;
 	}
 	
 	public void setOutOfBounds(boolean outOfBounds) {
@@ -162,17 +192,24 @@ public class Joint implements Serializable {
 		m_point.y = new_y;
 	}
 	
-	public void translate() {
-		
+	public void translate(float dx, float dy) {
+		m_point.x += dx;
+		m_point.y += dy;
 	}
 	
 	public void draw(Canvas canvas) {
-		canvas.drawCircle(m_point.x, m_point.y, GameData.joint_radius_visible, m_paint);
+		if (!m_isGlowing)
+			canvas.drawCircle(m_point.x, m_point.y, GameData.joint_radius_visible, m_paint);
+		else {
+			float t = (float) Math.abs(Math.cos((System.currentTimeMillis() - glowStartTime) * 2 * Math.PI / 1000));
+			GameData.mixTwoColors(glowColor1, glowColor2, t);
+			canvas.drawCircle(m_point.x, m_point.y, GameData.joint_radius_visible, GameData.blended_joint_paint);
+		}
 	}
 	
-	public void drawBlendingWithSuccessor(Canvas canvas, float t, Joint suc) {
+	public void drawBlendingWithSuccessor(Canvas canvas, Joint suc, float t, float interp_x, float interp_y) {
 		GameData.mixTwoColors(m_paint.getColor(), suc.m_paint.getColor(), 1 - t);
-		canvas.drawCircle((1 - t) * m_point.x + t * suc.m_point.x, (1 - t) * m_point.y + t * suc.m_point.y, GameData.joint_radius_visible, GameData.blended_joint_paint);
+		canvas.drawCircle(interp_x, interp_y, GameData.joint_radius_visible, GameData.blended_joint_paint);
 	}
 	
 	public void drawBlendingWithNoPredecessor(Canvas canvas, float t) {
@@ -185,11 +222,28 @@ public class Joint implements Serializable {
 		canvas.drawCircle(m_point.x, m_point.y, GameData.joint_radius_visible, GameData.blended_joint_paint);
 	}
 	
+	public void setCentral(boolean b) {
+		m_isCentral = b;
+	}
+	
 	public void removeChild(Joint ch) {
 		m_childrenJoints.remove(ch);
 		if (m_childrenJoints.isEmpty()) {
 			isFreeJoint = true;
 			isParentJoint = false;
 		}
+	}
+	
+	public void startGlowing(int Color1, int Color2) {
+		if (!m_isGlowing) {
+			m_isGlowing = true;
+			glowStartTime = System.currentTimeMillis();
+			glowColor1 = Color1;
+			glowColor2 = Color2;
+		}
+	}
+	
+	public void stopGlowing() {
+		m_isGlowing = false;
 	}
 }

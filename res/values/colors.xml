@@ -3,6 +3,8 @@
     <color name="label_color">#140E09</color>
     <color name="child_joint">#C8FFD300</color>
     <color name="root_joint">#C8008500</color>
+    <color name="glow_color1">#C820D620</color>
+    <color name="glow_color2">#C8063606</color>
     <color name="touched_element">#C8510FAD</color>
     <color name="prev_frame_element">#C8AAAAAA</color>
     <color name="primitive_line">#C8000000</color>

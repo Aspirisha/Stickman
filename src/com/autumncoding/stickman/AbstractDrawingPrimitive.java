@@ -12,6 +12,7 @@ import java.util.List;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.util.Log;
 
 enum PrimitiveType {
@@ -21,7 +22,13 @@ enum PrimitiveType {
 
 public abstract class AbstractDrawingPrimitive implements Serializable {
 	private static final long serialVersionUID = 6036735876597370696L;
+	
+	public static final float PIDIV2 = (float) (Math.PI / 2.0f);
+	public static final float PI = (float) Math.PI;
+	
 	protected ArrayList<Joint> joints;
+	protected Joint m_primitiveCentre;
+	protected transient Joint rotJoint;
 	protected boolean hasParent;
 	//protected ArrayList<Connection> m_connections;
 	protected int m_treeNumber;
@@ -32,6 +39,11 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	protected transient Context m_context;
 	protected transient int m_successorNumber = -1;
 	protected transient int m_predecessorNumber = -1;
+	protected Joint m_rotationCentre = null;
+	
+	protected float m_deltaScale = 1.0f;
+	protected Vector2DF m_deltaPos = new Vector2DF();
+	protected float m_deltaAngle = 0.0f;
 	
 	protected Connection m_parentConnection;
 	protected ArrayList<Connection> m_childrenConnections;
@@ -48,14 +60,19 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	abstract public PrimitiveType GetType();
 	abstract public float getDistToMe(float from_x, float from_y);
 	abstract public void setUntouched();
-	abstract public void scale(float cx, float cy, float rate);
 	abstract public AbstractDrawingPrimitive getCopy(); 
 	abstract public void setActiveColour();
 	abstract public void setUnactiveColour();
-	abstract public void rotate(float fi, float cx, float cy);
+	abstract public void rotate(float fi, float cx, float cy, boolean rotateChildren);
 	abstract public void applyMove(float new_x, float new_y, float prev_x, float prev_y, boolean isScaling);
+	abstract public Joint getTouchedJoint();
 	abstract float distTo(AbstractDrawingPrimitive pr);
 	
+	public void scale(float cx, float cy, float rate) {
+		if (m_predecessor != null) {
+			m_deltaScale *= rate;
+		}
+	}
 	
 	AbstractDrawingPrimitive(Context context) {
 		m_childrenConnections = new ArrayList<Connection>();
@@ -66,6 +83,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		m_number = Animation.getInstance().getCurrentframe().getPrimitives().size();
 		m_isTouched = false;
 		m_parentConnection = null;
+		m_primitiveCentre = null;
 	}
 	
 	public static void setSuccessorAndPredecessor(AbstractDrawingPrimitive s, AbstractDrawingPrimitive p) {
@@ -86,6 +104,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		m_treeNumber = pr.m_treeNumber;
 		m_number = pr.m_number;
 		m_isTouched = false;
+		m_primitiveCentre = null;
 	}
 
 	public Context getContext() {
@@ -175,6 +194,8 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		
 		child.hasParent = false;
 		child.m_parentConnection.myJoint.setFree();
+		child.m_parentConnection.myJoint.setCentral(true);
+		child.updateCentre(child.m_parentConnection.myJoint);
 		child.m_parentConnection.primitiveJoint.removeChild(child.m_parentConnection.myJoint);
 		child.m_parentConnection = null;
 		
@@ -192,6 +213,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		
 		Animation.getInstance().getCurrentframe().addRoot(child);
 		child.updateSubtreeNumber(Animation.getInstance().getCurrentframe().getTreesNumber()); // TODO check if it's ok
+		
 		child.updateJointColors();
 		return true;
 	}
@@ -221,6 +243,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		if (child.hasParent || parent.m_treeNumber == child.m_treeNumber)
 			return false;
 		
+		childJoint.setCentral(false);
 		child.hasParent = true;
 		child.addParentConnection(parent, parentJoint, childJoint);
 		parent.addChildConnection(child, childJoint, parentJoint);
@@ -250,6 +273,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		Animation.getInstance().getCurrentframe().removeRoot(child);
 		
 		parent.updateSubtreeNumber(parent.m_treeNumber);
+		parent.updateCentre(parent.m_rotationCentre);
 		return true;
 	}
 
@@ -264,6 +288,13 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		m_treeNumber = number;
 		for (Connection con : m_childrenConnections) {
 			con.primitive.updateSubtreeNumber(number);
+		}
+	}
+	
+	public void updateCentre(Joint centre) {
+		m_rotationCentre = centre;
+		for (Connection con : m_childrenConnections) {
+			con.primitive.updateCentre(centre);
 		}
 	}
 
@@ -357,6 +388,10 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		for (Joint j : joints)
 			stream.writeObject(j);
 		stream.writeBoolean(hasParent);
+		if (!hasParent) // write centre only for root!!!
+			stream.writeObject(m_rotationCentre);
+		stream.writeObject(m_primitiveCentre);
+		
 		stream.writeInt(m_treeNumber);
 		stream.writeBoolean(isScalable);
 		stream.writeInt(m_number);
@@ -390,9 +425,19 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		joints = new ArrayList<Joint>();
 		for (int i = 0; i < sz; i++) 
 			joints.add((Joint)stream.readObject());
+		
 		for (Joint j : joints)
 			j.setMyPrimitive(this);
 		hasParent = stream.readBoolean();
+		if (!hasParent) {
+			m_rotationCentre = (Joint)stream.readObject();
+			m_rotationCentre.setMyPrimitive(this);
+		}
+		m_primitiveCentre = (Joint)stream.readObject();
+		m_primitiveCentre.setMyPrimitive(this);
+		m_primitiveCentre.setInvisible();
+		rotJoint = m_primitiveCentre;
+		
 		m_treeNumber = stream.readInt();
 		isScalable = stream.readBoolean();
 		m_number = stream.readInt();
@@ -403,8 +448,11 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 			LinkedList<AbstractDrawingPrimitive> nextPrimitives) { // should be called after all the primitives of all frames are loaded
 		for (Connection con: m_childrenConnections)
 			con.restoreMyFieldsMyIndexes(q, this);	
-		if (m_parentConnection != null)
+		if (m_parentConnection != null) {
 			m_parentConnection.restoreMyFieldsMyIndexes(q, this);
+			m_rotationCentre = m_parentConnection.primitive.m_rotationCentre;
+			rotJoint = m_rotationCentre;
+		}
 		
 		if (nextPrimitives != null && m_successorNumber != -1) {
 			AbstractDrawingPrimitive suc = null;
@@ -418,6 +466,66 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		}
 	}
 	
+	public boolean setJointAsCentre(Joint j) {
+		if (!joints.contains(j))
+			return false;
+		
+		if (m_parentConnection != null) {
+			AbstractDrawingPrimitive parent = m_parentConnection.primitive;
+			Joint myJoint = m_parentConnection.myJoint;
+			Joint hisJoint = m_parentConnection.primitiveJoint;
+			disconnect(parent, this);
+			connect(myJoint, hisJoint);
+		}
+		
+		for (Joint joint : joints)
+			joint.setCentral(false);
+		
+		j.setCentral(true);
+		updateCentre(j);
+		updateJointColors();
+		return true;
+	}
+	
+	
+	public void rotateAroundRotationCentre(Joint touchedJoint, float x, float y) {
+		if (touchedJoint.isChild())
+			return;
+		
+		// joint around which real rotation is going to be
+		Vector2DF centre = rotJoint.getMyPoint();
+		float l1 = Vector2DF.dist(centre, x, y);
+		float l0 = Vector2DF.dist(centre, touchedJoint.getMyPoint());
+		if (l1 == 0 || l0 == 0)
+			return;
+    	float cos_theta = ((x - centre.x) * (touchedJoint.getMyPoint().x - centre.x) + 
+    			(y - centre.y) * (touchedJoint.getMyPoint().y - centre.y)) / (l1 * l0);
+    	if (cos_theta > 1.0f)
+    		cos_theta = 1.0f;
+    	else if (cos_theta < -1.0f)
+    		cos_theta = -1.0f;
+    	
+    	float theta = (float)Math.acos(cos_theta);
+    	
+    	if ((touchedJoint.getMyPoint().x - centre.x) * (y - centre.y) - (x - centre.x) * (touchedJoint.getMyPoint().y - centre.y) < 0)
+    		theta = -theta;
+    	
+		Connection con = m_parentConnection;
+		AbstractDrawingPrimitive parent = this;
+		while (con != null) {
+			if (con.primitiveJoint == rotJoint)
+				break;
+			parent = m_parentConnection.primitive;
+			con = parent.m_parentConnection;
+		}
+		
+		parent.rotate(theta, centre.x, centre.y, false);
+			
+		for (Connection c : parent.m_childrenConnections) {
+			if (c.myJoint != rotJoint)
+				c.primitive.rotate(theta, centre.x, centre.y, true);
+		}
+	}
 	
 	public void setMyNumber(int newNumber) {
 		m_number = newNumber;

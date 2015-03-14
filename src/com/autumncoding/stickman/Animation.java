@@ -139,6 +139,12 @@ public class Animation implements Serializable {
 		int framesNumber = m_frames.size();
 		for (int i = 0; i < framesNumber; i++)
 			removeFrame();
+		if (framesNumber == 0) {
+			m_currentFrame = new AnimationFrame();
+			m_frames.add(m_currentFrame);
+			m_prevFrame = null;
+			m_currentFrameIndex = 0;
+		}
 	}
 	
 	public void stopAnimation() {
@@ -397,7 +403,7 @@ public class Animation implements Serializable {
 		return true;
 	}
 	
-	public void loadFromFile(String fileName, boolean isTemp) {
+	public void loadFromFile(String fileName, boolean isTemp) throws IOException, ClassNotFoundException {
 		ObjectInput input = null;
 		try { 
 			InputStream istream = null;
@@ -435,8 +441,11 @@ public class Animation implements Serializable {
 		    
 		    GameData.drawing_queue = m_currentFrame.getPrimitives();
 		    GameData.prevDrawingQueue = null;
-		} catch (Exception e) { 
+		} catch (IOException e) { 
 			e.printStackTrace();
+			throw e;
+		} catch (ClassNotFoundException e) {
+			throw e;
 		} finally{
 	        try {
 				input.close();

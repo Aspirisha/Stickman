@@ -63,12 +63,28 @@ public class Vector2DF implements Serializable {
 		return result;
 	}
 	
+	static Vector2DF ave(Vector2DF v1, Vector2DF v2) {
+		Vector2DF result = new Vector2DF();
+		result.x = (v1.x + v2.x) / 2;
+		result.y = (v1.y + v2.y) / 2;
+		
+		return result;
+	}
+	
 	static float distSquare(Vector2DF v1, Vector2DF v2) {
 		return ((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y));
 	}
 	
 	static float dist(Vector2DF v1, Vector2DF v2) {
 		return (float) Math.sqrt((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y));
+	}
+	
+	static float dist(Vector2DF v1, float x, float y) {
+		return (float) Math.sqrt((v1.x - x) * (v1.x - x) + (v1.y - y) * (v1.y - y));
+	}
+	
+	static float dist(float x, float y, Vector2DF v2) {
+		return (float) Math.sqrt((x - v2.x) * (x - v2.x) + (y - v2.y) * (y - v2.y));
 	}
 	
 }

@@ -72,6 +72,13 @@ public class AnimationFrame implements Serializable {
 			AbstractDrawingPrimitive oldPrimitive = m_primitives.get(i);
 			AbstractDrawingPrimitive newPrimitive = newFrame.m_primitives.get(i);
 			
+			// update rotation centre
+			Joint oldRotationCentre = oldPrimitive.m_rotationCentre;
+			AbstractDrawingPrimitive oldRotationPrimitive = oldRotationCentre.getMyPrimitive();
+			int rotationJointIndex = oldRotationPrimitive.getMyJoints().indexOf(oldRotationCentre);
+			newPrimitive.m_rotationCentre = oldRotationPrimitive.m_successor.joints.get(rotationJointIndex);
+			
+			// update connections
 			for (Connection con : oldPrimitive.getMyChildrenConnections()) {
 				int primitiveIndex = m_primitives.indexOf(con.primitive);
 				int myJointIndex = oldPrimitive.getMyJoints().indexOf(con.myJoint);

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <integer name="default_anim_fps">1</integer> <!-- plus one for seekbar starts  from 0 -->
+    <integer name="max_delay_between_touches_scale">400</integer> <!-- in milliseconds -->
+    <integer name="min_delay_between_touch_and_drop_centre">500</integer> <!-- minimum time between touch and drop of joint to decide that it's new centre -->
 </resources>

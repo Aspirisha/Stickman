@@ -142,6 +142,7 @@ public class GameView extends SurfaceView {
         	d_timePassedBetweenFpsRecounts = 0;
         }
         canvas.drawText("FPS: " + Float.toString(d_fps), 30, MainActivity.layout_height - 20, debug_paint);
+        //canvas.drawText("angle: " + Float.toString(GameData.debugValue), 30, MainActivity.layout_height - 20, debug_paint);
         // end of debug info
     }
     
@@ -205,8 +206,7 @@ public class GameView extends SurfaceView {
     	currently_touched_pimititve = pr;
     }
     
-    public void setMenuBitmaps(ArrayList<Bitmap> bitmapList)
-    {
+    public void setMenuBitmaps(ArrayList<Bitmap> bitmapList) {
     	synchronized (GameData.getLocker()) {
 	    	m_menuBackground = bitmapList.get(0);
 	    	GameData.topMenuHeight = m_menuBackground.getHeight();
