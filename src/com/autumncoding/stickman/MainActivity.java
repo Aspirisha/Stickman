@@ -340,8 +340,10 @@ public class MainActivity extends Activity {
 				}
 			}).execute();
 	    }
-	    initSettingsView();
-	    initGameView();
+	    if (m_settingsView == null)
+	    	initSettingsView();
+	    if (m_gameView == null)
+	    	initGameView();
 		m_settingsView.updateSettings();
 		super.onResume();
 	}

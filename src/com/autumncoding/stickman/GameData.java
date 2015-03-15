@@ -276,7 +276,7 @@ public class GameData {
 		line_drop_paint.setStrokeWidth(res.getDimension(R.dimen.line_width));
 		line_prev_frame_paint.setStrokeWidth(res.getDimension(R.dimen.line_width));
 		line_touched_paint.setStrokeWidth(res.getDimension(R.dimen.line_width));
-		
+		blended_line_paint.setStrokeWidth(res.getDimension(R.dimen.line_width));
 		min_dist_to_connect_square = res.getDimension(R.dimen.min_dist_to_connect_square);
 		
 		metricsSet = true;

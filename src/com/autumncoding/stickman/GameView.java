@@ -149,7 +149,7 @@ public class GameView extends SurfaceView {
     @Override  
     public void onDraw(Canvas canvas) {   	
         canvas.save();
-        debugDraw(canvas);
+       // debugDraw(canvas);
         
         if (canDraw) {	    
             canvas.drawRect(GameData.fieldRect, m_boundRectPaint);

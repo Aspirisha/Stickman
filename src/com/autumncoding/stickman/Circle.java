@@ -168,6 +168,7 @@ public class Circle extends AbstractDrawingPrimitive {
 		m_jointPoint.y += dy;
 		
 		joints.get(0).setMyPoint(m_jointPoint);
+    	m_primitiveCentre.translate(dx, dy);
     	
 		for (Connection con : m_childrenConnections) {
 			con.primitive.translate(dx, dy);
