@@ -389,27 +389,42 @@ public class Animation implements Serializable {
 	        for (AbstractDrawingPrimitive v : GameData.drawing_queue)
 	        	v.drawJoints(canvas);
     	} else {
-    		if (hasNextFrame()) {
-        		for (AbstractDrawingPrimitive v : GameData.drawing_queue)
-        			v.drawLineBlendingWithSuccessor(canvas, t);
-        		for (AbstractDrawingPrimitive v : GameData.drawing_queue)
-        			v.drawJointsBlendingWithSuccessor(canvas, t);
-    			AnimationFrame nextFrame = m_frames.get(m_currentFrameIndex + 1);
-    			for (AbstractDrawingPrimitive pr : nextFrame.getPrimitives()) {
-    				if (pr.m_predecessor == null)
-    					pr.drawLineBlendingWithNoSuccessor(canvas, 1 - t);
-    			}
-    			for (AbstractDrawingPrimitive pr : nextFrame.getPrimitives()) {
-    				if (pr.m_predecessor == null)
-    					pr.drawJointsBlendingWithNoSuccessor(canvas, 1 - t);
-    			}
+    		if (GameData.enableInterpolation) {
+    			drawInterpolatedFrame(canvas, t);
     		} else {
-    			for (AbstractDrawingPrimitive v : GameData.drawing_queue)
-        			v.drawLineBlendingWithSuccessor(canvas, 0);
-    			for (AbstractDrawingPrimitive v : GameData.drawing_queue)
-        			v.drawJointsBlendingWithSuccessor(canvas, 0);
+    			drawWithoutInterpolation(canvas);
     		}
     	}
+	}
+	
+	private void drawInterpolatedFrame(Canvas canvas, float t) {
+		if (hasNextFrame()) {
+			for (AbstractDrawingPrimitive v : GameData.drawing_queue)
+				v.drawLineBlendingWithSuccessor(canvas, t);
+			for (AbstractDrawingPrimitive v : GameData.drawing_queue)
+				v.drawJointsBlendingWithSuccessor(canvas, t);
+			AnimationFrame nextFrame = m_frames.get(m_currentFrameIndex + 1);
+			for (AbstractDrawingPrimitive pr : nextFrame.getPrimitives()) {
+				if (pr.m_predecessor == null)
+					pr.drawLineBlendingWithNoSuccessor(canvas, 1 - t);
+			}
+			for (AbstractDrawingPrimitive pr : nextFrame.getPrimitives()) {
+				if (pr.m_predecessor == null)
+					pr.drawJointsBlendingWithNoSuccessor(canvas, 1 - t);
+			}
+		} else {
+			for (AbstractDrawingPrimitive v : GameData.drawing_queue)
+				v.drawLineBlendingWithSuccessor(canvas, 0);
+			for (AbstractDrawingPrimitive v : GameData.drawing_queue)
+				v.drawJointsBlendingWithSuccessor(canvas, 0);
+		}
+	}
+	
+	private void drawWithoutInterpolation(Canvas canvas) {
+		for (AbstractDrawingPrimitive v : GameData.drawing_queue)
+			v.drawLineBlendingWithSuccessor(canvas, 0);
+		for (AbstractDrawingPrimitive v : GameData.drawing_queue)
+			v.drawJointsBlendingWithSuccessor(canvas, 0);
 	}
 	
 	public boolean SaveToFile(String fileName, boolean isTemp) {

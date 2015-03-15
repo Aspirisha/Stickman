@@ -71,6 +71,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	abstract public Joint getTouchedJoint();
 	abstract float distTo(AbstractDrawingPrimitive pr);
 	
+	
 	public void scale(float cx, float cy, float rate) {
 		if (m_predecessor != null) {
 			m_deltaScale *= rate;
