@@ -20,6 +20,7 @@ public class GameData {
     private static Object locker;// object for touch thread and ui thread synchronization
     private long prevDrawingTime = System.currentTimeMillis();
     
+    public static boolean isDebug = false;
     public static final long FPS = 30; // FPS for real drawing
     public static final int maxAnimationFps = 30;
     public static TouchState touchState = TouchState.DRAWING;

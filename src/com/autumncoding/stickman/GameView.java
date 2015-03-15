@@ -141,7 +141,8 @@ public class GameView extends SurfaceView {
         	d_fps = d_drawsBetweenFpsRecount * 1000f / (float)d_timePassedBetweenFpsRecounts;
         	d_timePassedBetweenFpsRecounts = 0;
         }
-        canvas.drawText("FPS: " + Float.toString(d_fps), 30, MainActivity.layout_height - 20, debug_paint);
+        if (GameData.isDebug)
+        	canvas.drawText("FPS: " + Float.toString(d_fps), 30, MainActivity.layout_height - 20, debug_paint);
         //canvas.drawText("angle: " + Float.toString(GameData.debugValue), 30, MainActivity.layout_height - 20, debug_paint);
         // end of debug info
     }
@@ -149,7 +150,7 @@ public class GameView extends SurfaceView {
     @Override  
     public void onDraw(Canvas canvas) {   	
         canvas.save();
-       // debugDraw(canvas);
+        debugDraw(canvas);
         
         if (canDraw) {	    
             canvas.drawRect(GameData.fieldRect, m_boundRectPaint);
