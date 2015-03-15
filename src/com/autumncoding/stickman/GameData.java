@@ -3,17 +3,15 @@ package com.autumncoding.stickman;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import com.autamncoding.stickman.R;
-import com.autumncoding.stickman.TouchEventThread.TouchState;
-
-import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+
+import com.autamncoding.stickman.R;
+import com.autumncoding.stickman.TouchEventThread.TouchState;
 
 public class GameData {
 	public static LinkedList<AbstractDrawingPrimitive> drawing_queue;
@@ -22,10 +20,11 @@ public class GameData {
     private static Object locker;// object for touch thread and ui thread synchronization
     private long prevDrawingTime = System.currentTimeMillis();
     
-    public static final long FPS = 30;
+    public static final long FPS = 30; // FPS for real drawing
+    public static final int maxAnimationFps = 30;
     public static TouchState touchState = TouchState.DRAWING;
     //lengths
-    public static final float min_dist_to_connect_square = 100;
+    public static float min_dist_to_connect_square = 100;
     
     //menu lines
     public static float bottom_menu_y = 0;
@@ -37,26 +36,27 @@ public class GameData {
     public static float top_frames_text = 0;
     public static float left_frames_text = 0;
     
-    public static final int maxPrimitivesNumber = 15; 
+    public static int maxPrimitivesNumber = 15; 
+    public static final int absoluteMaxOfObjects = 30; 
     
     public static Resources res;
     
     public static RectF fieldRect = null;
     
     // visible sizes
-    public static final float joint_radius_visible = 7;
-    public static final float min_stick_length = 30;
+    public static float joint_radius_visible = 8;
+    public static float min_stick_length = 30;
     public static int rectDeltaX = 5;
     public static int rectDeltaY = 5;
     
     // touchable sizes
     public static float circle_touchable_dr; // +- so make it 0.5 of needed delta
-    public static final float joint_radius_touchable = 10;
-    public static final float joint_radius_touchable_square = joint_radius_touchable * joint_radius_touchable;
-    public static final float max_circle_radius = 200;
-    public static final float min_circle_radius = 10;
-	public static final float stick_distance_touchable = 10;
-	public static final float stick_distance_touchable_square = stick_distance_touchable * stick_distance_touchable;
+    public static float joint_radius_touchable = 10;
+    public static float joint_radius_touchable_square = joint_radius_touchable * joint_radius_touchable;
+    public static float max_circle_radius = 200;
+    public static float min_circle_radius = 15;
+	public static float stick_distance_touchable = 10;
+	public static float stick_distance_touchable_square = stick_distance_touchable * stick_distance_touchable;
     
     /*********** PAINTS ***************/
     // constant paints:
@@ -105,10 +105,15 @@ public class GameData {
 	public static int currentFrameIndex = 1; // for GameView, starting from 1
 	public static volatile boolean metricsSet = false;
 	public static volatile boolean framesChanged = false;
+	public static int helpToastDurationPerLetter = 100;
+	public static long intervalBetweenSameToasts = 30000L;
 	
 	// settings info
 	public static boolean saveToTemp = true;
 	public static String lang = "English"; 
+	public static boolean playInLoop = false;
+	public static boolean enableInterpolation = true;
+	public static boolean showPopupHinst = true;
 	public static float debugValue = 0; // TODO delete
 	
 	public static void init(MainActivity m) {
@@ -252,6 +257,27 @@ public class GameData {
 		topMenuHeight = res.getDimensionPixelSize(R.dimen.game_view_menu_height);
 		left_frames_text = res.getDimensionPixelSize(R.dimen.frames_text_position_left_padding);
 		top_frames_text = topMenuHeight + res.getDimensionPixelSize(R.dimen.frames_text_position_top_padding);
+		
+		joint_radius_visible = res.getDimension(R.dimen.visible_joint_r);
+		joint_radius_touchable = res.getDimension(R.dimen.touchable_joint_r);
+	    min_stick_length = res.getDimension(R.dimen.min_stick_length);
+	    
+	    // touchable sizes
+	    circle_touchable_dr = res.getDimension(R.dimen.circle_dist_touchable); // +- so make it 0.5 of needed delta
+	    joint_radius_touchable_square = joint_radius_touchable * joint_radius_touchable;
+	    max_circle_radius = res.getDimension(R.dimen.max_circle_radius);
+	    min_circle_radius = res.getDimension(R.dimen.min_circle_radius);
+		stick_distance_touchable = res.getDimension(R.dimen.stick_dist_touchable);
+		stick_distance_touchable_square = stick_distance_touchable * stick_distance_touchable;
+		
+		line_paint.setStrokeWidth(res.getDimension(R.dimen.line_width));
+		root_line_paint.setStrokeWidth(res.getDimension(R.dimen.line_width));
+		line_drop_paint.setStrokeWidth(res.getDimension(R.dimen.line_width));
+		line_prev_frame_paint.setStrokeWidth(res.getDimension(R.dimen.line_width));
+		line_touched_paint.setStrokeWidth(res.getDimension(R.dimen.line_width));
+		
+		min_dist_to_connect_square = res.getDimension(R.dimen.min_dist_to_connect_square);
+		
 		metricsSet = true;
     }
 

@@ -421,10 +421,20 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		float dr_y = (suc.p1.y - p1.y) * t;
 		float len = (1 - t) * length + t * suc.length;
 		
+		float cosfi = (p2.x - p1.x) * (suc.p2.x - suc.p1.x) + (p2.y - p1.y) * (suc.p2.y - suc.p1.y); 
+		cosfi = Math.min(cosfi, 1.0f);
+		cosfi = Math.max(cosfi, -1.0f);
+		fi = (float) Math.acos(fi);
+		if ((p2.x - p1.x) * (suc.p2.y - suc.p1.y) - (suc.p2.x - suc.p1.x) * (p2.y - p1.y) < 0)
+			fi = -fi;
+		
 		interpData.x1 = p1.x + dr_x;
 		interpData.y1 = p1.y + dr_y;
-		interpData.x2 = (float) (interpData.x1 + len * Math.cos(fi));
-		interpData.y2 = (float) (interpData.y1 + len * Math.sin(fi));
+		//interpData.x2 = (float) (interpData.x1 + len * Math.cos(fi * t));
+		//interpData.y2 = (float) (interpData.y1 + len * Math.sin(fi * t));
+		
+		interpData.x2 = (float) (p2.x + (suc.p2.x - p2.x) * t);
+		interpData.y2 = (float) (p2.y + (suc.p2.y - p2.y) * t);
 		
 		interpData.dx = GameData.joint_radius_visible * (interpData.x2 - interpData.x1) / len;
 		interpData.dy = GameData.joint_radius_visible * (interpData.y2 - interpData.y1) / len;

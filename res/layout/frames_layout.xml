@@ -11,6 +11,8 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="@dimen/frames_seek_bar_left_padding"
         android:layout_marginTop="@dimen/frames_seek_bar_top_padding"
+        android:minHeight="@dimen/seekbar_height"  
+        android:maxHeight="@dimen/seekbar_height"  
         android:layout_weight="0.46" />
 
     <TextView

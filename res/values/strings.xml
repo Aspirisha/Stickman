@@ -17,11 +17,37 @@
     <string name="current_fps_text">Current FPS:  </string>
     <string name="settings_header">Settings</string>
     <string name="file_saved_to">Animation was saved to file </string>
-    <string name="file_opened_from">Animation was loaded from file </string>
+    <string name="file_opened_from">Animation was loaded from file </string>    
     
-    <string name="save_or_not">Save animation automatically before exit.</string>
+    <string name="max_number_of_objects">Max number of objects in frame (too much objects on frame can cause a performance hit)</string>
+    <string name="save_or_not">Save animation automatically before exit</string>
+    <string name="enable_interpolation">Enable interpolation between frames</string>
+    <string name="loop_animation">Play animation in a loop</string>
+    <string name="show_hints">Show popup hints</string>
+    
     
     <!-- Help strings -->
+    <string name="toast_help1">Press hardware settings button in the left bottom corner of your device screen to enter menu.</string>
+    
+    <string name="toast_help2">Press this button to start or stop playing animation.</string>
+    <string name="toast_help3">You have pressed drag mode button. Now you can drag objects.</string>
+    <string name="toast_help4">You have touched the canvas in a draw mode. Now you can draw objects. </string>
+    <string name="toast_help5">You have touched the primitive for rotating. Green blinking joint indicates rotation centre.</string>
+    <string name="toast_help6">Press this button to delete current frame.</string>
+    <string name="toast_help7">You have touched parent object of hierarchy. While holding your finger on the screen, you can drag the object and all it\'s children.</string>
+    <string name="toast_help8">You have pressed drag mode button/ Now you can draw objects in current frame.</string>
+    <string name="toast_help9">Press this button to add new frame to animation.</string>
+    <string name="toast_help10">Press this button to switch to next frame.</string>
+    <string name="toast_help11">Press this button to switch to previous frame.</string>
+    <string name="toast_help12">You have touched child primitive for dragging. If you drag it rather fast, you will tear it from parent and make it independent</string>
+    <string name="toast_help13">You have double clicked the object\'s joint. Now you can scale it.</string>
+    <string name="toast_help14">You have double clicked the object\'s joint. Now this joint became rotation centre for the hierarchy and it\'s object became root the hierarchy.</string>
+    <string name="toast_help15">You have double clicked the object\'s line. Now this primitive became root of it\'s hierarchy.</string>
+    <string name="toast_help16">The object you are dragging is partly out of bounds. If you drop it now, it will be removed from current frame and all next frames.</string>
+    <string name="toast_help17">Self-intersected lines gives circle, all other lines give sticks.</string>
+    <string name="toast_help18">To turn off popup hints, select appropriate tick in settings menu.</string>
+    <string name="toast_help19"></string>
+    
     <string name="how1"><u>What is this app about?</u></string>
     <string name="how2"><u>How do I draw objects?</u></string>
     <string name="how3"><u>How do I move objects?</u></string>

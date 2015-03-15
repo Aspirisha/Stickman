@@ -1,6 +1,7 @@
 package com.autumncoding.stickman;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -8,13 +9,33 @@ import com.autamncoding.stickman.R;
 import com.autumncoding.stickman.Animation.AnimationState;
 
 import android.graphics.PointF;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.widget.Toast;
 
 public class TouchEventThread extends Thread {
 	enum TouchState {
 		DRAWING,
 		DRAGGING
+	}
+	
+	enum TouchHelpType {
+		ON_PLAY_PRESSED,
+		ON_DRAW_PRESSED,
+		ON_NEXT_PRESSED,
+		ON_PREV_PRESSED,
+		ON_NEW_PRESSED,
+		ON_DELETE_PRESSED,
+		ON_DRAW,
+		ON_SCALE,
+		ON_ROTATE,
+		ON_SET_CENTRE,
+		ON_SET_ROOT,
+		ON_DRAG_PRESSED,
+		ON_DRAG_PARENT,
+		ON_DRAG_CHILD,
+		ON_DROP
 	}
 	
 	private GameData game_data;
@@ -45,6 +66,8 @@ public class TouchEventThread extends Thread {
 	private float m_maxDist = -1;
 	private boolean m_drawingIsStarted = false;
 	private boolean m_drawingHasIntersection = false;
+	
+	private HashMap<TouchHelpType, Long> lastTimesOfToasts;
 	
 	class CurrentDrawingState {
 		PointF m_startDrawingPoint = new PointF();
@@ -93,6 +116,12 @@ public class TouchEventThread extends Thread {
 		m_startDrawingPoint = new PointF();
 		m_farthestDrawingPoint = new PointF();
 		m_currentDrawingPoint = new PointF();
+		lastTimesOfToasts = new HashMap<TouchEventThread.TouchHelpType, Long>();
+		
+		for (TouchHelpType type : TouchHelpType.values()) {
+			lastTimesOfToasts.put(type, 0L);
+		}
+			
 	}
 	
 	public void init(ArrayList<MenuIcon> icons) {
@@ -187,24 +216,29 @@ public class TouchEventThread extends Thread {
 					GameData.touchState = TouchState.DRAWING;
 					GameData.menuDrag.setUntouched();
 					GameData.menuPlay.setUntouched();
+					showPopupHint(TouchHelpType.ON_DRAW_PRESSED);
 					break;
 				case 1:
 					GameData.touchState = TouchState.DRAGGING;
 					GameData.menuPencil.setUntouched();
 					GameData.menuPlay.setUntouched();
+					showPopupHint(TouchHelpType.ON_DRAG_PRESSED);
 					break;
 				case 2:
 					Animation.getInstance().switchToPrevFrame();
 					lastTouchMenuIndex = 2;
+					showPopupHint(TouchHelpType.ON_PREV_PRESSED);
 					break;
 				case 3:
 					Animation.getInstance().switchToNextFrame();
 					lastTouchMenuIndex = 3;
+					showPopupHint(TouchHelpType.ON_NEXT_PRESSED);
 					break;
 				case 4:
 					Animation.getInstance().addFrame();
 					GameData.menuPrev.setActive();
 					lastTouchMenuIndex = 4;
+					showPopupHint(TouchHelpType.ON_NEW_PRESSED);
 					break;
 				case 5:
 					Animation.getInstance().removeFrame();
@@ -212,10 +246,12 @@ public class TouchEventThread extends Thread {
 						GameData.menuNext.setUnavailable();
 					if (!Animation.getInstance().hasPrevFrame())
 						GameData.menuPrev.setUnavailable();
+					showPopupHint(TouchHelpType.ON_DELETE_PRESSED);
 					lastTouchMenuIndex = 5;
 					break;
 				case 6:
-					Animation.getInstance().Play();
+					Animation.getInstance().Play(!Animation.getInstance().isPlaying());
+					showPopupHint(TouchHelpType.ON_PLAY_PRESSED);
 					break;
 				default:
 					lastTouchMenuIndex = touchedMenuIndex;
@@ -231,6 +267,87 @@ public class TouchEventThread extends Thread {
 			}
 			}
 		}
+	}
+	
+	
+	private void showPopupHint(final TouchHelpType type) {
+		if (!GameData.showPopupHinst)
+			return;
+
+		long curTime = System.currentTimeMillis();
+		
+		if (curTime - lastTimesOfToasts.get(type) < GameData.intervalBetweenSameToasts)
+			return;
+		
+		lastTimesOfToasts.put(type, curTime);
+		
+		Runnable show_toast = new Runnable() {
+			public void run() {
+				LinkedList<String> messages = new LinkedList<String>();
+				switch (type) {
+				case ON_PLAY_PRESSED:
+					messages.add(GameData.res.getString(R.string.toast_help2));
+					break;
+				case ON_DRAG_PRESSED:
+					messages.add(GameData.res.getString(R.string.toast_help3));
+					break;
+				case ON_DRAW:
+					messages.add(GameData.res.getString(R.string.toast_help4));
+					messages.add(GameData.res.getString(R.string.toast_help17));
+					break;
+				case ON_ROTATE:
+					messages.add(GameData.res.getString(R.string.toast_help5));
+					break;
+				case ON_DELETE_PRESSED:
+					messages.add(GameData.res.getString(R.string.toast_help6));
+					break;
+				case ON_DRAG_PARENT:
+					messages.add(GameData.res.getString(R.string.toast_help7));
+					break;
+				case ON_DRAW_PRESSED:
+					messages.add(GameData.res.getString(R.string.toast_help8));
+					break;
+				case ON_NEW_PRESSED:
+					messages.add(GameData.res.getString(R.string.toast_help9));
+					break;
+				case ON_NEXT_PRESSED:
+					messages.add(GameData.res.getString(R.string.toast_help10));
+					break;
+				case ON_PREV_PRESSED:
+					messages.add(GameData.res.getString(R.string.toast_help11));
+					break;
+				case ON_DRAG_CHILD:
+					messages.add(GameData.res.getString(R.string.toast_help12));
+					break;
+				case ON_SCALE:
+					messages.add(GameData.res.getString(R.string.toast_help13));
+					break;
+				case ON_SET_CENTRE:
+					messages.add(GameData.res.getString(R.string.toast_help14));
+					break;
+				case ON_SET_ROOT:
+					messages.add(GameData.res.getString(R.string.toast_help15));
+					break;
+				case ON_DROP:
+					messages.add(GameData.res.getString(R.string.toast_help16));
+					break;
+				default:
+					break;
+				}
+				
+				for (String msg : messages) {
+					final Toast toast = Toast.makeText(GameData.mainActivity, msg, Toast.LENGTH_LONG);
+					toast.show();
+	
+					new CountDownTimer(GameData.helpToastDurationPerLetter * msg.length(), 1000) {
+					    public void onTick(long millisUntilFinished) {toast.show();}
+					    public void onFinish() {toast.show();}
+					}.start();
+				}
+			}
+		};
+
+		GameData.mainActivity.runOnUiThread(show_toast);
 	}
 	
 	private void processEventDrawing(MotionEvent event) {
@@ -251,6 +368,7 @@ public class TouchEventThread extends Thread {
 			m_currentDrawingPoint.y = m_startDrawingPoint.y = y;
 			m_maxDist = -1;
 			m_drawingIsStarted = true;
+			showPopupHint(TouchHelpType.ON_DRAW);
 			break;
 
 		case MotionEvent.ACTION_MOVE: {
@@ -367,14 +485,31 @@ public class TouchEventThread extends Thread {
 					
 					if (eventTime - lastTouchTime < 400) {
 						movementIsScaling = true;
-						Joint j = primitive.getTouchedJoint();
-						if (j != null) 
-							primitive.setJointAsCentre(j);
-						else
-							primitive.setAsRoot();
+						if (!primitive.hasParent && !primitive.hasChildren())
+							showPopupHint(TouchHelpType.ON_SCALE);
+						else {
+							Joint j = primitive.getTouchedJoint();
+							if (j != null) {
+								showPopupHint(TouchHelpType.ON_SET_CENTRE);
+								primitive.setJointAsCentre(j);
+							}
+							else {
+								showPopupHint(TouchHelpType.ON_SET_ROOT);
+								primitive.setAsRoot();
+							}
+						}
 					}
-					else
+					else {
 						movementIsScaling = false;
+						if (primitive.getTouchedJoint() != null) 
+							showPopupHint(TouchHelpType.ON_ROTATE);
+						else {
+							if (primitive.hasParent)
+								showPopupHint(TouchHelpType.ON_DRAG_CHILD);
+							else
+								showPopupHint(TouchHelpType.ON_DRAG_PARENT);
+						}
+					}
 					
 					lastTouchedPrimitive = primitive;
 					lastTouchTime = eventTime;
@@ -391,6 +526,9 @@ public class TouchEventThread extends Thread {
 				synchronized (GameData.getLocker()) {
 					touchedPrimitive.applyMove(x, y, mLastTouchX, mLastTouchY, movementIsScaling);
 					touchedPrimitive.tryConnection(GameData.drawing_queue);
+					if (touchedPrimitive.isOutOfBounds()) {
+						showPopupHint(TouchHelpType.ON_DROP);
+					}
 				}
 			}
 			break;
@@ -408,7 +546,7 @@ public class TouchEventThread extends Thread {
 					for (int i = 0; i < size; i++) {
 						AbstractDrawingPrimitive pr = GameData.drawing_queue.get(index);
 						if (pr.isOutOfBounds()) {
-							Animation.getInstance().getCurrentframe().removePrimitive(pr);
+							Animation.getInstance().removePrimitive(pr);
 							GameData.menuPencil.setAvailable();
 						} else {
 							pr.setActiveColour();

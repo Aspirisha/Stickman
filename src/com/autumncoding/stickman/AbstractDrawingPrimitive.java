@@ -483,6 +483,10 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		}
 	}
 	
+	boolean hasChildren() {
+		return !m_childrenConnections.isEmpty();
+	}
+	
 	public boolean setJointAsCentre(Joint j) {
 		if (!joints.contains(j))
 			return false;

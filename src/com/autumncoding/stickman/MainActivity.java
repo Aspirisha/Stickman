@@ -2,6 +2,7 @@ package com.autumncoding.stickman;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 
 import android.app.Activity;
 import android.content.Context;
@@ -10,6 +11,7 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -98,6 +100,20 @@ public class MainActivity extends Activity {
     	    	
     	setContentView(m_gameLayout);
 		m_gameView.setBackgroundResource(R.drawable.background);
+		
+		if (GameData.showPopupHinst) {
+			LinkedList<String> messages = new LinkedList<String>();
+			messages.add(GameData.res.getString(R.string.toast_help1));
+			messages.add(GameData.res.getString(R.string.toast_help18));
+			
+			for (String msg : messages) {
+				final Toast toast = Toast.makeText(GameData.mainActivity, msg, Toast.LENGTH_LONG);
+				new CountDownTimer(GameData.helpToastDurationPerLetter * msg.length(), 1000) {
+				    public void onTick(long millisUntilFinished) {toast.show();}
+				    public void onFinish() {toast.show();}
+				}.start();
+			}
+		}
 	}
 	
 	private void initSettingsView() {
@@ -154,6 +170,7 @@ public class MainActivity extends Activity {
 				initGameView();
 
 			setContentView(m_gameLayout);
+
 			break;
 		case VIEW_INTRO:
 			m_viewIntro = new ViewIntro(this);
@@ -277,6 +294,7 @@ public class MainActivity extends Activity {
 	
 	@Override
 	protected void onPause() {
+		Animation.getInstance().Play(false);
 		if (GameData.saveToTemp)
 			Animation.getInstance().SaveToFile("", true);
 		
@@ -284,6 +302,10 @@ public class MainActivity extends Activity {
 		SharedPreferences.Editor editor = settings.edit();
 	    editor.putBoolean("SaveTemp", GameData.saveToTemp);
 	    editor.putString("Lang", GameData.lang);
+	    editor.putBoolean("EnableInterp", GameData.enableInterpolation);
+	    editor.putBoolean("PlayInLoop", GameData.playInLoop);
+	    editor.putBoolean("popupHints", GameData.showPopupHinst);
+	    editor.putInt("fps", Animation.getInstance().getFps());
 	    editor.commit();
 		super.onPause();
 	}
@@ -293,9 +315,14 @@ public class MainActivity extends Activity {
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 	    GameData.saveToTemp = settings.getBoolean("SaveTemp", true);
 	    GameData.lang = settings.getString("Lang", "English");
+	    GameData.enableInterpolation = settings.getBoolean("EnableInterp", true);
+	    GameData.playInLoop = settings.getBoolean("PlayInLoop", false);
+	    GameData.showPopupHinst = settings.getBoolean("popupHints", true);
 	    GameData.touchState = TouchState.DRAWING;
-		
+	    Animation.getInstance().setAnimationFPS(settings.getInt("fps", 2));
+	    
 	    initSettingsView();
+	    initGameView();
 		m_settingsView.updateSettings();
 		super.onResume();
 	}

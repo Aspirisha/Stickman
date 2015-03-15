@@ -46,13 +46,21 @@ public class Animation implements Serializable {
 		m_frames.add(m_currentFrame);
 	}
 	
+	public int getFps() {
+		return (int) m_fps;
+	}
+	
 	public AnimationState getState() {
 		return m_state;
 	}
 	
+	public boolean isPlaying() {
+		return (m_state == AnimationState.PLAY);
+	}
+	
 	public float getTimePassedFromFrameStart() {
 		long t = System.currentTimeMillis();
-		float r = (float)(t - m_frameStartTime) / (float)(1000 * m_fps);
+		float r = (t - m_frameStartTime) * m_fps / 1000f;
 		return (r < 1.0f ? r : 1.0f);
 	}
 	
@@ -96,6 +104,16 @@ public class Animation implements Serializable {
 			}
 			else
 				break;
+		}
+	}
+	
+	public void removePrimitive(AbstractDrawingPrimitive pr) {
+		AnimationFrame frame = null;
+		AbstractDrawingPrimitive curPrim = pr;
+		for (int i = m_currentFrameIndex; i < m_frames.size() && curPrim != null; i++) {
+			frame = m_frames.get(i);
+			frame.removePrimitive(curPrim);
+			curPrim = curPrim.m_successor;
 		}
 	}
 	
@@ -172,8 +190,8 @@ public class Animation implements Serializable {
 			GameData.menuNext.setAvailable();
 	}
 	
-	public void Play() {
-		if (m_state == AnimationState.EDIT) {
+	public void Play(boolean play) {
+		if (m_state == AnimationState.EDIT && play) {
 			m_state = AnimationState.PLAY;
 			m_animationThread = new Thread() {
 				@Override
@@ -214,9 +232,15 @@ public class Animation implements Serializable {
 						if (m_state != AnimationState.PLAY)
 							break;
 						synchronized (GameData.getLocker()) {
-							if (!hasNextFrame())
-								break;
-							switchToNextFrame();
+							if (!hasNextFrame()) {
+								if (!GameData.playInLoop)
+									break;
+								setCurrentframe(0);
+								GameData.menuNext.setUnavailable();
+							} else	
+								switchToNextFrame();
+						
+							// it's needed check for we have switched frame 
 							if (hasNextFrame()) {
 								AnimationFrame nextFrame = m_frames.get(m_currentFrameIndex + 1);
 								for (AbstractDrawingPrimitive pr : nextFrame.getPrimitives())
@@ -236,7 +260,7 @@ public class Animation implements Serializable {
 				}
 			};
 			m_animationThread.start();
-		} else if (m_state == AnimationState.PLAY) {
+		} else if (m_state == AnimationState.PLAY && !play) {
 			synchronized (GameData.getLocker()) {
 				m_state = AnimationState.EDIT;
 				onStopAnimation();

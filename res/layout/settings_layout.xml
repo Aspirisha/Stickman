@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:fillViewport="true"> <!--IMPORTANT otherwise backgrnd img. will not fill the whole screen -->
+    
+<LinearLayout
     android:layout_width="fill_parent"
     android:layout_height="match_parent"
     android:layout_gravity="top"
@@ -67,28 +74,85 @@
             android:text="@+string/str_anim_fps"
             android:textColor="@color/label_color"
             android:textColorHint="@color/label_color" />
+        
+        <TableRow
+            	android:id="@+id/tableRow1"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/animation_fps_label"
+                android:layout_marginLeft="0dp"
+                android:layout_marginRight="5dp" >
 
-        <SeekBar
-            android:id="@+id/animation_fps_seekbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_below="@+id/animation_fps_label"
-            android:contentDescription="@string/choose_language"
-            android:max="@integer/max_animation_fps"
-            android:progress="@integer/default_anim_fps" />
+                <SeekBar
+                    android:id="@+id/animation_fps_seekbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/choose_language"
+                    android:max="@integer/max_animation_fps"
+                    android:maxHeight="@dimen/seekbar_height"
+                    android:minHeight="@dimen/seekbar_height"
+                    android:paddingRight="15dp"
+                    android:paddingTop="10dp"
+                    android:progress="@integer/default_anim_fps" />
 
-        <TextView
-            android:id="@+id/fps_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/animation_fps_seekbar"
-            android:text="Bla"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="@color/label_color" />
+                <TextView
+                    android:id="@+id/fps_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="0"
+                    android:text="Bla"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="@color/label_color"
+                    android:textStyle="bold" />
+            </TableRow>
+                <TextView
+        android:id="@+id/textView3"
+        android:layout_below="@id/tableRow1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="@string/max_number_of_objects"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@color/label_color" />
+        <TableRow
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/textView3"
+                android:layout_marginLeft="0dp"
+                android:layout_marginRight="5dp" >
+
+                <SeekBar
+                    android:id="@+id/seekbar2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/choose_language"
+                    android:max="@integer/max_animation_fps"
+                    android:maxHeight="@dimen/seekbar_height"
+                    android:minHeight="@dimen/seekbar_height"
+                    android:paddingRight="15dp"
+                    android:paddingTop="10dp"
+                    android:progress="@integer/default_anim_fps" />
+
+                <TextView
+                    android:id="@+id/maxObjs"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="0"
+                    android:text="Bla"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="@color/label_color"
+                    android:textStyle="bold" />
+            </TableRow>
 
     </RelativeLayout>
 
+    
     <CheckBox
         android:id="@+id/checkBox1"
         android:layout_width="wrap_content"
@@ -98,5 +162,35 @@
         android:layout_marginTop="10dp"
         android:textColor="@color/label_color"
         android:textAppearance="?android:attr/textAppearanceSmall" />
+    
+	<CheckBox
+        android:id="@+id/checkBox2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="@string/enable_interpolation"
+        android:layout_marginTop="10dp"
+        android:textColor="@color/label_color"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
+ 	<CheckBox
+        android:id="@+id/checkBox3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="@string/loop_animation"
+        android:layout_marginTop="10dp"
+        android:textColor="@color/label_color"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+ 	
+ 	<CheckBox
+        android:id="@+id/checkBox4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="@string/show_hints"
+        android:layout_marginTop="10dp"
+        android:textColor="@color/label_color"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 </LinearLayout>
+</ScrollView>
