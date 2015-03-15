@@ -55,7 +55,8 @@
     <string name="move3">To drag an object, touch it\'s black part (not joint, but line) and drag wherever you want. When touched for dragging,
         objects\'s line colour turns to violet.</string>
     <string name="move4">To rotate an object, touch it\'s joint and move your finger over the screen. When touched for rotating, objects\'s 
-        joint colour turns to violet.</string>
+        joint colour turns to violet. Rotation is performed around green blinking joint (it will appear when any joint is touched). Usually it is the green joint of
+        the hierarchy, but if you try to rotate object touching the green joint itself, the rotation will be performed around parent object\'s centre.</string>
     <string name="move5">To scale an object, quickly tap twice any of it\'s joints, and then drag. When touched for scaling, object\'s 
         joint colour turns to blue.</string>
     <string name="move6">To remove object from the frame, simply move it so that any of it\'s points gets out of drawing field. After that object will turn to red,
@@ -65,11 +66,15 @@
     <string name="connect2">Connected objects form a hierarchy: attached object becomes a child of object, to which it is attached 
         (the latter object becomes parent for the former).</string>
     <string name="connect3">
-        We call object\'s joint a <i>free joint</i>, if it has green colour. More precisely, this means,
-        that this joint belongs to a parent object, i.e. object, that is not attached to any other object as a child. So, after 
-        object became a child, it\'s joints are recoloured into yellow.</string>
-    <string name="connect4">To attach one object to another, move first object so that one of it\'s free joints
-        overlaps with some joint of second object. After connection, the object you moved becomes child of an object, that was stationary.</string>
+        We call object\'s joint a <i>root joint</i>, if touching any other joint in hierarchy causes rotation around this one. Such joint has a green colour and it is always unique and present in any hierarchy.
+        Root joint always belongs to a parent og the hierarchy.
+        We call object\'s joint a <i>free joint</i>, if it\'s not connected with any other joint. free jints (except maybe a root joint) have yellow colour. 
+        We call object\'s joint a <i>connected joint</i>, if it\'s connected with some other joint. Connected joints have orange colour.</string>
+    <string name="connect4">Key thing is that you can only attach parent objects. To attach one object (parent object!) to any other object, move first object so that one of it\'s free joints
+        overlaps with some joint of second object. After connection, the object you moved becomes child of an object, that was stationary. Note, that object cannot be attached
+        to any of it\'s direct or indirect children.</string>
+    <string name="connect8">You can turn any object in hierarchy into parent of this hierarchy by quickly tapping twice on one of it\'s joints or on it\'s line. 
+        Note that tapping twice on joint also turns it into new rotation centre of hierarchy.</string>
     <string name="connect5">When parent object is moved, all it\'s children are also moved. On the other hand, you can\'t drag child object explicitly,
         you can rather rotate it around connection joint or disconnect it from parent by dragging it rather fast.</string>
     <string name="connect6">Note, that you can scale object, only if it\'s absolutely free, i.e. is not a parent nor a child.</string>

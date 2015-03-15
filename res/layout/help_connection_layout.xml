@@ -102,14 +102,24 @@
         android:layout_marginTop="16dp"
         android:text="@string/connect5" 
         android:textColor="@color/label_color" />
-
+<TextView
+        android:id="@+id/textView9"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView6"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/imageView4"
+        android:text="@string/connect8" 
+        android:textColor="@color/label_color" />
     <TextView
         android:id="@+id/textView7"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/textView6"
-        android:layout_below="@+id/imageView4"
+        android:layout_below="@+id/textView9"
         android:text="@string/connect6"
+        android:layout_marginTop="10dp"
         android:textColor="@color/label_color" />
 
     <TextView
@@ -117,6 +127,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/textView7"
+        android:layout_marginTop="10dp"
         android:layout_below="@+id/textView7"
         android:text="@string/connect7"
         android:textColor="@color/label_color" />
@@ -136,13 +147,14 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_below="@+id/textView8"
+        android:layout_marginTop="10dp"
         android:src="@drawable/move4" />
 
     <ImageView
         android:id="@+id/imageView5"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/textView7"
+        android:layout_above="@+id/textView9"
         android:layout_alignRight="@+id/imageView3"
         android:src="@drawable/move2" />
 

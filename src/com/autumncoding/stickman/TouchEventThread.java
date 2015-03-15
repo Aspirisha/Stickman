@@ -370,6 +370,8 @@ public class TouchEventThread extends Thread {
 						Joint j = primitive.getTouchedJoint();
 						if (j != null) 
 							primitive.setJointAsCentre(j);
+						else
+							primitive.setAsRoot();
 					}
 					else
 						movementIsScaling = false;

@@ -16,14 +16,16 @@ public final class R {
     }
     public static final class color {
         public static final int child_joint=0x7f040001;
-        public static final int drop_color=0x7f040008;
+        public static final int connected_joint=0x7f040005;
+        public static final int drop_color=0x7f040009;
         public static final int glow_color1=0x7f040003;
         public static final int glow_color2=0x7f040004;
         public static final int label_color=0x7f040000;
-        public static final int prev_frame_element=0x7f040006;
-        public static final int primitive_line=0x7f040007;
+        public static final int prev_frame_element=0x7f040007;
+        public static final int primitive_line=0x7f040008;
         public static final int root_joint=0x7f040002;
-        public static final int touched_element=0x7f040005;
+        public static final int root_primitive=0x7f04000a;
+        public static final int touched_element=0x7f040006;
     }
     public static final class dimen {
         /**  Default screen margins, per the Android Design guidelines. 
@@ -116,35 +118,35 @@ public final class R {
         public static final int stop_touched=0x7f02003f;
     }
     public static final class id {
-        public static final int ImageView01=0x7f0b0011;
-        public static final int ImageView02=0x7f0b0012;
-        public static final int ImageView03=0x7f0b0013;
-        public static final int ImageView04=0x7f0b0016;
-        public static final int ImageView05=0x7f0b0017;
+        public static final int ImageView01=0x7f0b0012;
+        public static final int ImageView02=0x7f0b0013;
+        public static final int ImageView03=0x7f0b0014;
+        public static final int ImageView04=0x7f0b0017;
+        public static final int ImageView05=0x7f0b0018;
         public static final int RelativeLayout1=0x7f0b0000;
-        public static final int TextView01=0x7f0b0019;
-        public static final int TextView02=0x7f0b0015;
-        public static final int TextView03=0x7f0b0014;
-        public static final int TextView04=0x7f0b0018;
-        public static final int TextView05=0x7f0b001a;
-        public static final int TextView06=0x7f0b0010;
-        public static final int action_help=0x7f0b0025;
-        public static final int action_load=0x7f0b0024;
-        public static final int action_save=0x7f0b0023;
-        public static final int action_settings=0x7f0b0021;
-        public static final int animation_fps_label=0x7f0b001d;
-        public static final int animation_fps_seekbar=0x7f0b001e;
-        public static final int checkBox1=0x7f0b0020;
-        public static final int fps_text=0x7f0b001f;
-        public static final int group1=0x7f0b0022;
+        public static final int TextView01=0x7f0b001a;
+        public static final int TextView02=0x7f0b0016;
+        public static final int TextView03=0x7f0b0015;
+        public static final int TextView04=0x7f0b0019;
+        public static final int TextView05=0x7f0b001b;
+        public static final int TextView06=0x7f0b0011;
+        public static final int action_help=0x7f0b0026;
+        public static final int action_load=0x7f0b0025;
+        public static final int action_save=0x7f0b0024;
+        public static final int action_settings=0x7f0b0022;
+        public static final int animation_fps_label=0x7f0b001e;
+        public static final int animation_fps_seekbar=0x7f0b001f;
+        public static final int checkBox1=0x7f0b0021;
+        public static final int fps_text=0x7f0b0020;
+        public static final int group1=0x7f0b0023;
         public static final int imageView1=0x7f0b0003;
         public static final int imageView2=0x7f0b0004;
         public static final int imageView3=0x7f0b0005;
         public static final int imageView4=0x7f0b0006;
         public static final int imageView5=0x7f0b0007;
-        public static final int imageView6=0x7f0b000f;
-        public static final int language_spinner=0x7f0b001c;
-        public static final int language_spinner_label=0x7f0b001b;
+        public static final int imageView6=0x7f0b0010;
+        public static final int language_spinner=0x7f0b001d;
+        public static final int language_spinner_label=0x7f0b001c;
         public static final int seekBar1=0x7f0b0008;
         public static final int textView1=0x7f0b0001;
         public static final int textView2=0x7f0b0002;
@@ -152,8 +154,9 @@ public final class R {
         public static final int textView4=0x7f0b000a;
         public static final int textView5=0x7f0b000b;
         public static final int textView6=0x7f0b000c;
-        public static final int textView7=0x7f0b000d;
-        public static final int textView8=0x7f0b000e;
+        public static final int textView7=0x7f0b000e;
+        public static final int textView8=0x7f0b000f;
+        public static final int textView9=0x7f0b000d;
     }
     public static final class integer {
         public static final int default_anim_fps=0x7f050001;
@@ -183,10 +186,10 @@ public final class R {
     public static final class string {
         public static final int about1=0x7f070020;
         public static final int action_settings=0x7f070001;
-        public static final int animation1=0x7f070036;
-        public static final int animation2=0x7f070037;
-        public static final int animation3=0x7f070038;
-        public static final int animation4=0x7f070039;
+        public static final int animation1=0x7f070037;
+        public static final int animation2=0x7f070038;
+        public static final int animation3=0x7f070039;
+        public static final int animation4=0x7f07003a;
         public static final int ans1=0x7f070019;
         public static final int ans2=0x7f07001a;
         public static final int ans3=0x7f07001b;
@@ -200,9 +203,10 @@ public final class R {
         public static final int connect2=0x7f07002c;
         public static final int connect3=0x7f07002d;
         public static final int connect4=0x7f07002e;
-        public static final int connect5=0x7f07002f;
-        public static final int connect6=0x7f070030;
-        public static final int connect7=0x7f070031;
+        public static final int connect5=0x7f070030;
+        public static final int connect6=0x7f070031;
+        public static final int connect7=0x7f070032;
+        public static final int connect8=0x7f07002f;
         public static final int current_fps_text=0x7f07000d;
         public static final int draw1=0x7f070021;
         public static final int draw2=0x7f070022;
@@ -210,10 +214,10 @@ public final class R {
         public static final int draw4=0x7f070024;
         public static final int file_opened_from=0x7f070010;
         public static final int file_saved_to=0x7f07000f;
-        public static final int frames1=0x7f070032;
-        public static final int frames2=0x7f070033;
-        public static final int frames3=0x7f070034;
-        public static final int frames4=0x7f070035;
+        public static final int frames1=0x7f070033;
+        public static final int frames2=0x7f070034;
+        public static final int frames3=0x7f070035;
+        public static final int frames4=0x7f070036;
         public static final int hello_world=0x7f070002;
         /**  Help strings 
  Help strings 
@@ -231,7 +235,7 @@ public final class R {
         public static final int move4=0x7f070028;
         public static final int move5=0x7f070029;
         public static final int move6=0x7f07002a;
-        public static final int save1=0x7f07003a;
+        public static final int save1=0x7f07003b;
         public static final int save_or_not=0x7f070011;
         public static final int settings_header=0x7f07000e;
         public static final int str_anim_fps=0x7f07000b;

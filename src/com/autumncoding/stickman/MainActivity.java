@@ -294,19 +294,6 @@ public class MainActivity extends Activity {
 	    GameData.saveToTemp = settings.getBoolean("SaveTemp", true);
 	    GameData.lang = settings.getString("Lang", "English");
 	    GameData.touchState = TouchState.DRAWING;
-	    
-		if (GameData.saveToTemp) {
-			synchronized (GameData.getLocker()) {
-				try {
-					Animation.getInstance().loadFromFile("", true);
-				} catch (Exception e) {
-					e.printStackTrace();
-					Animation.getInstance().clear();
-				}
-			}
-		} else {
-			Animation.getInstance().clear();
-		}
 		
 	    initSettingsView();
 		m_settingsView.updateSettings();

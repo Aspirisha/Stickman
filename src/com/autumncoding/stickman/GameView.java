@@ -272,6 +272,19 @@ public class GameView extends SurfaceView {
                 final GameView gameView = imageViewReference.get();
                 if (gameView != null) {
                 	gameView.setMenuBitmaps(bitmapList);
+                	
+            		if (GameData.saveToTemp) {
+            			synchronized (GameData.getLocker()) {
+            				try {
+            					Animation.getInstance().loadFromFile("", true);
+            				} catch (Exception e) {
+            					e.printStackTrace();
+            					Animation.getInstance().clear();
+            				}
+            			}
+            		} else {
+            			Animation.getInstance().clear();
+            		}
                 }
             }
         }

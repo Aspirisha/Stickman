@@ -45,7 +45,7 @@ public class GameData {
     
     // visible sizes
     public static final float joint_radius_visible = 7;
-    public static final float min_stick_length = 20;
+    public static final float min_stick_length = 30;
     public static int rectDeltaX = 5;
     public static int rectDeltaY = 5;
     
@@ -69,9 +69,12 @@ public class GameData {
     
     // untouched paints:
 	public static Paint line_paint;  // normal paint for stick line
+	public static Paint root_line_paint;
 	public static Paint root_joint_paint;
-	public static Paint child_joint_paint;
+	public static Paint joint_paint_free;
+	public static Paint joint_connected_paint;
 	public static Paint invisible_paint;
+	
 	// touched paints:
 	public static Paint line_drop_paint;  // paint used to show that element is going to be dropped to the bin
 	public static Paint line_touched_paint;
@@ -119,13 +122,16 @@ public class GameData {
     	
     	// paints init
     	line_paint = new Paint();
-		line_paint.setColor(Color.BLACK);
+		line_paint.setColor(res.getColor(R.color.primitive_line));
 		line_paint.setAntiAlias(true);
 		line_paint.setDither(true);
 		line_paint.setStrokeWidth(7f);
 		line_paint.setStyle(Paint.Style.STROKE);
 		line_paint.setStrokeJoin(Paint.Join.ROUND);
 		line_paint.setStrokeCap(Paint.Cap.ROUND);
+		
+		root_line_paint = new Paint(line_paint);
+		root_line_paint.setColor(res.getColor(R.color.root_primitive));
 		
 		textPaint = new Paint();
 		textPaint.setColor(Color.GRAY);
@@ -161,14 +167,17 @@ public class GameData {
 
 		blended_joint_paint = new Paint(root_joint_paint);
 		
-		child_joint_paint = new Paint(root_joint_paint);
-		child_joint_paint.setColor(res.getColor(R.color.child_joint));
+		joint_paint_free = new Paint(root_joint_paint);
+		joint_paint_free.setColor(res.getColor(R.color.child_joint));
 		
 		line_touched_paint = new Paint(line_paint);
 		line_touched_paint.setColor(res.getColor(R.color.touched_element));
-		joint_touched_paint = new Paint(child_joint_paint);
+		
+		joint_touched_paint = new Paint(joint_paint_free);
 		joint_touched_paint.setColor(res.getColor(R.color.touched_element));
 		
+		joint_connected_paint = new Paint(joint_paint_free);
+		joint_connected_paint.setColor(res.getColor(R.color.connected_joint));
 		
 		line_prev_frame_paint = new Paint(line_paint);
 		line_prev_frame_paint.setColor(res.getColor(R.color.prev_frame_element));
@@ -177,7 +186,7 @@ public class GameData {
 		
 		line_drop_paint = new Paint(line_paint);
 		line_drop_paint.setColor(res.getColor(R.color.drop_color));
-		joint_drop_paint = new Paint(child_joint_paint);
+		joint_drop_paint = new Paint(joint_paint_free);
 		joint_drop_paint.setColor(res.getColor(R.color.drop_color));
 		
 		drawnPoints = new ArrayList<PointF>();

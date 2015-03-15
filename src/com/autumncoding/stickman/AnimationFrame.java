@@ -64,8 +64,17 @@ public class AnimationFrame implements Serializable {
 			newFrame.m_primitives.add(newPrimitive);
 			AbstractDrawingPrimitive.setSuccessorAndPredecessor(currentPrimitive.m_successor, newPrimitive);
 			AbstractDrawingPrimitive.setSuccessorAndPredecessor(newPrimitive, currentPrimitive);
-			if (m_roots.contains(currentPrimitive))
+			
+			
+			newPrimitive.joints.get(0).setCentral(false);
+
+
+			if (m_roots.contains(currentPrimitive)) {
 				newFrame.m_roots.add(newPrimitive);
+				int ind = currentPrimitive.joints.indexOf(currentPrimitive.m_rotationCentre);
+				if (ind != -1) 
+					newPrimitive.joints.get(ind).setCentral(true);
+			}
 		}
 		
 		for (int i = 0; i < m_primitives.size(); ++i) {

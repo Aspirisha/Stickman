@@ -13,6 +13,7 @@ import java.util.List;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.util.Log;
 
 enum PrimitiveType {
@@ -39,6 +40,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	protected transient Context m_context;
 	protected transient int m_successorNumber = -1;
 	protected transient int m_predecessorNumber = -1;
+	protected transient Paint m_line_paint = null;
 	protected Joint m_rotationCentre = null;
 	
 	protected float m_deltaScale = 1.0f;
@@ -53,10 +55,11 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	
 	abstract void translate(float x, float y);
 	abstract public boolean checkTouch(float touch_x, float touch_y);
-	abstract public void draw(Canvas canvas);
-	abstract public void drawBlendingWithSuccessor(Canvas canvas, float t); // t in [0, 1]
-	abstract public void drawBlendingWithNoPredecessor(Canvas canvas, float t);
-	abstract public void drawBlendingWithNoSuccessor(Canvas canvas, float t);
+	abstract public void drawLine(Canvas canvas);
+	abstract public void drawLineBlendingWithSuccessor(Canvas canvas, float t); // t in [0, 1]
+	abstract public void drawLineBlendingWithNoSuccessor(Canvas canvas, float t);
+	abstract public void drawJointsBlendingWithSuccessor(Canvas canvas, float t); // t in [0, 1]
+	abstract public void drawJointsBlendingWithNoSuccessor(Canvas canvas, float t);
 	abstract public PrimitiveType GetType();
 	abstract public float getDistToMe(float from_x, float from_y);
 	abstract public void setUntouched();
@@ -84,6 +87,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		m_isTouched = false;
 		m_parentConnection = null;
 		m_primitiveCentre = null;
+		m_line_paint = GameData.root_line_paint;
 	}
 	
 	public static void setSuccessorAndPredecessor(AbstractDrawingPrimitive s, AbstractDrawingPrimitive p) {
@@ -105,6 +109,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		m_number = pr.m_number;
 		m_isTouched = false;
 		m_primitiveCentre = null;
+		m_line_paint = GameData.root_line_paint;
 	}
 
 	public Context getContext() {
@@ -192,13 +197,14 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		if (parent != child.m_parentConnection.primitive)
 			return false;
 		
+		parent.rotJoint.stopGlowing();
 		child.hasParent = false;
 		child.m_parentConnection.myJoint.setFree();
 		child.m_parentConnection.myJoint.setCentral(true);
 		child.updateCentre(child.m_parentConnection.myJoint);
 		child.m_parentConnection.primitiveJoint.removeChild(child.m_parentConnection.myJoint);
 		child.m_parentConnection = null;
-		
+		child.m_line_paint = GameData.root_line_paint;
 		
 		Connection toRemove = null;
 		for (Connection con : parent.m_childrenConnections) {
@@ -210,6 +216,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		parent.m_childrenConnections.remove(toRemove);
 		parent.isScalable = (parent.m_childrenConnections.isEmpty() && parent.m_parentConnection == null);
 		child.isScalable = (child.m_childrenConnections.isEmpty() && child.m_parentConnection == null);
+		child.m_line_paint = GameData.root_line_paint;
 		
 		Animation.getInstance().getCurrentframe().addRoot(child);
 		child.updateSubtreeNumber(Animation.getInstance().getCurrentframe().getTreesNumber()); // TODO check if it's ok
@@ -243,15 +250,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		if (child.hasParent || parent.m_treeNumber == child.m_treeNumber)
 			return false;
 		
-		childJoint.setCentral(false);
-		child.hasParent = true;
-		child.addParentConnection(parent, parentJoint, childJoint);
-		parent.addChildConnection(child, childJoint, parentJoint);
-		
-		LinkedList<Connection> toRemove = new LinkedList<Connection>();
-		
-		Vector2DF dv = Vector2DF.sub(parentJoint.getMyPoint(), childJoint.getMyPoint());
-		
+		// first of all, manage children of connected element
 		ArrayList<Connection> tempChildChildCons = new ArrayList<Connection>();
 		tempChildChildCons.addAll(child.m_childrenConnections);
 		for (Connection con : tempChildChildCons) {
@@ -263,6 +262,17 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 			}
 		}
 		
+		child.m_line_paint = GameData.line_paint;
+		child.m_rotationCentre.setCentral(false);
+		child.rotJoint.stopGlowing();
+		child.hasParent = true;
+		child.addParentConnection(parent, parentJoint, childJoint);
+		parent.addChildConnection(child, childJoint, parentJoint);
+		
+		LinkedList<Connection> toRemove = new LinkedList<Connection>();
+		
+		Vector2DF dv = Vector2DF.sub(parentJoint.getMyPoint(), childJoint.getMyPoint());
+		
 		child.translate(dv);
 		parentJoint.addChild(childJoint);
 		childJoint.connectToParent(parentJoint);
@@ -272,7 +282,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		parent.isScalable = false;
 		Animation.getInstance().getCurrentframe().removeRoot(child);
 		
-		parent.updateSubtreeNumber(parent.m_treeNumber);
+		parent.updateSubtreeNumber(parent.m_treeNumber); // HERE updated!
 		parent.updateCentre(parent.m_rotationCentre);
 		return true;
 	}
@@ -293,6 +303,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	
 	public void updateCentre(Joint centre) {
 		m_rotationCentre = centre;
+		rotJoint = m_rotationCentre;
 		for (Connection con : m_childrenConnections) {
 			con.primitive.updateCentre(centre);
 		}
@@ -348,7 +359,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	}
 	
 	
-	public void setTransitiveFields(Context context) {
+	public void setTransientFields(Context context) {
 		m_context = context;
 		m_isTouched = false;
 		m_isOutOfBounds = false;
@@ -390,6 +401,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		stream.writeBoolean(hasParent);
 		if (!hasParent) // write centre only for root!!!
 			stream.writeObject(m_rotationCentre);
+		
 		stream.writeObject(m_primitiveCentre);
 		
 		stream.writeInt(m_treeNumber);
@@ -429,10 +441,14 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		for (Joint j : joints)
 			j.setMyPrimitive(this);
 		hasParent = stream.readBoolean();
+		
 		if (!hasParent) {
 			m_rotationCentre = (Joint)stream.readObject();
 			m_rotationCentre.setMyPrimitive(this);
-		}
+			m_line_paint = GameData.root_line_paint;
+		} else
+			m_line_paint = GameData.line_paint;
+		
 		m_primitiveCentre = (Joint)stream.readObject();
 		m_primitiveCentre.setMyPrimitive(this);
 		m_primitiveCentre.setInvisible();
@@ -442,6 +458,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		isScalable = stream.readBoolean();
 		m_number = stream.readInt();
 		m_successorNumber = stream.readInt();
+		
 	}
 	
 	public void restoreMyFieldsByIndexes(LinkedList<AbstractDrawingPrimitive> q, 
@@ -470,21 +487,37 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		if (!joints.contains(j))
 			return false;
 		
-		if (m_parentConnection != null) {
-			AbstractDrawingPrimitive parent = m_parentConnection.primitive;
-			Joint myJoint = m_parentConnection.myJoint;
-			Joint hisJoint = m_parentConnection.primitiveJoint;
-			disconnect(parent, this);
-			connect(myJoint, hisJoint);
-		}
+		setAsRoot();
 		
-		for (Joint joint : joints)
-			joint.setCentral(false);
-		
+		m_rotationCentre.setCentral(false);
+		rotJoint.stopGlowing();
 		j.setCentral(true);
+		
 		updateCentre(j);
 		updateJointColors();
 		return true;
+	}
+	
+	public void setAsRoot() {
+		if (m_parentConnection != null) {
+			AbstractDrawingPrimitive parent = m_parentConnection.primitive;
+			AbstractDrawingPrimitive child = this;
+			LinkedList<AbstractDrawingPrimitive> stack = new LinkedList<AbstractDrawingPrimitive>();
+			while (parent.hasParent) {
+				stack.push(child);
+				child = parent;
+				parent = parent.m_parentConnection.primitive;
+			}
+			
+			while (child != null) {
+				Joint newParentJoint = child.m_parentConnection.myJoint;
+				Joint newChildJoint = child.m_parentConnection.primitiveJoint;
+				disconnect(parent, child);
+				connect(newParentJoint, newChildJoint);
+				parent = child;
+				child = stack.pollFirst();
+			}
+		}
 	}
 	
 	
@@ -515,7 +548,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 		while (con != null) {
 			if (con.primitiveJoint == rotJoint)
 				break;
-			parent = m_parentConnection.primitive;
+			parent = con.primitive;
 			con = parent.m_parentConnection;
 		}
 		
@@ -525,6 +558,17 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 			if (c.myJoint != rotJoint)
 				c.primitive.rotate(theta, centre.x, centre.y, true);
 		}
+	}
+	
+	public void drawJoints(Canvas canvas) {
+		for (Joint j : joints)
+			j.draw(canvas);
+		m_primitiveCentre.draw(canvas);
+	}
+	
+	public void draw(Canvas canvas) {
+		drawLine(canvas);
+		drawJoints(canvas);
 	}
 	
 	public void setMyNumber(int newNumber) {

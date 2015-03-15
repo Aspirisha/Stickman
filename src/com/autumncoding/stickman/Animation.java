@@ -84,10 +84,13 @@ public class Animation implements Serializable {
 	
 	public void addPrimitive(AbstractDrawingPrimitive pr) {
 		AnimationFrame frame = null;
+		AbstractDrawingPrimitive prev = null;
 		for (int i = m_currentFrameIndex; i < m_frames.size(); i++) {
 			frame = m_frames.get(i);
 			if (frame.getPrimitives().size() < GameData.maxPrimitivesNumber) {
 				AbstractDrawingPrimitive newPrimitive = pr.getCopy();
+				AbstractDrawingPrimitive.setSuccessorAndPredecessor(newPrimitive, prev);
+				prev = newPrimitive;
 				frame.addRoot(newPrimitive);
 				frame.getPrimitives().add(newPrimitive);
 			}
@@ -358,21 +361,29 @@ public class Animation implements Serializable {
 	        		pr.draw(canvas);
         	}
 	        for (AbstractDrawingPrimitive v : GameData.drawing_queue)
-	        	v.draw(canvas);
+	        	v.drawLine(canvas);
+	        for (AbstractDrawingPrimitive v : GameData.drawing_queue)
+	        	v.drawJoints(canvas);
     	} else {
     		if (hasNextFrame()) {
-	    		for (AbstractDrawingPrimitive v : GameData.drawing_queue)
-		        	v.drawBlendingWithSuccessor(canvas, t);
-	    		if (m_currentFrameIndex + 1 < m_frames.size()) {
-	    			AnimationFrame nextFrame = m_frames.get(m_currentFrameIndex + 1);
-	    			for (AbstractDrawingPrimitive pr : nextFrame.getPrimitives()) {
-	    				if (pr.m_predecessor == null)
-	    					pr.drawBlendingWithNoPredecessor(canvas, t);
-	    			}
-	    		}
+        		for (AbstractDrawingPrimitive v : GameData.drawing_queue)
+        			v.drawLineBlendingWithSuccessor(canvas, t);
+        		for (AbstractDrawingPrimitive v : GameData.drawing_queue)
+        			v.drawJointsBlendingWithSuccessor(canvas, t);
+    			AnimationFrame nextFrame = m_frames.get(m_currentFrameIndex + 1);
+    			for (AbstractDrawingPrimitive pr : nextFrame.getPrimitives()) {
+    				if (pr.m_predecessor == null)
+    					pr.drawLineBlendingWithNoSuccessor(canvas, 1 - t);
+    			}
+    			for (AbstractDrawingPrimitive pr : nextFrame.getPrimitives()) {
+    				if (pr.m_predecessor == null)
+    					pr.drawJointsBlendingWithNoSuccessor(canvas, 1 - t);
+    			}
     		} else {
     			for (AbstractDrawingPrimitive v : GameData.drawing_queue)
-    		        v.draw(canvas);
+        			v.drawLineBlendingWithSuccessor(canvas, 0);
+    			for (AbstractDrawingPrimitive v : GameData.drawing_queue)
+        			v.drawJointsBlendingWithSuccessor(canvas, 0);
     		}
     	}
 	}
@@ -428,19 +439,21 @@ public class Animation implements Serializable {
 		    	frame.restorePrimitivesFieldsByIndexes(NextDrawingSequence);
 		    }
 		    
-		    m_currentFrameIndex = 0;
+		    
 		    m_currentFrame = m_frames.get(0); // any saved animation has at least 1 frame
 		    for (AnimationFrame frame : m_frames) {
 		    	LinkedList<AbstractDrawingPrimitive> framePrimitives = frame.getPrimitives();
 		    	for (AbstractDrawingPrimitive pr: framePrimitives) {
-		    		pr.setTransitiveFields(GameData.mainActivity);
+		    		pr.setTransientFields(GameData.mainActivity);
+		    	}
+		    	
+		    	for (AbstractDrawingPrimitive pr : frame.getRoots()) {
+		    		pr.updateCentre(pr.m_rotationCentre);
 		    	}
 		    }
 		    
-		    GameData.framesChanged = true;
-		    
-		    GameData.drawing_queue = m_currentFrame.getPrimitives();
-		    GameData.prevDrawingQueue = null;
+		    m_currentFrameIndex = -1;
+		    setCurrentframe(0);
 		} catch (IOException e) { 
 			e.printStackTrace();
 			throw e;

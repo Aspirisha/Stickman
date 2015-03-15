@@ -3,12 +3,11 @@ package com.autumncoding.stickman;
 import java.io.IOException;
 import java.io.Serializable;
 
-import com.autamncoding.stickman.R;
-
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
+
+import com.autamncoding.stickman.R;
 
 public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	private static final long serialVersionUID = -9064457764417918381L;
@@ -18,27 +17,31 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	private float length;
 	private float angle;
 	
-	private transient Paint m_line_paint;
+	private class InterpolatedData {
+		float dx = 0; // joint has size, so line should be shorter on dx, dy
+		float dy = 0;
+		
+		float x1, x2, y1, y2;
+		float t;
+	}
 	
-	/*********************** touch data *********************************************/
 	enum StickTouches {
 		JOINT1, 
 		JOINT2,
 		STICK,
 		NONE
 	}	
-	
+	private transient InterpolatedData interpData;
 	private transient StickTouches m_touchState = StickTouches.NONE;
 	
 	public Stick(Context context) {
 		super(context);
 		
+		interpData = new InterpolatedData(); 
 		length = 100;
 		angle = 0;
 		p1 = new Vector2DF(100, 100);
 		p2 = new Vector2DF(200, 100);
-
-		m_line_paint = GameData.line_paint;
 		
 		joints.add(new Joint(this, p1));
 		joints.add(new Joint(this, p2));
@@ -52,13 +55,15 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	
 	public Stick(Stick st) { // TODO maybe it should be private?
 		super(st);
+		interpData = new InterpolatedData(); 
 		p1 = new Vector2DF(st.p1);
 		p2 = new Vector2DF(st.p2);
 		length = st.length;
 		angle = st.angle;
-		m_line_paint = GameData.line_paint;
+
 		joints.add(new Joint(this, p1));
 		joints.add(new Joint(this, p2));
+		
 		joints.get(0).setCentral(true);
 		m_rotationCentre = joints.get(0);
 		rotJoint = m_rotationCentre;
@@ -82,6 +87,10 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
     	
 		angle += fi;
 		
+		/*if (angle > Math.PI)
+			angle = (float) (2*Math.PI - angle);
+		else if (angle < -Math.PI)
+			angle = (float) (2*Math.PI + angle);*/
 		joints.get(0).setMyPoint(p1);
 		joints.get(1).setMyPoint(p2);
 		m_primitiveCentre.setMyPoint(Vector2DF.ave(p1, p2));
@@ -133,14 +142,11 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	}
 	
 	@Override
-	public void draw(Canvas canvas) { 
+	public void drawLine(Canvas canvas) {
 		float dx = GameData.joint_radius_visible * (p2.x - p1.x) / length;
 		float dy = GameData.joint_radius_visible * (p2.y - p1.y) / length;
 		
 		canvas.drawLine(p1.x + dx, p1.y + dy, p2.x - dx, p2.y - dy, m_line_paint);
-		for (Joint j : joints)
-			j.draw(canvas);
-		m_primitiveCentre.draw(canvas);
 	}
 	
 	private StickTouches m_checkTouched(float touch_x, float touch_y) {
@@ -188,24 +194,26 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		m_touchState = m_checkTouched(touch_x, touch_y);
 		
 		m_isTouched = true;
-		m_line_paint = GameData.line_paint;
+		m_line_paint = (hasParent ? GameData.line_paint : GameData.root_line_paint);
 		for (Joint j : joints) {
 			j.setTouched(false);
 		}
 		
 		switch (m_touchState) {
 		case JOINT1:
-			// TODO set glowing
+			rotJoint.stopGlowing();
 			rotJoint = (joints.get(0) != m_rotationCentre ? m_rotationCentre : m_primitiveCentre);
 			rotJoint.startGlowing(GameData.res.getColor(R.color.glow_color1), GameData.res.getColor(R.color.glow_color2));
 			joints.get(0).setTouched(true);
 			break;
 		case JOINT2:
+			rotJoint.stopGlowing();
 			rotJoint = (joints.get(1) != m_rotationCentre ? m_rotationCentre : m_primitiveCentre);
 			rotJoint.startGlowing(GameData.res.getColor(R.color.glow_color1), GameData.res.getColor(R.color.glow_color2));
 			joints.get(1).setTouched(true);
 			break;
 		case NONE:
+			rotJoint.stopGlowing();
 			m_isTouched = false;
 			break;
 		case STICK:
@@ -232,7 +240,7 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		if (!m_isOutOfBounds) {
 			for (Joint j : joints)
 				j.setTouched(false);
-			m_line_paint = GameData.line_paint;
+			m_line_paint = (hasParent ? GameData.line_paint : GameData.root_line_paint);
 		}
 	}
 	
@@ -246,22 +254,23 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		p2.x = _x2;
 		p2.y = _y2;
 		
+		length = (float) Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
+		if (length < GameData.min_stick_length) {
+			p2.x = p1.x + GameData.min_stick_length;
+			length = GameData.min_stick_length;
+		}
+		
 		joints.get(0).setMyPoint(p1);
 		joints.get(1).setMyPoint(p2);
 		
-		length = (float) Math.sqrt((p1.x - p2.x) * (p1.x - p2.x) + (p1.y - p2.y) * (p1.y - p2.y));
-		if (length < GameData.min_stick_length) {
-			p2.x = p1.x + 20;
-		}
-		
-		float cos_theta = (_x2 - _x1) / length;
+		float cos_theta = (p2.x - p1.x) / length;
     	if (cos_theta > 1.0f)
     		cos_theta = 1.0f;
     	else if (cos_theta < -1.0f)
     		cos_theta = -1.0f;
     	
     	angle = (float)Math.acos(cos_theta);
-    	if (_y2 - _y1 < 0)
+    	if (p2.y - p1.y < 0)
     		angle = -angle;
 	}
 	
@@ -342,7 +351,7 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 				for (Joint j : joints)
 					j.setOutOfBounds(true);
 			} else {
-				m_line_paint = GameData.line_paint;
+				m_line_paint = (hasParent ? GameData.line_paint : GameData.root_line_paint);
 				for (Joint j : joints)
 					j.setOutOfBounds(false);
 				switch (m_touchState) {
@@ -365,10 +374,10 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	}
 
 	@Override
-	public void setTransitiveFields(Context context) {
-		super.setTransitiveFields(context);
-		m_line_paint = GameData.line_paint;
+	public void setTransientFields(Context context) {
+		super.setTransientFields(context);
 		m_touchState = StickTouches.NONE;
+		interpData = new InterpolatedData(); 
 	}
 
 	@Override
@@ -381,7 +390,7 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	public void setActiveColour() {
 		for (Joint j : joints)
 			j.setUnactive(false);
-		m_line_paint = GameData.line_paint;
+		m_line_paint = (hasParent ? GameData.line_paint : GameData.root_line_paint);
 	}
 
 	@Override
@@ -396,7 +405,6 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		stream.writeObject(p2);
 		stream.writeFloat(length);
 		stream.writeFloat(angle);
-		
 	}
 	
 	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
@@ -406,48 +414,59 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		angle = stream.readFloat();
 	}
 	
+	public void interpolateWithSuccessor(float t) {
+		Stick suc = (Stick)m_successor;
+		float fi = (suc.angle - angle) * t + angle;
+		float dr_x = (suc.p1.x - p1.x) * t;
+		float dr_y = (suc.p1.y - p1.y) * t;
+		float len = (1 - t) * length + t * suc.length;
+		
+		interpData.x1 = p1.x + dr_x;
+		interpData.y1 = p1.y + dr_y;
+		interpData.x2 = (float) (interpData.x1 + len * Math.cos(fi));
+		interpData.y2 = (float) (interpData.y1 + len * Math.sin(fi));
+		
+		interpData.dx = GameData.joint_radius_visible * (interpData.x2 - interpData.x1) / len;
+		interpData.dy = GameData.joint_radius_visible * (interpData.y2 - interpData.y1) / len;
+		
+		interpData.t = t;
+	}
+	
 	@Override
-	public void drawBlendingWithSuccessor(Canvas canvas, float t) {
+	public void drawLineBlendingWithSuccessor(Canvas canvas, float t) {
 		if (m_successor != null) {
-			Stick suc = (Stick)m_successor;
-			GameData.mixTwoColors(m_line_paint.getColor(), suc.m_line_paint.getColor(), 1 - t);
+			interpolateWithSuccessor(t);
 			
-			float fi = (suc.angle - angle) * t + angle;
-			float dr_x = (suc.p1.x - p1.x) * t;
-			float dr_y = (suc.p1.y - p1.y) * t;
-			float len = (1 - t) * length + t * suc.length;
-			
-			float x1 = p1.x + dr_x;
-			float y1 = p1.y + dr_y;
-			float x2 = (float) (x1 + len * Math.cos(fi));
-			float y2 = (float) (y1 + len * Math.sin(fi));
-			
-			float dx = GameData.joint_radius_visible * (x2 - x1) / len;
-			float dy = GameData.joint_radius_visible * (y2 - y1) / len;
-			
-			canvas.drawLine(x1 + dx, y1 + dy, x2 - dx, y2 - dy, GameData.blended_line_paint);
-			joints.get(0).drawBlendingWithSuccessor(canvas, suc.joints.get(0), t, x1, y1);
-			joints.get(1).drawBlendingWithSuccessor(canvas, suc.joints.get(1), t, x2, y2);
+			canvas.drawLine(interpData.x1 + interpData.dx, interpData.y1 + interpData.dy, 
+					interpData.x2 - interpData.dx, interpData.y2 - interpData.dy, GameData.root_line_paint);
 		} else {
-			drawBlendingWithNoSuccessor(canvas, t);
+			drawLineBlendingWithNoSuccessor(canvas, t);
 		}
 	}
 
 	@Override
-	public void drawBlendingWithNoPredecessor(Canvas canvas, float t) {
-		GameData.mixTwoColors(Color.argb(0, 0, 0, 0), m_line_paint.getColor(), 1 - t);
+	public void drawJointsBlendingWithSuccessor(Canvas canvas, float t) {
+		if (m_successor != null) {
+			if (interpData.t != t)
+				interpolateWithSuccessor(t);
+			joints.get(0).drawBlendingWithSuccessor(canvas, interpData.x1, interpData.y1);
+			joints.get(1).drawBlendingWithSuccessor(canvas, interpData.x2, interpData.y2);
+		} else {
+			drawJointsBlendingWithNoSuccessor(canvas, t);
+		}
+	}
+	
+	@Override
+	public void drawLineBlendingWithNoSuccessor(Canvas canvas, float t) {
+		GameData.mixTwoColors(Color.argb(0, 0, 0, 0), GameData.root_line_paint.getColor(), t);
 		float dx = GameData.joint_radius_visible * (p2.x - p1.x) / length;
 		float dy = GameData.joint_radius_visible * (p2.y - p1.y) / length;
 		
 		canvas.drawLine(p1.x + dx, p1.y + dy, p2.x - dx, p2.y - dy, GameData.blended_line_paint);
-		joints.get(0).drawBlendingWithNoPredecessor(canvas, t);
-		joints.get(1).drawBlendingWithNoPredecessor(canvas, t);
 	}
 	
 	@Override
-	public void drawBlendingWithNoSuccessor(Canvas canvas, float t) {
-		GameData.mixTwoColors(Color.argb(0, 0, 0, 0), m_line_paint.getColor(), t);
-		canvas.drawLine(p1.x, p1.y, p2.x, p2.y, GameData.blended_line_paint);
+	public void drawJointsBlendingWithNoSuccessor(Canvas canvas, float t) {		
 		joints.get(0).drawBlendingWithNoSuccessor(canvas, t);
 		joints.get(1).drawBlendingWithNoSuccessor(canvas, t);
 	}
