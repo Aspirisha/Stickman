@@ -93,8 +93,8 @@
         (the latter object becomes parent for the former).</string>
     <string name="connect3">
         We call object\'s joint a <i>root joint</i>, if touching any other joint in hierarchy causes rotation around this one. Such joint has a green colour and it is always unique and present in any hierarchy.
-        Root joint always belongs to a parent og the hierarchy.
-        We call object\'s joint a <i>free joint</i>, if it\'s not connected with any other joint. free jints (except maybe a root joint) have yellow colour. 
+        Root joint always belongs to a parent of the hierarchy.
+        We call object\'s joint a <i>free joint</i>, if it\'s not connected with any other joint. free joints (except maybe a root joint) have yellow colour. 
         We call object\'s joint a <i>connected joint</i>, if it\'s connected with some other joint. Connected joints have orange colour.</string>
     <string name="connect4">Key thing is that you can only attach parent objects. To attach one object (parent object!) to any other object, move first object so that one of it\'s free joints
         overlaps with some joint of second object. After connection, the object you moved becomes child of an object, that was stationary. Note, that object cannot be attached

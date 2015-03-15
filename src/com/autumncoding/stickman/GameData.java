@@ -115,6 +115,7 @@ public class GameData {
 	public static boolean enableInterpolation = true;
 	public static boolean showPopupHinst = true;
 	public static float debugValue = 0; // TODO delete
+	public static String animFolder = "/animations";
 	
 	public static void init(MainActivity m) {
 		mainActivity = m;

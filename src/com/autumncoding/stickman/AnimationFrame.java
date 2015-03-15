@@ -107,6 +107,7 @@ public class AnimationFrame implements Serializable {
 			
 			// copying parent connection if exists
 			if (oldPrimitive.hasParent()) {
+				newPrimitive.m_line_paint = GameData.line_paint;
 				Connection con = oldPrimitive.getMyParentConnection();
 				
 				int primitiveIndex = m_primitives.indexOf(con.primitive);

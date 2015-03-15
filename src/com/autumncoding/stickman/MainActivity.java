@@ -1,17 +1,25 @@
 package com.autumncoding.stickman;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.LinkedList;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.Rect;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Environment;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -226,7 +234,7 @@ public class MainActivity extends Activity {
 	        		});
 	        		
 	        		//You can change the default filename using the public variable "Default_File_Name"
-	        		File file = new File(GameData.mainActivity.getExternalFilesDir(null), "StickmanSaves");
+	        		File file = new File(GameData.mainActivity.getExternalFilesDir(null) + GameData.animFolder);
 	     		    file.mkdirs();
 	        		FileOpenDialog.chooseFile_or_Dir(file.getAbsolutePath());
 	        		FileOpenDialog.Default_File_Name = "";
@@ -260,7 +268,7 @@ public class MainActivity extends Activity {
 	        	});
 
 	        	//You can change the default filename using the public variable "Default_File_Name"
-	        	File file = new File(GameData.mainActivity.getExternalFilesDir(null), "StickmanSaves");
+	        	File file = new File(GameData.mainActivity.getExternalFilesDir(null) + GameData.animFolder);
 	        	file.mkdirs();
 	        	FileOpenDialog.chooseFile_or_Dir(file.getAbsolutePath());
 	        	FileOpenDialog.Default_File_Name = "";
@@ -306,6 +314,7 @@ public class MainActivity extends Activity {
 	    editor.putBoolean("PlayInLoop", GameData.playInLoop);
 	    editor.putBoolean("popupHints", GameData.showPopupHinst);
 	    editor.putInt("fps", Animation.getInstance().getFps());
+
 	    editor.commit();
 		super.onPause();
 	}
@@ -321,6 +330,16 @@ public class MainActivity extends Activity {
 	    GameData.touchState = TouchState.DRAWING;
 	    Animation.getInstance().setAnimationFPS(settings.getInt("fps", 2));
 	    
+	    if (!settings.getBoolean("assetsAreCopied", false)) {
+	    	(new AsyncTask<Void, Void, Void>() {
+
+				@Override
+				protected Void doInBackground(Void... params) {
+					copyAssets();
+					return null;
+				}
+			}).execute();
+	    }
 	    initSettingsView();
 	    initGameView();
 		m_settingsView.updateSettings();
@@ -338,4 +357,50 @@ public class MainActivity extends Activity {
 		m_settingsView.UpdateTexts();
 	}
 
+	
+	private void copyAssets() {
+		AssetManager assetManager = getAssets();
+		String[] files = null;
+		try {
+			files = assetManager.list("");
+			File outFile = new File( GameData.mainActivity.getExternalFilesDir(null).getCanonicalPath() + GameData.animFolder, "");
+			outFile.mkdirs();
+		} catch (IOException e) {
+			Log.e("tag", "Failed to get asset file list.", e);
+		}
+		for(String filename : files) {
+			InputStream in = null;
+			OutputStream outStream = null;
+			try {
+				in = assetManager.open(filename);
+
+				String out = GameData.mainActivity.getExternalFilesDir(null).getCanonicalPath() + GameData.animFolder; 
+				
+				File outFile = new File(out, filename);
+				
+				
+				outStream = new FileOutputStream(outFile);
+				copyFile(in, outStream);
+				in.close();
+				in = null;
+				outStream.flush();
+				outStream.close();
+				out = null;			    	
+				
+			} catch(IOException e) {
+				Log.e("tag", "Failed to copy asset file: " + filename, e);
+			}       
+		}
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		SharedPreferences.Editor editor = settings.edit();
+		editor.putBoolean("assetsAreCopied", true);
+	    editor.commit();
+	}
+	private void copyFile(InputStream in, OutputStream out) throws IOException {
+		byte[] buffer = new byte[1024];
+		int read;
+		while((read = in.read(buffer)) != -1){
+			out.write(buffer, 0, read);
+		}
+	}
 }
