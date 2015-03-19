@@ -66,6 +66,7 @@
     
     <string name="about1">Stickman application will help you easily create simple animations, like those that almost everyone 
         tried to draw in her notebook. Besides drawing, you can save your animation for future usage and watch it whenever you want.</string>
+    <string name="about2">You can ask questions to developers, report about a problem or consider suggestions about application improvement, writing at \n <center><i><b>e-mail:</b> andy.silv@yandex.ru</i></center></string>
         
     <string name="draw1">To draw an object, first choose drawing mode by clicking this button in top menu. Not more than
         15 objects can be drawn on a single frame.</string>
@@ -106,13 +107,14 @@
     <string name="connect6">Note, that you can scale object, only if it\'s absolutely free, i.e. is not a parent nor a child.</string>
     <string name="connect7">As mentioned above, to disconnect objects, quickly pull child object away from parent.</string>
         
-    <string name="frames1">There are four buttons in top menu to control frames (the third is New frame button, and the right most is Delete frame button).</string>
+    <string name="frames1">There are four buttons in top menu to control frames (the third is <i>New frame</i> button, and the right most is <i>Delete</i> button).</string>
     <string name="frames2">Left and right arrows simply allow you to switch between frames. Also under the top menu there is a seekbar
         that allows rapid navigation, and frame counter on the right of it.</string>
     <string name="frames3">Pressing New frame button you can add frames to your animation. Notice that new frames will appear right after the current frame, 
         and will contain all the objects from the current frame you have drawn so far.</string>
-    <string name="frames4">Pressing Delete frame button you can remove current frame. Notice, that if you have only one frame, removing it equivalent to
-        clearing the frame, yet it will be still present (animation can\'t has less than one frame).</string>
+    <string name="frames4">Pressing Delete button you can remove recently drawn primitives, or, if there are no recently drawn primitives, current frame will be removed. Object is thought to be 
+        recently drawn, if frames were not switched since it was drawn and application was not restarted. Notice, that if you have only one frame, removing it is equivalent to
+        clearing the frame, yet it will be still present (animation can\'t have less than one frame).</string>
     
      <string name="animation1">To play animation you have created, push Play button in top menu.</string>
      <string name="animation2">To stop playing animation, push the same button (it has become red after playing had started).</string>

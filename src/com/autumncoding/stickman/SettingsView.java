@@ -48,7 +48,7 @@ public class SettingsView extends LinearLayout {
 		m_interpBox = (CheckBox)findViewById(R.id.checkBox2);
 		m_loopBox = (CheckBox)findViewById(R.id.checkBox3);
 		m_hintsBox = (CheckBox)findViewById(R.id.checkBox4);
-		m_maxNumberOfObjsLabel = (TextView)findViewById(R.id.textView3);
+		m_maxNumberOfObjsLabel = (TextView)findViewById(R.id.max_objects_label);
 		m_objsNumberText = (TextView)findViewById(R.id.maxObjs);
 		
 		m_maxObjSeekBar.setMax(GameData.maxPrimitivesNumber - 1);

@@ -342,7 +342,7 @@ public class SimpleFileDialog
 		dialogBuilder.setCustomTitle(titleLayout1);
 		m_listAdapter = createListAdapter(listItems);
 		dialogBuilder.setSingleChoiceItems(m_listAdapter, -1, onClickListener);
-		dialogBuilder.setCancelable(false);
+		dialogBuilder.setCancelable(true);
 		return dialogBuilder;
 	}
 

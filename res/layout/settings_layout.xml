@@ -109,7 +109,7 @@
                     android:textStyle="bold" />
             </TableRow>
                 <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/max_objects_label"
         android:layout_below="@id/tableRow1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -120,7 +120,7 @@
         <TableRow
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/textView3"
+                android:layout_below="@+id/max_objects_label"
                 android:layout_marginLeft="0dp"
                 android:layout_marginRight="5dp" >
 
