@@ -46,6 +46,10 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	protected float m_deltaScale = 1.0f;
 	protected Vector2DF m_deltaPos = new Vector2DF();
 	protected float m_deltaAngle = 0.0f;
+	protected boolean m_isGlowing = false;
+	protected long m_glowStartTime = 0;
+	protected int m_glowingColor1;
+	protected int m_glowingColor2;
 	
 	protected Connection m_parentConnection;
 	protected ArrayList<Connection> m_childrenConnections;
@@ -54,6 +58,8 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	
 	
 	abstract void translate(float x, float y);
+	abstract public void scale(float cx, float cy, float rate);
+	abstract public void noSaturationScale(float cx, float cy, float rate);
 	abstract public boolean checkTouch(float touch_x, float touch_y);
 	abstract public void drawLine(Canvas canvas);
 	abstract public void drawLineBlendingWithSuccessor(Canvas canvas, float t); // t in [0, 1]
@@ -62,6 +68,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	abstract public void drawJointsBlendingWithNoSuccessor(Canvas canvas, float t);
 	abstract public PrimitiveType GetType();
 	abstract public float getDistToMe(float from_x, float from_y);
+	abstract public float getDistToMe(final Vector2DF from_point);
 	abstract public void setUntouched();
 	abstract public AbstractDrawingPrimitive getCopy(); 
 	abstract public void setActiveColour();
@@ -71,13 +78,7 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	abstract public Joint getTouchedJoint();
 	abstract float distTo(AbstractDrawingPrimitive pr);
 	
-	
-	public void scale(float cx, float cy, float rate) {
-		if (m_predecessor != null) {
-			m_deltaScale *= rate;
-		}
-	}
-	
+
 	AbstractDrawingPrimitive(Context context) {
 		m_childrenConnections = new ArrayList<Connection>();
 		joints = new ArrayList<Joint>();
@@ -588,5 +589,45 @@ public abstract class AbstractDrawingPrimitive implements Serializable {
 	
 	public boolean hasParent() {
 		return hasParent;
+	}
+	
+	void startGlowing(int color1, int color2) {
+		AbstractDrawingPrimitive glowingRoot = this;
+		AbstractDrawingPrimitive prev = this;
+		if (getTouchedJoint() != null) {
+			Connection con = m_parentConnection;
+			while (con != null) {
+				if (con.primitiveJoint == rotJoint)
+					break;
+				prev = con.primitive;
+				glowingRoot = con.primitive;
+				con = glowingRoot.m_parentConnection;
+			}
+		}
+		
+		m_isGlowing = true;
+		m_glowStartTime = System.currentTimeMillis();
+		m_glowingColor1 = color1;
+		m_glowingColor2 = color2;
+		
+		for (Connection c : prev.m_childrenConnections) {
+			if (c.myJoint != rotJoint)
+				c.primitive.startGlowing(color1, color2, m_glowStartTime);
+		}
+	}
+	
+	private void startGlowing(int color1, int color2, long startGlowingTime) {
+		m_isGlowing = true;
+		m_glowStartTime = startGlowingTime;
+		m_glowingColor1 = color1;
+		m_glowingColor2 = color2;
+		for (Connection con : m_childrenConnections)
+			con.primitive.startGlowing(color1, color2, m_glowStartTime);
+	}
+	
+	void stopGlowing() {
+		m_isGlowing = false;
+		for (Connection con : m_childrenConnections)
+			con.primitive.stopGlowing();
 	}
 }

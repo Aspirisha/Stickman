@@ -29,10 +29,13 @@
 	<dimen name="touchable_joint_r">13dp</dimen>
 	<dimen name="visible_joint_r">8dp</dimen>
 	<dimen name="line_width">8dp</dimen>
+	<dimen name="glowing_line_width">12dp</dimen>
 	<dimen name="min_stick_length">30dp</dimen>
 	<dimen name="min_circle_radius">30dp</dimen>
 	<dimen name="max_circle_radius">300dp</dimen>
 	<dimen name="stick_dist_touchable">10dp</dimen>
 	<dimen name="circle_dist_touchable">5dp</dimen>
 	<dimen name="min_dist_to_connect_square">100dp</dimen>
+	<dimen name="field_delta_x">5dp</dimen>
+	<dimen name="field_delta_y">7dp</dimen>
 </resources>

@@ -67,6 +67,9 @@ public class TouchEventThread extends Thread {
 	private boolean m_drawingIsStarted = false;
 	private boolean m_drawingHasIntersection = false;
 	
+	private int minTappingDelay = -1; // between two taps for scaling etc
+	private int maxTappingDelay = -1;
+	
 	private HashMap<TouchHelpType, Long> lastTimesOfToasts;
 	
 	class CurrentDrawingState {
@@ -117,6 +120,9 @@ public class TouchEventThread extends Thread {
 		m_farthestDrawingPoint = new PointF();
 		m_currentDrawingPoint = new PointF();
 		lastTimesOfToasts = new HashMap<TouchEventThread.TouchHelpType, Long>();
+		
+		minTappingDelay = GameData.res.getInteger(R.integer.min_delay_between_touches_scale);
+		maxTappingDelay = GameData.res.getInteger(R.integer.max_delay_between_touches_scale);
 		
 		for (TouchHelpType type : TouchHelpType.values()) {
 			lastTimesOfToasts.put(type, 0L);
@@ -241,6 +247,7 @@ public class TouchEventThread extends Thread {
 					showPopupHint(TouchHelpType.ON_NEW_PRESSED);
 					break;
 				case 5:
+					//if (!Animation.getInstance().removeLastDrawn())
 					Animation.getInstance().removeFrame();
 					if (!Animation.getInstance().hasNextFrame())
 						GameData.menuNext.setUnavailable();
@@ -271,7 +278,7 @@ public class TouchEventThread extends Thread {
 	
 	
 	private void showPopupHint(final TouchHelpType type) {
-		if (!GameData.showPopupHinst)
+		if (!GameData.showPopupHints)
 			return;
 
 		long curTime = System.currentTimeMillis();
@@ -481,9 +488,11 @@ public class TouchEventThread extends Thread {
 						GameData.drawing_queue.remove(primitive); // to make it drawing last
 						GameData.drawing_queue.add(primitive);
 						m_gameView.setTouchedPrimitive(primitive);
+						primitive.startGlowing(GameData.lineGlowingColor1, GameData.lineGlowingColor2);
 					}
 					
-					if (eventTime - lastTouchTime < 400) {
+					long dt = eventTime - lastTouchTime;
+					if (dt <= maxTappingDelay && dt >= minTappingDelay) {
 						movementIsScaling = true;
 						if (!primitive.hasParent && !primitive.hasChildren())
 							showPopupHint(TouchHelpType.ON_SCALE);
@@ -540,6 +549,10 @@ public class TouchEventThread extends Thread {
 			synchronized (GameData.getLocker()) {
 				if (primitive != null) {					
 					primitive.setUntouched();
+					while (primitive.hasParent)
+						primitive = primitive.m_parentConnection.primitive;
+					primitive.stopGlowing();
+					
 					m_gameView.setTouchedPrimitive(null);
 					int index = 0;
 					int size = GameData.drawing_queue.size();

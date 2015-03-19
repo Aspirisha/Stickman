@@ -87,12 +87,6 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
     	
 		angle += fi;
 		
-		/*if (angle > Math.PI)
-			angle = (float) (2*Math.PI - angle);
-		else if (angle < -Math.PI)
-			angle = (float) (2*Math.PI + angle);*/
-		joints.get(0).setMyPoint(p1);
-		joints.get(1).setMyPoint(p2);
 		m_primitiveCentre.setMyPoint(Vector2DF.ave(p1, p2));
 		if (rotateChildren) {
 			for (Connection con : m_childrenConnections) {
@@ -100,16 +94,16 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 			}
 		}
 	}
+	
+	@Override
+	public float getDistToMe(final Vector2DF from_point) {
+		return Math.min(Vector2DF.distSquare(from_point, p1), Vector2DF.distSquare(from_point, p2));
+	}
 
 	@Override
 	public void translate(float dx, float dy) {	
-		p1.x += dx;
-		p1.y += dy;
-		p2.x += dx;
-		p2.y += dy;
-    	
-		joints.get(0).setMyPoint(p1);
-		joints.get(1).setMyPoint(p2);
+		joints.get(0).translate(dx, dy);
+		joints.get(1).translate(dx, dy);
 		m_primitiveCentre.translate(dx, dy);
 		
 		for (Connection con : m_childrenConnections) {
@@ -119,32 +113,40 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 	
 	@Override
 	public void scale(float cx, float cy, float rate) {	
-		super.scale(cx, cy, rate);
-		
 		float temp_length = length * rate;
-		if (temp_length < GameData.min_stick_length)
-		{
+		if (temp_length < GameData.min_stick_length) {
 			temp_length = GameData.min_stick_length;
 			rate = temp_length / length;
 		}
 		
-		p1.x = cx + rate * (p1.x - cx);
-		p1.y = cy + rate * (p1.y - cy);
-		p2.x = cx + rate * (p2.x - cx);
-		p2.y = cy + rate * (p2.y - cy);
-		
-		joints.get(0).setMyPoint(p1);
-		joints.get(1).setMyPoint(p2);
-		
+		p1.scale(cx, cy, rate);
+		p2.scale(cx, cy, rate);
 		
 		m_primitiveCentre.setMyPoint(Vector2DF.ave(p1, p2));
     	length = temp_length;
 	}
 	
 	@Override
+	public void noSaturationScale(float cx, float cy, float rate) {
+		 length *= rate;
+		
+		p1.scale(cx, cy, rate);
+		p2.scale(cx, cy, rate);
+		
+		m_primitiveCentre.setMyPoint(Vector2DF.ave(p1, p2));
+	}
+	
+	@Override
 	public void drawLine(Canvas canvas) {
 		float dx = GameData.joint_radius_visible * (p2.x - p1.x) / length;
 		float dy = GameData.joint_radius_visible * (p2.y - p1.y) / length;
+		
+		if (m_isGlowing) {
+			float t = (float) Math.abs(Math.cos((System.currentTimeMillis() - m_glowStartTime) * 2 * Math.PI * GameData.glowingFrequency));
+			GameData.mixTwoColors(m_glowingColor1, m_glowingColor2, t);
+			GameData.glowingLinePaint.setColor(GameData.blended_joint_paint.getColor());
+			canvas.drawLine(p1.x + dx, p1.y + dy, p2.x - dx, p2.y - dy, GameData.glowingLinePaint);
+		}
 		
 		canvas.drawLine(p1.x + dx, p1.y + dy, p2.x - dx, p2.y - dy, m_line_paint);
 	}
@@ -236,6 +238,9 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		
 		m_isTouched = false;
 		rotJoint.stopGlowing();
+		if (m_isGlowing)
+			stopGlowing();
+		
 		m_touchState = StickTouches.NONE;
 		if (!m_isOutOfBounds) {
 			for (Joint j : joints)
@@ -269,6 +274,7 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
     	else if (cos_theta < -1.0f)
     		cos_theta = -1.0f;
     	
+    	m_primitiveCentre.setMyPoint(Vector2DF.ave(p1, p2));
     	angle = (float)Math.acos(cos_theta);
     	if (p2.y - p1.y < 0)
     		angle = -angle;
@@ -290,8 +296,8 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 
 	@Override
 	public float getDistToMe(float x_from, float y_from) {
-		float d1 = (p2.x - x_from) * (p2.x - x_from) + (p2.y - y_from) * (p2.y - y_from);
-		float d2 = (p1.x - x_from) * (p1.x - x_from) + (p1.y - y_from) * (p1.y - y_from);
+		float d1 = Vector2DF.distSquare(p1, x_from, y_from);
+		float d2 = Vector2DF.distSquare(p2, x_from, y_from);
 		
 		return Math.min(d1, d2);
 	}
@@ -378,6 +384,8 @@ public class Stick extends AbstractDrawingPrimitive implements Serializable {
 		super.setTransientFields(context);
 		m_touchState = StickTouches.NONE;
 		interpData = new InterpolatedData(); 
+		p1 = joints.get(0).getMyPoint();
+		p2 = joints.get(1).getMyPoint();
 	}
 
 	@Override

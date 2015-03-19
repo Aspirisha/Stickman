@@ -21,6 +21,9 @@ public final class R {
         public static final int glow_color1=0x7f040003;
         public static final int glow_color2=0x7f040004;
         public static final int label_color=0x7f040000;
+        public static final int line_glowing_color_2=0x7f04000b;
+        /**  aslo glowing color 1 for line  
+         */
         public static final int prev_frame_element=0x7f040007;
         public static final int primitive_line=0x7f040008;
         public static final int root_joint=0x7f040002;
@@ -36,8 +39,10 @@ public final class R {
          */
         public static final int activity_horizontal_margin=0x7f060000;
         public static final int activity_vertical_margin=0x7f060001;
-        public static final int circle_dist_touchable=0x7f060019;
+        public static final int circle_dist_touchable=0x7f06001a;
         public static final int debug_font_size=0x7f060002;
+        public static final int field_delta_x=0x7f06001c;
+        public static final int field_delta_y=0x7f06001d;
         public static final int frames_counter_right_padding=0x7f060007;
         public static final int frames_seek_bar_left_padding=0x7f060005;
         public static final int frames_seek_bar_right_padding=0x7f060006;
@@ -46,18 +51,19 @@ public final class R {
         public static final int frames_text_position_top_padding=0x7f060009;
         public static final int game_view_menu_height=0x7f060003;
         public static final int gane_view_frames_text_font_size=0x7f06000a;
+        public static final int glowing_line_width=0x7f060015;
         public static final int line_width=0x7f060014;
-        public static final int max_circle_radius=0x7f060017;
-        public static final int min_circle_radius=0x7f060016;
-        public static final int min_dist_to_connect_square=0x7f06001a;
-        public static final int min_stick_length=0x7f060015;
+        public static final int max_circle_radius=0x7f060018;
+        public static final int min_circle_radius=0x7f060017;
+        public static final int min_dist_to_connect_square=0x7f06001b;
+        public static final int min_stick_length=0x7f060016;
         public static final int seekbar_height=0x7f060010;
         public static final int seekbar_with_text_margin=0x7f060011;
         public static final int settings_header_font_size=0x7f06000f;
         public static final int settings_padding_left=0x7f06000c;
         public static final int settings_padding_right=0x7f06000d;
         public static final int settings_padding_top=0x7f06000e;
-        public static final int stick_dist_touchable=0x7f060018;
+        public static final int stick_dist_touchable=0x7f060019;
         /**  Geometry sizes 
          */
         public static final int touchable_joint_r=0x7f060012;
@@ -183,9 +189,10 @@ public final class R {
         /**  plus one for seekbar starts  from 0 
          */
         public static final int max_delay_between_touches_scale=0x7f050002;
+        public static final int min_delay_between_touch_and_drop_centre=0x7f050004;
         /**  in milliseconds 
          */
-        public static final int min_delay_between_touch_and_drop_centre=0x7f050003;
+        public static final int min_delay_between_touches_scale=0x7f050003;
     }
     public static final class layout {
         public static final int about_layout=0x7f030000;

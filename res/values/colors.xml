@@ -6,9 +6,10 @@
     <color name="glow_color1">#AA20D620</color>
     <color name="glow_color2">#AA063606</color>
     <color name="connected_joint">#FFFF6200</color>
-    <color name="touched_element">#FF510FAD</color>
+    <color name="touched_element">#FF510FAD</color> <!-- aslo glowing color 1 for line  --> 
     <color name="prev_frame_element">#A6AAAAAA</color>
     <color name="primitive_line">#FF5D5D5D</color>
     <color name="drop_color">#C8FF0000</color>
     <color name="root_primitive">#FF000000</color>
+    <color name="line_glowing_color_2">#FFA531C6</color>
 </resources>

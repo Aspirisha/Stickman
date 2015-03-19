@@ -22,6 +22,11 @@ public class Vector2DF implements Serializable {
 		y = p.y;
 	}
 	
+	public void scale(float cx, float cy, float rate) {
+		x = cx + rate * (x - cx);
+		y = cy + rate * (y - cy);
+	}
+	
 	public float getLength() {
 		return (float) Math.sqrt(x * x + y * y);
 	}
@@ -73,6 +78,14 @@ public class Vector2DF implements Serializable {
 	
 	static float distSquare(Vector2DF v1, Vector2DF v2) {
 		return ((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y));
+	}
+	
+	static float distSquare(Vector2DF v1, float x, float y) {
+		return (v1.x - x) * (v1.x - x) + (v1.y - y) * (v1.y - y);
+	}
+	
+	static float distSquare(float x, float y, Vector2DF v2) {
+		return (v2.x - x) * (v2.x - x) + (v2.y - y) * (v2.y - y);
 	}
 	
 	static float dist(Vector2DF v1, Vector2DF v2) {

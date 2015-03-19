@@ -1,22 +1,19 @@
 package com.autumncoding.stickman;
 
 import java.io.IOException;
-import java.util.ArrayList;
-
-import com.autamncoding.stickman.R;
 
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
+
+import com.autamncoding.stickman.R;
 
 public class Circle extends AbstractDrawingPrimitive {
 	private static final long serialVersionUID = 5019188822441365318L;
 	private Vector2DF m_centre;
-	private Vector2DF m_jointPoint;
 	private float m_radius;
 	private float angle = 0;
-	
+	Vector2DF m_jointPoint = null; // pointer to joints point
 	/*********************** touch data *********************************************/
 	
 	enum CircleTouches {
@@ -32,10 +29,10 @@ public class Circle extends AbstractDrawingPrimitive {
 		m_centre = new Vector2DF(100, 100);
 		m_radius = 10;
 		
-		m_jointPoint = new Vector2DF(m_centre.x + m_radius, m_centre.y);
-		joints.add(new Joint(this, m_jointPoint));
+		joints.add(new Joint(this, new Vector2DF()));
 		joints.get(0).setCentral(true);	
 		m_primitiveCentre = new Joint(this, m_centre);
+		m_jointPoint = joints.get(0).getMyPoint();
 		m_primitiveCentre.setInvisible();
 		updateJointColors();
 		m_rotationCentre = joints.get(0);
@@ -45,8 +42,10 @@ public class Circle extends AbstractDrawingPrimitive {
 	public Circle(Circle cir) {
 		super(cir);
 		m_centre = new Vector2DF(cir.m_centre);
-		m_jointPoint = new Vector2DF(cir.m_jointPoint);
 		m_radius = cir.m_radius;
+		
+		m_jointPoint = new Vector2DF(cir.m_jointPoint);
+		
 		joints.add(new Joint(this, m_jointPoint));
 		joints.get(0).setCentral(true);
 		m_primitiveCentre = new Joint(this, m_centre);
@@ -115,6 +114,12 @@ public class Circle extends AbstractDrawingPrimitive {
 
 	@Override
 	public void drawLine(Canvas canvas) {
+		if (m_isGlowing) {
+			float t = (float) Math.abs(Math.cos((System.currentTimeMillis() - m_glowStartTime) * 2 * Math.PI * GameData.glowingFrequency));
+			GameData.mixTwoColors(m_glowingColor1, m_glowingColor2, t);
+			GameData.glowingLinePaint.setColor(GameData.blended_joint_paint.getColor());
+			canvas.drawCircle(m_centre.x, m_centre.y, m_radius, GameData.glowingLinePaint);
+		}
 		canvas.drawCircle(m_centre.x, m_centre.y, m_radius, m_line_paint);
 	}
 
@@ -125,7 +130,12 @@ public class Circle extends AbstractDrawingPrimitive {
 
 	@Override
 	public float distTo(AbstractDrawingPrimitive primitive) {
-		return primitive.getDistToMe(m_jointPoint.x, m_jointPoint.y);
+		return primitive.getDistToMe(m_jointPoint);
+	}
+	
+	@Override
+	public float getDistToMe(final Vector2DF from_point) {
+		return Vector2DF.distSquare(from_point, m_jointPoint);
 	}
 
 
@@ -138,6 +148,7 @@ public class Circle extends AbstractDrawingPrimitive {
 	public void rotate(float fi, float cx, float cy, boolean rotateChildren) {
 		float new_x = (float) (cx + (m_jointPoint.x - cx) * Math.cos(fi) - (m_jointPoint.y - cy) * Math.sin(fi));
 		float new_y = (float) (cy + (m_jointPoint.x - cx) * Math.sin(fi) + (m_jointPoint.y - cy) * Math.cos(fi));
+		
 		m_jointPoint.x = new_x;
 		m_jointPoint.y = new_y;
 		
@@ -146,7 +157,6 @@ public class Circle extends AbstractDrawingPrimitive {
 		m_centre.x = new_x;
 		m_centre.y = new_y;
     	
-		joints.get(0).setMyPoint(m_jointPoint);
 		m_primitiveCentre.setMyPoint(m_centre);
 		angle += fi;
 		
@@ -164,11 +174,8 @@ public class Circle extends AbstractDrawingPrimitive {
 	public void translate(float dx, float dy) {	
 		m_centre.x += dx;
 		m_centre.y += dy;
-		m_jointPoint.x += dx;
-		m_jointPoint.y += dy;
 		
-		joints.get(0).setMyPoint(m_jointPoint);
-    	m_primitiveCentre.translate(dx, dy);
+		joints.get(0).translate(dx, dy);
     	
 		for (Connection con : m_childrenConnections) {
 			con.primitive.translate(dx, dy);
@@ -183,8 +190,7 @@ public class Circle extends AbstractDrawingPrimitive {
 		
 		if (m_radius < GameData.min_circle_radius)
 			m_radius = GameData.min_circle_radius;
-		m_jointPoint.x = joint_x;
-		m_jointPoint.y = joint_y;
+		joints.get(0).setMyPoint(joint_x, joint_y);
 		
 		float cos_theta = (joint_x - _x) / _r;
     	if (cos_theta > 1.0f)
@@ -195,13 +201,11 @@ public class Circle extends AbstractDrawingPrimitive {
     	angle = (float)Math.acos(cos_theta);
     	if (joint_y - _y < 0)
     		angle = -angle;
-		
-		joints.get(0).setMyPoint(m_jointPoint);
 	}
 
 	@Override
 	public float getDistToMe(float from_x, float from_y) {
-		return (m_jointPoint.x - from_x) * (m_jointPoint.x - from_x) + (m_jointPoint.y - from_y) * (m_jointPoint.y - from_y);
+		return Vector2DF.distSquare(m_jointPoint, from_x, from_y);
 	}
 
 	@Override
@@ -265,21 +269,25 @@ public class Circle extends AbstractDrawingPrimitive {
 
 	@Override
 	public void scale(float cx, float cy, float rate) {
-		super.scale(cx, cy, rate);
-		
 		float temp_r = m_radius * rate;
-		if (temp_r < GameData.min_stick_length)
-		{
+		if (temp_r < GameData.min_circle_radius) {
 			temp_r = GameData.min_circle_radius;
 			rate = temp_r / m_radius;
 		}
 		
-		m_jointPoint.x = cx + rate * (m_jointPoint.x - cx);
-		m_jointPoint.y = cy + rate * (m_jointPoint.y - cy);
-		
-		joints.get(0).setMyPoint(m_jointPoint);
-		
+		m_jointPoint.scale(cx, cy, rate);
+		m_centre.scale(cx, cy, rate);
+		m_primitiveCentre.setMyPoint(m_centre);
     	m_radius = temp_r;
+	}
+	
+	@Override
+	public void noSaturationScale(float cx, float cy, float rate) {
+		m_radius *= rate;
+		
+		m_jointPoint.scale(cx, cy, rate);
+		m_centre.scale(cx, cy, rate);
+		m_primitiveCentre.setMyPoint(m_centre);
 	}
 	
 	public void checkOutOfBounds() {	
@@ -315,6 +323,7 @@ public class Circle extends AbstractDrawingPrimitive {
 	@Override
 	public void setTransientFields(Context context) {
 		super.setTransientFields(context);
+		m_jointPoint = joints.get(0).getMyPoint();
 		m_touchState = CircleTouches.NONE;
 	}
 
@@ -344,7 +353,8 @@ public class Circle extends AbstractDrawingPrimitive {
 	
 	private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
 		m_centre = (Vector2DF) stream.readObject();
-		m_jointPoint = (Vector2DF) stream.readObject();
+		stream.readObject();
+		// TOFO no eed to write twice joint
 		m_radius = stream.readFloat();
 	}
 
@@ -391,6 +401,6 @@ public class Circle extends AbstractDrawingPrimitive {
 			return null;
 		}
 	}
-	
+
 }
 	

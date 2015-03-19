@@ -67,7 +67,7 @@ public class SettingsView extends LinearLayout {
 					GameData.playInLoop = isChecked;
 					break;
 				case R.id.checkBox4:
-					GameData.showPopupHinst = isChecked;
+					GameData.showPopupHints = isChecked;
 					break;
 				}
 			}
@@ -168,7 +168,7 @@ public class SettingsView extends LinearLayout {
 		m_saveBox.setChecked(GameData.saveToTemp);
 		m_loopBox.setChecked(GameData.playInLoop);
 		m_interpBox.setChecked(GameData.enableInterpolation);
-		m_hintsBox.setChecked(GameData.showPopupHinst);
+		m_hintsBox.setChecked(GameData.showPopupHints);
 		m_fpsText.setText(String.valueOf(Animation.getInstance().getFps()));
 		
 		m_fpsSeekBar.setMax(GameData.maxAnimationFps - 1);

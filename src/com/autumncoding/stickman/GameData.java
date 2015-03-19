@@ -3,7 +3,10 @@ package com.autumncoding.stickman;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import org.apache.http.message.LineParser;
+
 import android.content.res.Resources;
+import android.graphics.BlurMaskFilter;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
@@ -75,6 +78,8 @@ public class GameData {
 	public static Paint joint_paint_free;
 	public static Paint joint_connected_paint;
 	public static Paint invisible_paint;
+	public static Paint blured_paint;
+	public static Paint glowingLinePaint;
 	
 	// touched paints:
 	public static Paint line_drop_paint;  // paint used to show that element is going to be dropped to the bin
@@ -114,9 +119,14 @@ public class GameData {
 	public static String lang = "English"; 
 	public static boolean playInLoop = false;
 	public static boolean enableInterpolation = true;
-	public static boolean showPopupHinst = true;
+	public static boolean showPopupHints = true;
 	public static float debugValue = 0; // TODO delete
 	public static String animFolder = "/animations";
+	
+	// line glowing
+	public static float glowingFrequency = 0.001f;
+	public static int lineGlowingColor1 = 0xAA093D0C;
+	public static int lineGlowingColor2 = 0xAA12DD1F;
 	
 	public static void init(MainActivity m) {
 		mainActivity = m;
@@ -165,7 +175,9 @@ public class GameData {
     	menu_line_paint.setStrokeWidth(3f);
 		
     	blended_line_paint = new Paint(line_paint);
-		
+    	glowingLinePaint = new Paint(line_paint);
+    	glowingLinePaint.setStrokeWidth(12f);
+    	
 		// joints paints
 		root_joint_paint = new Paint(line_paint);
 		root_joint_paint.setColor(res.getColor(R.color.root_joint));
@@ -176,6 +188,11 @@ public class GameData {
 		
 		joint_paint_free = new Paint(root_joint_paint);
 		joint_paint_free.setColor(res.getColor(R.color.child_joint));
+		
+		blured_paint = new Paint(joint_paint_free);
+		blured_paint.setColor(Color.argb(235, 74, 138, 255));
+		blured_paint.setStrokeWidth(30f);
+		blured_paint.setMaskFilter(new BlurMaskFilter(15, BlurMaskFilter.Blur.NORMAL)); 
 		
 		line_touched_paint = new Paint(line_paint);
 		line_touched_paint.setColor(res.getColor(R.color.touched_element));
@@ -202,6 +219,8 @@ public class GameData {
     	
     	invisible_paint = new Paint();
     	invisible_paint.setColor(Color.argb(0, 0, 0, 0));
+    	lineGlowingColor1 = res.getColor(R.color.touched_element);
+    	lineGlowingColor2 = res.getColor(R.color.line_glowing_color_2);
 	}
    
     
@@ -251,6 +270,8 @@ public class GameData {
     	top_menu_x2 = MainActivity.layout_width - dx;
     	top_menu_x1 = dx;
     	
+    	rectDeltaX = (int) res.getDimension(R.dimen.field_delta_x);
+    	rectDeltaY = (int) res.getDimension(R.dimen.field_delta_y);
     	fieldRect = new RectF(rectDeltaX, top_menu_y + rectDeltaY + Yoffset, MainActivity.layout_width - rectDeltaX, MainActivity.layout_height - rectDeltaY);
 		Resources res = mainActivity.getResources();
 		
@@ -278,6 +299,7 @@ public class GameData {
 		line_prev_frame_paint.setStrokeWidth(res.getDimension(R.dimen.line_width));
 		line_touched_paint.setStrokeWidth(res.getDimension(R.dimen.line_width));
 		blended_line_paint.setStrokeWidth(res.getDimension(R.dimen.line_width));
+		glowingLinePaint.setStrokeWidth(res.getDimension(R.dimen.glowing_line_width));
 		min_dist_to_connect_square = res.getDimension(R.dimen.min_dist_to_connect_square);
 		
 		metricsSet = true;

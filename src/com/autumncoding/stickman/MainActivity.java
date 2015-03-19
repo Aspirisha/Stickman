@@ -4,9 +4,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.Locale;
 
 import android.app.Activity;
 import android.content.Context;
@@ -18,8 +19,6 @@ import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Environment;
-import android.support.v4.app.TaskStackBuilder;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -106,10 +105,9 @@ public class MainActivity extends Activity {
 			}
 		});
     	    	
-    	setContentView(m_gameLayout);
 		m_gameView.setBackgroundResource(R.drawable.background);
 		
-		if (GameData.showPopupHinst) {
+		if (GameData.showPopupHints) {
 			LinkedList<String> messages = new LinkedList<String>();
 			messages.add(GameData.res.getString(R.string.toast_help1));
 			messages.add(GameData.res.getString(R.string.toast_help18));
@@ -174,9 +172,10 @@ public class MainActivity extends Activity {
 		
 		switch (viewType) {
 		case VIEW_GAME:
+			if (m_settingsView == null) // explicitly because we need language for hints
+				initSettingsView();
 			if (m_gameView == null) 
 				initGameView();
-
 			setContentView(m_gameLayout);
 
 			break;
@@ -312,7 +311,7 @@ public class MainActivity extends Activity {
 	    editor.putString("Lang", GameData.lang);
 	    editor.putBoolean("EnableInterp", GameData.enableInterpolation);
 	    editor.putBoolean("PlayInLoop", GameData.playInLoop);
-	    editor.putBoolean("popupHints", GameData.showPopupHinst);
+	    editor.putBoolean("popupHints", GameData.showPopupHints);
 	    editor.putInt("fps", Animation.getInstance().getFps());
 
 	    editor.commit();
@@ -323,14 +322,26 @@ public class MainActivity extends Activity {
 	protected void onResume() {
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 	    GameData.saveToTemp = settings.getBoolean("SaveTemp", true);
-	    GameData.lang = settings.getString("Lang", "English");
+	    GameData.lang = settings.getString("Lang", "NONE");
 	    GameData.enableInterpolation = settings.getBoolean("EnableInterp", true);
 	    GameData.playInLoop = settings.getBoolean("PlayInLoop", false);
-	    GameData.showPopupHinst = settings.getBoolean("popupHints", true);
-	    GameData.touchState = TouchState.DRAWING;
+	    GameData.showPopupHints = settings.getBoolean("popupHints", true);
+	    GameData.touchState = TouchState.DRAWING;	    
 	    Animation.getInstance().setAnimationFPS(settings.getInt("fps", 2));
 	    
-	    if (!settings.getBoolean("assetsAreCopied", false)) {
+	    if (GameData.lang == "NONE") {
+	    	String codes[] = getResources().getStringArray(R.array.lang_codes);
+	    	String langNames[] = getResources().getStringArray(R.array.languages_array);
+	    	int pos = Arrays.asList(codes).indexOf(Locale.getDefault().getLanguage());
+	    	
+	    	if (pos != -1) 
+	    		GameData.lang = langNames[pos];
+	    	else
+	    		GameData.lang = "English";
+	    }
+	    	
+	    //TODO ucomment it later, it's always copying now for imiatating first install
+	    //if (!settings.getBoolean("assetsAreCopied", false)) {
 	    	(new AsyncTask<Void, Void, Void>() {
 
 				@Override
@@ -339,12 +350,8 @@ public class MainActivity extends Activity {
 					return null;
 				}
 			}).execute();
-	    }
-	    if (m_settingsView == null)
-	    	initSettingsView();
-	    if (m_gameView == null)
-	    	initGameView();
-		m_settingsView.updateSettings();
+	    //}
+
 		super.onResume();
 	}
 	

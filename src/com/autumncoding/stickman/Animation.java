@@ -38,11 +38,12 @@ public class Animation implements Serializable {
 	private volatile AnimationState m_state = AnimationState.EDIT;
 	private Thread m_animationThread = null;
 	private long m_frameStartTime = 0;
-	
+	private LinkedList<AbstractDrawingPrimitive> m_drawnOnCurrentFrameQueue = null;
 	
 	private Animation() {
 		m_frames = new ArrayList<AnimationFrame>();
 		m_currentFrame = new AnimationFrame();
+		m_drawnOnCurrentFrameQueue = new LinkedList<AbstractDrawingPrimitive>();
 		m_frames.add(m_currentFrame);
 	}
 	
@@ -92,19 +93,29 @@ public class Animation implements Serializable {
 	
 	public void addPrimitive(AbstractDrawingPrimitive pr) {
 		AnimationFrame frame = null;
-		AbstractDrawingPrimitive prev = null;
-		for (int i = m_currentFrameIndex; i < m_frames.size(); i++) {
-			frame = m_frames.get(i);
-			if (frame.getPrimitives().size() < GameData.maxPrimitivesNumber) {
-				AbstractDrawingPrimitive newPrimitive = pr.getCopy();
-				AbstractDrawingPrimitive.setSuccessorAndPredecessor(newPrimitive, prev);
-				prev = newPrimitive;
-				frame.addRoot(newPrimitive);
-				frame.getPrimitives().add(newPrimitive);
+		
+		
+		if (m_currentFrame.getPrimitives().size() < GameData.maxPrimitivesNumber) {
+			m_drawnOnCurrentFrameQueue.push(pr);
+			AbstractDrawingPrimitive.setSuccessorAndPredecessor(pr, null);
+			AbstractDrawingPrimitive prev = pr;
+			m_currentFrame.addRoot(pr);
+			m_currentFrame.getPrimitives().add(pr);
+			
+			for (int i = m_currentFrameIndex + 1; i < m_frames.size(); i++) {
+				frame = m_frames.get(i);
+				if (frame.getPrimitives().size() < GameData.maxPrimitivesNumber) {
+					AbstractDrawingPrimitive newPrimitive = pr.getCopy();
+					AbstractDrawingPrimitive.setSuccessorAndPredecessor(newPrimitive, prev);
+					prev = newPrimitive;
+					frame.addRoot(newPrimitive);
+					frame.getPrimitives().add(newPrimitive);
+				}
+				else
+					break;
 			}
-			else
-				break;
 		}
+
 	}
 	
 	public void removePrimitive(AbstractDrawingPrimitive pr) {
@@ -115,6 +126,8 @@ public class Animation implements Serializable {
 			frame.removePrimitive(curPrim);
 			curPrim = curPrim.m_successor;
 		}
+		
+		m_drawnOnCurrentFrameQueue.remove(pr);
 	}
 	
 	public void addFrame() {
@@ -126,10 +139,18 @@ public class Animation implements Serializable {
 		GameData.prevDrawingQueue = m_prevFrame.getPrimitives();
 		for (AbstractDrawingPrimitive pr : GameData.prevDrawingQueue)
 			pr.setUnactiveColour();
+		m_drawnOnCurrentFrameQueue.clear();
 		GameData.framesChanged = true;
 	}
 	
 	public void removeFrame() {
+		if (!m_drawnOnCurrentFrameQueue.isEmpty()) {
+			AbstractDrawingPrimitive pr = m_drawnOnCurrentFrameQueue.poll();
+			if (m_currentFrame.getPrimitives().contains(pr))
+				removePrimitive(pr);
+			return;
+		}
+		
 		if (m_frames.size() == 1) {
 			m_currentFrame.clear();
 			GameData.drawing_queue = m_currentFrame.getPrimitives();
@@ -288,6 +309,9 @@ public class Animation implements Serializable {
 				if (!hasNextFrame())
 					GameData.menuNext.setUnavailable();
 			}
+			
+			m_drawnOnCurrentFrameQueue.clear();
+			
 			return m_currentFrame;
 		}
 		
@@ -318,6 +342,7 @@ public class Animation implements Serializable {
 			}
 			
 			GameData.menuNext.setAvailable();
+			m_drawnOnCurrentFrameQueue.clear();
 			return m_currentFrame;
 		}
 		return null;
@@ -375,6 +400,8 @@ public class Animation implements Serializable {
 			GameData.menuPrev.setAvailable();
 		else
 			GameData.menuPrev.setUnavailable();
+		
+		m_drawnOnCurrentFrameQueue.clear();
 	}
 	
 	public void drawFrame(Canvas canvas) {
@@ -439,6 +466,8 @@ public class Animation implements Serializable {
 		    else
 		    	ostream = new ObjectOutputStream(GameData.mainActivity.openFileOutput("temp.ani", Context.MODE_PRIVATE));
 		    	
+		    ostream.writeFloat(GameData.fieldRect.width());
+		    ostream.writeFloat(GameData.fieldRect.height());
 			ostream.writeInt(m_frames.size());
 			
 			for (AnimationFrame fr : m_frames) {
@@ -465,6 +494,12 @@ public class Animation implements Serializable {
 		    InputStream buffer = new BufferedInputStream(istream);
 		    input = new ObjectInputStream (buffer);
 		    
+		    float hostWidth = input.readFloat();
+		    float hostHeight = input.readFloat();
+		    
+		    float scale = Math.min(GameData.fieldRect.width() / hostWidth, GameData.fieldRect.height() / hostHeight);
+		    
+		    
 		    int sz = input.readInt();
 		    m_frames.clear();
 		    for (int i = 0; i < sz; i++)
@@ -484,6 +519,7 @@ public class Animation implements Serializable {
 		    	LinkedList<AbstractDrawingPrimitive> framePrimitives = frame.getPrimitives();
 		    	for (AbstractDrawingPrimitive pr: framePrimitives) {
 		    		pr.setTransientFields(GameData.mainActivity);
+		    		pr.noSaturationScale(0, 0, scale);
 		    	}
 		    	
 		    	for (AbstractDrawingPrimitive pr : frame.getRoots()) {

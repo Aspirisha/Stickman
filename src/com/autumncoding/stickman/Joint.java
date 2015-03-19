@@ -59,10 +59,11 @@ public class Joint implements Serializable {
 			m_paint = GameData.joint_paint_free;
 	}
 	
+	// !!! Consumes point as-is
 	public Joint(AbstractDrawingPrimitive pr, Vector2DF p) {
 		m_childrenJoints = new ArrayList<Joint>();
 		m_primitive = pr;
-		m_point = new Vector2DF(p);
+		m_point = p;
 		m_paint = GameData.joint_paint_free;
 	}
 	
@@ -94,7 +95,9 @@ public class Joint implements Serializable {
 		m_state = JointState.FREE;
 		m_parent = null;
 		m_childrenJoints.clear();
-		m_paint = GameData.joint_paint_free;
+		
+		if (!m_isCentral)
+			m_paint = GameData.joint_paint_free;
 	}
 
 	/**
@@ -183,6 +186,11 @@ public class Joint implements Serializable {
 		m_point.y = p.y;
 	}
 	
+	public void setMyPoint(float x, float y) {
+		m_point.x = x;
+		m_point.y = y;
+	}
+	
 	public void rotate(float fi, float cx, float cy) {
 		float new_x = (float) (cx + (m_point.x - cx) * Math.cos(fi) - (m_point.y - cy) * Math.sin(fi));
 		float new_y = (float) (cy + (m_point.x - cx) * Math.sin(fi) + (m_point.y - cy) * Math.cos(fi));
@@ -196,12 +204,13 @@ public class Joint implements Serializable {
 	}
 	
 	public void draw(Canvas canvas) {
-		if (!m_isGlowing)
-			canvas.drawCircle(m_point.x, m_point.y, GameData.joint_radius_visible, m_paint);
-		else {
+		canvas.drawCircle(m_point.x, m_point.y, GameData.joint_radius_visible, m_paint);
+		if (m_isGlowing) {
 			float t = (float) Math.abs(Math.cos((System.currentTimeMillis() - glowStartTime) * 2 * Math.PI / 1000));
 			GameData.mixTwoColors(glowColor1, glowColor2, t);
-			canvas.drawCircle(m_point.x, m_point.y, GameData.joint_radius_visible, GameData.blended_joint_paint);
+			GameData.blured_paint.setColor(GameData.blended_joint_paint.getColor());
+			canvas.drawCircle(m_point.x, m_point.y, GameData.joint_radius_visible * 1.5f, GameData.blended_joint_paint);
+			canvas.drawCircle(m_point.x, m_point.y, GameData.joint_radius_visible * 1.5f, GameData.blured_paint);
 		}
 	}
 	
@@ -231,6 +240,7 @@ public class Joint implements Serializable {
 			glowStartTime = System.currentTimeMillis();
 			glowColor1 = Color1;
 			glowColor2 = Color2;
+			
 		}
 	}
 	
