@@ -5,14 +5,18 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.autamncoding.stickman.R;
-import com.autumncoding.stickman.Animation.AnimationState;
-
+import CircularList.CircularListReferenceBased;
+import CircularList.SwappingCircularList;
 import android.graphics.PointF;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnTouchListener;
 import android.widget.Toast;
+
+import com.autamncoding.stickman.R;
+import com.autumncoding.stickman.Animation.AnimationState;
 
 public class TouchEventThread extends Thread {
 	enum TouchState {
@@ -41,7 +45,8 @@ public class TouchEventThread extends Thread {
 	private GameData game_data;
 	private GameView m_gameView;
 	private boolean isRunning = false;
-	static final long desiredSleepTime = 1000 / GameData.FPS;
+	private static long m_runFrequency = 10 * GameData.FPS;
+	static final long desiredSleepTime = 1000 / m_runFrequency;
 	private static final long max_delta_between_drawings = 1000 / GameData.FPS;
 	// drawing entities
     
@@ -49,11 +54,19 @@ public class TouchEventThread extends Thread {
 	float mLastTouchY = 0;
 	private int lastTouchMenuIndex = -1;
 	
-	private LinkedList<MotionEvent> touch_events;
-	private LinkedList<Long> events_time;
-	private LinkedList<MotionEvent> bufferTouchEvents;
-	private LinkedList<Long> bufferEventsTime;
-	public ReentrantLock lock;
+	public static class TouchEventData {
+		public TouchEventData() {
+		}
+		int eventType;
+		float x;
+		float y;
+		long time;
+	}
+	
+	private SwappingCircularList<TouchEventData> events;	
+	private SwappingCircularList<TouchEventData> eventsBuf;
+	private TouchEventData tempData; 
+	private Object lock;
 	
 	private long startTime = 0;
 	private long lastTouchTime = System.currentTimeMillis();
@@ -71,6 +84,10 @@ public class TouchEventThread extends Thread {
 	private int maxTappingDelay = -1;
 	
 	private HashMap<TouchHelpType, Long> lastTimesOfToasts;
+	private LinkedList<Toast> m_toastsQueue;
+	private LinkedList<CountDownTimer> m_toastTimers;
+	private OnTouchListener m_toastTouchListener;
+	private CurrentDrawingState drawingState = new CurrentDrawingState();
 	
 	class CurrentDrawingState {
 		PointF m_startDrawingPoint = new PointF();
@@ -86,10 +103,7 @@ public class TouchEventThread extends Thread {
 		dst.y = src.y;
 	}
 	
-	public CurrentDrawingState getCurrentDrawingState()
-	{
-		CurrentDrawingState drawingState = new CurrentDrawingState();
-
+	public CurrentDrawingState getCurrentDrawingState() {
 		drawingState.m_hasIntersection = m_drawingHasIntersection;
 		drawingState.m_isDrawingProcess = m_drawingIsStarted;
 		if (m_drawingHasIntersection) {
@@ -108,19 +122,34 @@ public class TouchEventThread extends Thread {
         isRunning = run;
 	}
 	
-	TouchEventThread(GameView _gameView) {
+	TouchEventThread(GameView _gameView) throws InstantiationException, IllegalAccessException {
 		m_gameView = _gameView;
-		touch_events = new LinkedList<MotionEvent>();
-		events_time = new LinkedList<Long>();
-		bufferTouchEvents = new LinkedList<MotionEvent>();
-		bufferEventsTime = new LinkedList<Long>();
-		lock = new ReentrantLock();
+		events = new SwappingCircularList<TouchEventData>(TouchEventData.class, 100);
+		eventsBuf = new SwappingCircularList<TouchEventData>(TouchEventData.class, 10);
+		tempData = new TouchEventData();
+		
+		lock = new Object();
 		setName("Touch thread");
 		m_startDrawingPoint = new PointF();
 		m_farthestDrawingPoint = new PointF();
 		m_currentDrawingPoint = new PointF();
-		lastTimesOfToasts = new HashMap<TouchEventThread.TouchHelpType, Long>();
 		
+		lastTimesOfToasts = new HashMap<TouchEventThread.TouchHelpType, Long>();
+		m_toastsQueue = new LinkedList<Toast>();
+		m_toastTimers = new LinkedList<CountDownTimer>();
+		m_toastTouchListener = new OnTouchListener() {
+			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				 if(m_gameView != null){
+                        //Set the touch location to the absolute screen location
+                        event.setLocation(event.getRawX(), event.getRawY());
+                        //Send the touch event to the view
+                        return m_gameView.onTouchEvent(event);
+                    } 
+				return false;
+			}
+		};
 		minTappingDelay = GameData.res.getInteger(R.integer.min_delay_between_touches_scale);
 		maxTappingDelay = GameData.res.getInteger(R.integer.max_delay_between_touches_scale);
 		
@@ -148,45 +177,39 @@ public class TouchEventThread extends Thread {
 			
 			sleepTime = desiredSleepTime - (System.currentTimeMillis() - startTime);
 			try {
-				if (sleepTime > 0)
+				if (sleepTime > 0) {
 					sleep(sleepTime);
-				else
-					sleep(10);
+				}
+				else {
+					sleep(5);
+					Log.w("Caughtion: ", " almost no time to sleep!!");
+				}
 			} catch (Exception e) {
 				Log.i("Exeption: ", e.toString());
 			}
 		}
 	}
 	
-	private void processEvent() {
-		MotionEvent event = null;
-		Long eventTime = (long) 0;
-		
-		if (lock.tryLock()) {
-			touch_events.addAll(bufferTouchEvents);
-			events_time.addAll(bufferEventsTime);
-			bufferTouchEvents.clear();
-			bufferEventsTime.clear();
-			event = touch_events.pollFirst();
-			eventTime = events_time.pollFirst();
-			lock.unlock();
-		} else {
-			return;
-		}
-		
-		if (event == null)
+	private void processEvent() {		
+		if (events.size() > 0) {
+			synchronized (lock) {
+				
+				tempData = events.pop(tempData);
+			} 
+		} else
 			return;
 		
-		if (event.getY() < GameData.getMenuBottom()) {
-			processEventInMenu(event);
+		if (tempData.y < GameData.getMenuBottom() && ((tempData.eventType & 0xff) != MotionEvent.ACTION_MOVE)) {
+			processEventInMenu(tempData.eventType, tempData.x, tempData.y, tempData.time);
 		} else {
 			switch (GameData.touchState) {
 			case DRAGGING:
-				processEventDragging(event, eventTime);
+				processEventDragging(tempData.eventType, tempData.x, tempData.y, tempData.time);
 				break;
 			case DRAWING: {
 				if (GameData.maxPrimitivesNumber > GameData.drawing_queue.size()) {
-					processEventDrawing(event);
+					Log.d("PROCESSING", "typ : " + Integer.toString(tempData.eventType) + " point : x=" + Float.toString(tempData.x) + " y=" + Float.toString(tempData.y));
+					processEventDrawing(tempData.eventType, tempData.x, tempData.y, tempData.time);
 				}
 				break;
 			}
@@ -196,18 +219,15 @@ public class TouchEventThread extends Thread {
 			}		
 		}
 		
-		mLastTouchX = event.getX();
-		mLastTouchY = event.getY();
+		mLastTouchX = tempData.x;
+		mLastTouchY = tempData.y;
 	}
 	
-	private void processEventInMenu(MotionEvent event) {
-		int eventCode = event.getAction() & MotionEvent.ACTION_MASK;
-		float x = event.getX();
-		float y = event.getY();
+	private void processEventInMenu(int eventType, float x, float y, long eventTime) {
+		int eventCode = eventType & MotionEvent.ACTION_MASK;
 
 		int touchedMenuIndex = -1;
-		synchronized (GameData.getLocker()) {
-
+		synchronized (GameData.getLocker()) {			
 			switch (eventCode) {
 			case MotionEvent.ACTION_DOWN: {
 				for (int i = 0; i < GameData.numberOfMenuIcons; ++i) {
@@ -268,6 +288,14 @@ public class TouchEventThread extends Thread {
 			}
 
 			case MotionEvent.ACTION_UP: {
+				
+				if (m_drawingIsStarted && !GameData.fieldRect.contains(x, y)) {
+					GameData.drawnPoints.clear();
+					m_drawingHasIntersection = false;
+					m_drawingIsStarted = false;
+					return;
+				}
+				
 				if (lastTouchMenuIndex != -1) { // check that needed action was performed (in fact we had to put it to a queue of needed actions)
 					GameData.menuIcons.get(lastTouchMenuIndex).setUntouched();
 				}
@@ -344,12 +372,31 @@ public class TouchEventThread extends Thread {
 				
 				for (String msg : messages) {
 					final Toast toast = Toast.makeText(GameData.mainActivity, msg, Toast.LENGTH_LONG);
-					toast.show();
-	
-					new CountDownTimer(GameData.helpToastDurationPerLetter * msg.length(), 1000) {
-					    public void onTick(long millisUntilFinished) {toast.show();}
-					    public void onFinish() {toast.show();}
-					}.start();
+					
+					m_toastsQueue.push(toast);
+					toast.getView().setOnTouchListener(m_toastTouchListener);
+					//toast.show();
+
+
+					CountDownTimer timer =  new CountDownTimer(GameData.helpToastDurationPerLetter * msg.length(), 1000) {
+						public void onTick(long millisUntilFinished) {
+							toast.show();
+						}
+						public void onFinish() {
+							toast.show();
+							m_toastTimers.remove(this);
+							m_toastsQueue.remove(toast);
+							if (!m_toastTimers.isEmpty()) {
+								m_toastTimers.get(0).start();
+							}
+						}
+					};
+					m_toastTimers.push(timer);
+					
+					// no one will call me :'( 
+					if (m_toastsQueue.size() == 1) {
+						m_toastTimers.get(0).start();
+					}
 				}
 			}
 		};
@@ -357,25 +404,24 @@ public class TouchEventThread extends Thread {
 		GameData.mainActivity.runOnUiThread(show_toast);
 	}
 	
-	private void processEventDrawing(MotionEvent event) {
+	private void processEventDrawing(int eventType, float x, float y, long eventTime) {
 		if (Animation.getInstance().getState() == AnimationState.PLAY)
 			return;
 		
-		int eventCode = event.getAction() & MotionEvent.ACTION_MASK;
-		float x = event.getX();
-		float y = event.getY();
-
+		int eventCode = eventType & MotionEvent.ACTION_MASK;
 		
 		switch (eventCode) {
 		case MotionEvent.ACTION_DOWN: 
 			synchronized (GameData.getLocker()) {
 				GameData.drawnPoints.add(new PointF(x, y));
 			}
+				
 			m_currentDrawingPoint.x = m_startDrawingPoint.x = x;
 			m_currentDrawingPoint.y = m_startDrawingPoint.y = y;
 			m_maxDist = -1;
 			m_drawingIsStarted = true;
 			showPopupHint(TouchHelpType.ON_DRAW);
+			Log.d("DRAWING START", "fnejfe");
 			break;
 
 		case MotionEvent.ACTION_MOVE: {
@@ -428,6 +474,14 @@ public class TouchEventThread extends Thread {
 			if (!m_drawingIsStarted)
 				break;
 			
+			if (!GameData.fieldRect.contains(x, y)) {
+				synchronized (GameData.getLocker()) {
+					GameData.drawnPoints.clear();
+				}
+				m_drawingHasIntersection = false;
+				m_drawingIsStarted = false;
+				return;
+			}
 			AbstractDrawingPrimitive newPrimitive = null;
 			if (!m_drawingHasIntersection) {
 				Stick stick = new Stick(m_gameView.getContext());
@@ -470,13 +524,11 @@ public class TouchEventThread extends Thread {
 	
 		
 	
-	private void processEventDragging(MotionEvent event, long eventTime) {
+	private void processEventDragging(int eventType, float x, float y, long eventTime) {
 		if (Animation.getInstance().getState() == AnimationState.PLAY)
 			return;
 		
-		int eventCode = event.getAction() & MotionEvent.ACTION_MASK;
-		float x = event.getX();
-		float y = event.getY();
+		int eventCode = eventType & MotionEvent.ACTION_MASK;
 		
 		switch (eventCode) {
 		case MotionEvent.ACTION_DOWN: {
@@ -577,21 +629,29 @@ public class TouchEventThread extends Thread {
 	public void pushEvent(MotionEvent ev) {
 		long time = System.currentTimeMillis();
 		
-		if (lock.tryLock()) {
-			try {
-				touch_events.addAll(bufferTouchEvents);
-				events_time.addAll(bufferEventsTime);
-				bufferTouchEvents.clear();
-				bufferEventsTime.clear();
-				touch_events.add(ev);
-				events_time.add(time);
-			} finally {
-				lock.unlock();
+		synchronized (lock) {
+			
+			try {				
+				tempData.x = ev.getX();
+				tempData.y = ev.getY();
+				tempData.time = time;
+				tempData.eventType = ev.getAction();
+				
+				tempData = events.push(tempData);
+				Log.i("TOUCH", ev.toString());
 			}
-		} else {
-			bufferTouchEvents.add(ev);
-			bufferEventsTime.add(time);
-		}
+			catch (Exception e){
+				Log.e("EXC", ev.toString());
+			}
+			
+		} 
+	}
+	
+	public void stopToasts() {
+		for (CountDownTimer t : m_toastTimers)
+			t.cancel();
+		for (Toast t : m_toastsQueue)
+			t.cancel();
 	}
 	
 }

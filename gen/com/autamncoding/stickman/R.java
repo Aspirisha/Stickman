@@ -274,9 +274,6 @@ public final class R {
         public static final int str_load=0x7f070007;
         public static final int str_save=0x7f070008;
         public static final int str_start=0x7f070006;
-        /**  <string name="str_depth">Кафедра прикладной \n математики</string>
-	<string name="str_university">Санкт-Петербургский Политехнический \n Университет</string> 
-         */
         public static final int str_toweb=0x7f070005;
         public static final int str_university=0x7f070004;
         /**  Help strings 

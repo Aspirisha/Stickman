@@ -1,17 +1,31 @@
 package com.autumncoding.stickman;
 
 //import android.app.Activity;
-import com.autamncoding.stickman.*;
-import android.content.res.*;
-import android.content.Intent;
+import java.io.IOException;
+import java.io.InputStream;
+
 import android.content.Context;
-import android.graphics.*;
+import android.content.Intent;
+import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.LinearGradient;
+import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
-import android.util.*;
-import android.net.*;
+import android.graphics.Path;
+import android.graphics.RadialGradient;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.Shader;
+import android.net.ConnectivityManager;
+import android.net.Uri;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.WindowManager;
 
-import java.io.*;
+import com.autamncoding.stickman.R;
 
 public class AppIntro 
 {
@@ -88,7 +102,9 @@ public class AppIntro
 	float				m_appleRadiusBase;
 	float				m_appleRadiusMin;
 	Vector2DI					m_point;
-	
+	private boolean m_fontSizesCounted = false;
+	private float m_fontHeight = 0;
+	private float m_vertOffset = 0;
 	
 	// METHODS
 	public AppIntro(MainActivity ctx, int language)
@@ -724,15 +740,29 @@ public class AppIntro
 		if (m_timeState > TIME_LEAF)
 		{
 			// draw titles
-			Rect r = new Rect();
-			m_paintTextWhite.setTextSize(26.0f);
-			m_paintTextWhite.getTextBounds(m_strDepth, 	 0, m_strDepth.length(), r);
-			float h = r.height();
-			float vOff = 0.0f;
-			if (m_scrH > m_scrW)
-				vOff = 3*h;
-			canvas.drawText(m_strDepth, 	 0, m_strDepth.length(), 		m_scrCenterX, vOff + h , 		m_paintTextWhite);
-			canvas.drawText(m_strUniversity, 0, m_strUniversity.length(), 	m_scrCenterX, vOff + h * 2.5f,	m_paintTextYell);
+			if (!m_fontSizesCounted) {
+				DisplayMetrics metrics = new DisplayMetrics();
+				WindowManager wm = (WindowManager) m_ctx.getSystemService(Context.WINDOW_SERVICE);
+				wm.getDefaultDisplay().getMetrics(metrics);
+				
+				Rect r = new Rect();
+				m_paintTextWhite.setTextSize(26.0f);
+				m_paintTextWhite.getTextBounds(m_strDepth, 	 0, m_strDepth.length(), r);
+
+				float fac = (float)(metrics.widthPixels - 30) / (float)r.width(); // compute the factor, which will scale the text to our target width
+				m_paintTextWhite.setTextSize( m_paintTextWhite.getTextSize() * fac );
+				m_fontHeight = r.height();
+				if (m_scrH > m_scrW)
+					m_vertOffset = 3 * m_fontHeight;
+				
+				m_paintTextYell.getTextBounds(m_strUniversity, 0, m_strUniversity.length(), r);
+				fac = (float)(metrics.widthPixels - 30) / (float)r.width(); // compute the factor, which will scale the text to our target width
+				m_paintTextYell.setTextSize(m_paintTextYell.getTextSize() * fac);
+				
+				m_fontSizesCounted = true;
+			}
+			canvas.drawText(m_strDepth, 	 0, m_strDepth.length(), 		m_scrCenterX, m_vertOffset + m_fontHeight , 		m_paintTextWhite);
+			canvas.drawText(m_strUniversity, 0, m_strUniversity.length(), 	m_scrCenterX, m_vertOffset + m_fontHeight  * 2.5f,	m_paintTextYell);
 		}
 		if ( (m_timeState > 2* TIME_LEAF)  )
 		{

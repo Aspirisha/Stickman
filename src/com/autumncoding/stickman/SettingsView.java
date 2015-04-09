@@ -31,9 +31,11 @@ public class SettingsView extends LinearLayout {
 	private CheckBox m_interpBox = null;
 	private CheckBox m_loopBox = null;
 	private CheckBox m_hintsBox = null;
+	private MainActivity m_activity = null;
 	
 	public SettingsView(Context context) {
 		super(context);
+		m_activity = (MainActivity) context;
 		inflate(context, R.layout.settings_layout, this);
 		setBackgroundResource(R.drawable.background);
 	
@@ -149,7 +151,7 @@ public class SettingsView extends LinearLayout {
 		conf.locale = new Locale(code);
 		res.updateConfiguration(conf, null);
 		GameData.lang = newLanguage;
-		GameData.mainActivity.updateTexts();
+		m_activity.updateTexts();
 	}
 	
 	void UpdateTexts() {

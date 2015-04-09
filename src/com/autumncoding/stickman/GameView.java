@@ -17,7 +17,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import com.autamncoding.stickman.R;
-import com.autumncoding.stickman.Animation.AnimationState;
 import com.autumncoding.stickman.TouchEventThread.CurrentDrawingState;
 
 public class GameView extends SurfaceView {
@@ -93,7 +92,15 @@ public class GameView extends SurfaceView {
 
     		@Override
     		public void surfaceCreated(SurfaceHolder holder) {
-    			createNewThreads();
+    			try {
+					createNewThreads();
+				} catch (InstantiationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
     			gameLoopThread.setRunning(true);
     			touch_thread.setRunning(true);
     			gameLoopThread.start(); 
@@ -112,7 +119,7 @@ public class GameView extends SurfaceView {
     	});
 	}
 
-    private void createNewThreads() {
+    private void createNewThreads() throws InstantiationException, IllegalAccessException {
     	gameLoopThread = new GameLoopThread(this);
     	touch_thread = new TouchEventThread(this);
     	touch_thread.init(m_menuIcons);
@@ -121,8 +128,10 @@ public class GameView extends SurfaceView {
     @Override
     public boolean onTouchEvent(final MotionEvent ev) {    	
     	touch_thread.pushEvent(ev);
+    	
         return true;
     }
+
     
     private void drawMenu(Canvas canvas)
     {
@@ -141,7 +150,7 @@ public class GameView extends SurfaceView {
         	d_fps = d_drawsBetweenFpsRecount * 1000f / (float)d_timePassedBetweenFpsRecounts;
         	d_timePassedBetweenFpsRecounts = 0;
         }
-        if (GameData.isDebug)
+      //  if (GameData.isDebug)
         	canvas.drawText("FPS: " + Float.toString(d_fps), 30, MainActivity.layout_height - 20, debug_paint);
         //canvas.drawText("angle: " + Float.toString(GameData.debugValue), 30, MainActivity.layout_height - 20, debug_paint);
         // end of debug info
@@ -339,6 +348,10 @@ public class GameView extends SurfaceView {
 	    	m_menuIcons.get(2).setAvailable();
 	    else
 	    	m_menuIcons.get(2).setUnavailable();
+    }
+    
+    public void stopToasts() {
+    	touch_thread.stopToasts();
     }
 }
 

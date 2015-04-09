@@ -24,6 +24,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -56,17 +59,28 @@ public class MainActivity extends Activity {
     private SeekBar m_frameSeekBar = null;
     private TextView m_framesInfo = null;
     private Menu m_menu = null;
+    private boolean m_settingsRead = false;
+    
+    // store helper toasts objects and timer just to be able to cancel them
+    private LinkedList<Toast> m_toasts = null;
+    private LinkedList<CountDownTimer> m_toastTimers = null;
     
 	@Override 
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);		
+		super.onCreate(savedInstanceState);	
+		GameData.init(this);
+		readSettings();
+		if (m_settingsView == null) // explicitly because we need language for hints
+			initSettingsView();
         m_app = new AppIntro(this, AppIntro.LANGUAGE_ENG);
         setView(ViewType.VIEW_INTRO);
         m_gameLayout = new FrameLayout(this);
         LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         m_gameWidgetsLayout = (LinearLayout) inflater.inflate(R.layout.frames_layout, null);
         
-        GameData.init(this);
+        m_toasts = new LinkedList<Toast>();
+        m_toastTimers = new LinkedList<CountDownTimer>();
+       
         Animation.getInstance().setAnimationFPS(getResources().getInteger(R.integer.default_anim_fps));
 	}
 
@@ -112,13 +126,43 @@ public class MainActivity extends Activity {
 			messages.add(GameData.res.getString(R.string.toast_help1));
 			messages.add(GameData.res.getString(R.string.toast_help18));
 			
+			OnTouchListener l = new OnTouchListener() {
+				
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+					 if(m_gameView != null){
+	                        //Set the touch location to the absolute screen location
+	                        event.setLocation(event.getRawX(), event.getRawY());
+	                        //Send the touch event to the view
+	                        return m_gameView.onTouchEvent(event);
+	                    } 
+					return false;
+				}
+			};
+			
 			for (String msg : messages) {
 				final Toast toast = Toast.makeText(GameData.mainActivity, msg, Toast.LENGTH_LONG);
-				new CountDownTimer(GameData.helpToastDurationPerLetter * msg.length(), 1000) {
-				    public void onTick(long millisUntilFinished) {toast.show();}
-				    public void onFinish() {toast.show();}
-				}.start();
+				final View toastView = toast.getView();
+				toastView.setOnTouchListener(l);
+				m_toasts.push(toast);
+				CountDownTimer toastTimer = new CountDownTimer(GameData.helpToastDurationPerLetter * msg.length(), 1000) {
+				    public void onTick(long millisUntilFinished) {
+				    	toast.show();
+				    }
+				    public void onFinish() {
+				    	toast.show();
+				    	m_toasts.remove(toast);
+				    	m_toastTimers.remove(this);
+				    	if (!m_toastTimers.isEmpty())
+				    		m_toastTimers.get(0).start();
+				 
+				    }
+				    
+				};
+				m_toastTimers.push(toastTimer);
+				
 			}
+			m_toastTimers.get(0).start();
 		}
 	}
 	
@@ -174,6 +218,8 @@ public class MainActivity extends Activity {
 		case VIEW_GAME:
 			if (m_settingsView == null) // explicitly because we need language for hints
 				initSettingsView();
+			else
+				m_settingsView.updateSettings();
 			if (m_gameView == null) 
 				initGameView();
 			setContentView(m_gameLayout);
@@ -189,6 +235,10 @@ public class MainActivity extends Activity {
 				initSettingsView();
 			Animation.getInstance().stopAnimation();
 			setContentView(m_settingsView);
+			for (CountDownTimer t : m_toastTimers)
+				t.cancel();
+			for (Toast t : m_toasts)
+				t.cancel();
 			break;
 		default:
 			break;
@@ -287,7 +337,12 @@ public class MainActivity extends Activity {
 		case NONE:
 			break;
 		case VIEW_GAME:
+			m_gameView.stopToasts();
 		case VIEW_INTRO:
+			for (CountDownTimer t : m_toastTimers)
+				t.cancel();
+			for (Toast t : m_toasts)
+				t.cancel();
 			finish();
 			break;
 		case VIEW_SETTINGS:
@@ -302,6 +357,7 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onPause() {
 		Animation.getInstance().Play(false);
+		m_settingsRead = false;
 		if (GameData.saveToTemp)
 			Animation.getInstance().SaveToFile("", true);
 		
@@ -320,6 +376,12 @@ public class MainActivity extends Activity {
 	
 	@Override
 	protected void onResume() {
+		if (!m_settingsRead)
+			readSettings();
+		super.onResume();
+	}
+	
+	private void readSettings() {
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 	    GameData.saveToTemp = settings.getBoolean("SaveTemp", true);
 	    GameData.lang = settings.getString("Lang", "NONE");
@@ -341,7 +403,7 @@ public class MainActivity extends Activity {
 	    }
 	    	
 	    //TODO ucomment it later, it's always copying now for imiatating first install
-	    //if (!settings.getBoolean("assetsAreCopied", false)) {
+	    if (!settings.getBoolean("assetsAreCopied", false)) {
 	    	(new AsyncTask<Void, Void, Void>() {
 
 				@Override
@@ -350,9 +412,9 @@ public class MainActivity extends Activity {
 					return null;
 				}
 			}).execute();
-	    //}
-
-		super.onResume();
+	    }
+	    	
+	    m_settingsRead = true;
 	}
 	
 	public void updateTexts() {
