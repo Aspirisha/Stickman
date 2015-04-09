@@ -64,13 +64,11 @@ public class TouchEventThread extends Thread {
 	}
 	
 	private SwappingCircularList<TouchEventData> events;	
-	private SwappingCircularList<TouchEventData> eventsBuf;
 	private TouchEventData tempData; 
 	private Object lock;
 	
 	private long startTime = 0;
 	private long lastTouchTime = System.currentTimeMillis();
-	private AbstractDrawingPrimitive lastTouchedPrimitive = null;
 	private boolean movementIsScaling = false;
 	
 	private PointF m_startDrawingPoint = null;
@@ -125,7 +123,6 @@ public class TouchEventThread extends Thread {
 	TouchEventThread(GameView _gameView) throws InstantiationException, IllegalAccessException {
 		m_gameView = _gameView;
 		events = new SwappingCircularList<TouchEventData>(TouchEventData.class, 100);
-		eventsBuf = new SwappingCircularList<TouchEventData>(TouchEventData.class, 10);
 		tempData = new TouchEventData();
 		
 		lock = new Object();
@@ -494,9 +491,7 @@ public class TouchEventThread extends Thread {
 				float cx = (m_startDrawingPoint.x + m_farthestDrawingPoint.x) / 2f;
 				float cy = (m_startDrawingPoint.y + m_farthestDrawingPoint.y) / 2f;
 				
-				float dx = m_startDrawingPoint.x - m_farthestDrawingPoint.x;
-				float dy = m_startDrawingPoint.y - m_farthestDrawingPoint.y;
-				float r = 30f; //(float) Math.sqrt(dx * dx + dy * dy);
+				float r = 30f;
 				r = Math.max(r, GameData.min_circle_radius);
 				
 				circle.setPosition(cx, cy, cx + r, cy, r);
@@ -572,7 +567,6 @@ public class TouchEventThread extends Thread {
 						}
 					}
 					
-					lastTouchedPrimitive = primitive;
 					lastTouchTime = eventTime;
 					break;
 				}

@@ -1,0 +1,6 @@
+[submodule "src/Aspirisha/CircularList"]
+	path = src/Aspirisha/CircularList
+	url = https://github.com/Aspirisha/CircularList
+[submodule "src/CircularList"]
+	path = src/CircularList
+	url = https://github.com/Aspirisha/CircularList
