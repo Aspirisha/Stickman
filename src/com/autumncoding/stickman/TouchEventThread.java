@@ -66,6 +66,7 @@ public class TouchEventThread extends Thread {
 	
 	private SwappingCircularList<TouchEventData> events;	
 	private TouchEventData tempData; 
+	private TouchEventData readData; 
 	private Object lock;
 	
 	private long startTime = 0;
@@ -125,6 +126,7 @@ public class TouchEventThread extends Thread {
 		m_gameView = _gameView;
 		events = new SwappingCircularList<TouchEventData>(TouchEventData.class, 100);
 		tempData = new TouchEventData();
+		readData = new TouchEventData();
 		
 		lock = new Object();
 		setName("Touch thread");
@@ -191,22 +193,22 @@ public class TouchEventThread extends Thread {
 	private void processEvent() {		
 		if (!events.isEmpty()) {
 			synchronized (lock) {
-				tempData = events.pop(tempData);
+				readData = events.pop(readData);
 			} 
 		} else
 			return;
 		
-		if (tempData.y < GameData.getMenuBottom() && ((tempData.eventType & 0xff) != MotionEvent.ACTION_MOVE)) {
-			processEventInMenu(tempData.eventType, tempData.x, tempData.y, tempData.time);
+		if (readData.y < GameData.getMenuBottom() && ((readData.eventType & 0xff) != MotionEvent.ACTION_MOVE)) {
+			processEventInMenu(readData.eventType, readData.x, readData.y, readData.time);
 		} else {
 			switch (GameData.touchState) {
 			case DRAGGING:
-				processEventDragging(tempData.eventType, tempData.x, tempData.y, tempData.time);
+				processEventDragging(readData.eventType, readData.x, readData.y, readData.time);
 				break;
 			case DRAWING: {
 				if (GameData.maxPrimitivesNumber > GameData.drawing_queue.size()) {
-					Log.d("PROCESSING", "typ : " + Integer.toString(tempData.eventType) + " point : x=" + Float.toString(tempData.x) + " y=" + Float.toString(tempData.y));
-					processEventDrawing(tempData.eventType, tempData.x, tempData.y, tempData.time);
+					Log.d("PROCESSING", "typ : " + Integer.toString(readData.eventType) + " point : x=" + Float.toString(readData.x) + " y=" + Float.toString(tempData.y));
+					processEventDrawing(readData.eventType, readData.x, readData.y, readData.time);
 				}
 				break;
 			}
@@ -216,8 +218,8 @@ public class TouchEventThread extends Thread {
 			}		
 		}
 		
-		mLastTouchX = tempData.x;
-		mLastTouchY = tempData.y;
+		mLastTouchX = readData.x;
+		mLastTouchY = readData.y;
 	}
 	
 	private void processEventInMenu(int eventType, float x, float y, long eventTime) {
@@ -437,6 +439,8 @@ public class TouchEventThread extends Thread {
 				float dist = PointF.length(x - p1.x, y - p1.y);
 				if (dist < 5f) // avoid noise from fingers, slow motions etc
 					break;
+				if (x < 5 || y < 5)
+					Log.i("Strange", Float.toString(x) + " " +Float.toString(y));
 				m_currentDrawingPoint.x = x;
 				m_currentDrawingPoint.y = y;
 				GameData.drawnPoints.add(new PointF(x, y));
