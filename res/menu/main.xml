@@ -1,12 +1,22 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-
-    <item
+  <group android:id="@+id/group2" android:menuCategory="container">
+     <item
         android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:showAsAction="never"
         android:icon="@drawable/settings_menu"
         android:title="@string/action_settings"/>
+	
+	 <item 
+            android:id="@+id/action_help" 
+            android:icon="@drawable/help_menu"
+            android:title="@string/str_help">
+        </item>
+	</group>
+   
     <group android:id="@+id/group1" android:menuCategory="container">
+        <item
+	    	android:id="@+id/action_new_animation"
+        	android:icon="@drawable/new_anim"
+        	android:title="@string/str_new_anim"/>
         <item 
             android:id="@+id/action_save" 
             android:icon="@drawable/save_menu"
@@ -16,11 +26,7 @@
             android:icon="@drawable/load_menu"
             android:title="@string/str_load">
         </item>
-        <item 
-            android:id="@+id/action_help" 
-            android:icon="@drawable/help_menu"
-            android:title="@string/str_help">
-        </item>
-    </group>
 
+    </group>
+   
 </menu>

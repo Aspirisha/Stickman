@@ -10,7 +10,9 @@ import java.util.LinkedList;
 import java.util.Locale;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
@@ -81,7 +83,6 @@ public class MainActivity extends Activity {
         m_toasts = new LinkedList<Toast>();
         m_toastTimers = new LinkedList<CountDownTimer>();
        
-        Animation.getInstance().setAnimationFPS(getResources().getInteger(R.integer.default_anim_fps));
 	}
 
 	@Override
@@ -123,8 +124,9 @@ public class MainActivity extends Activity {
 		
 		if (GameData.showPopupHints) {
 			LinkedList<String> messages = new LinkedList<String>();
-			messages.add(GameData.res.getString(R.string.toast_help1));
-			messages.add(GameData.res.getString(R.string.toast_help18));
+			messages.push(GameData.res.getString(R.string.toast_help1));
+			messages.push(GameData.res.getString(R.string.toast_help19));
+			messages.push(GameData.res.getString(R.string.toast_help18));
 			
 			OnTouchListener l = new OnTouchListener() {
 				
@@ -259,6 +261,89 @@ public class MainActivity extends Activity {
 		return m_app;
 	}
 	
+	public void openMenu() {
+		this.openOptionsMenu();
+	}
+	
+	private void onSavePressed() {
+		synchronized (GameData.getLocker()) {
+    		SimpleFileDialog FileOpenDialog =  new SimpleFileDialog(MainActivity.this, "FileSave",
+    				new SimpleFileDialog.SimpleFileDialogListener()
+    		{
+    			@Override
+    			public void onChosenDir(String chosenDir) {
+    				// The code in this function will be executed when the dialog OK button is pushed 
+    				//m_chosen = chosenDir;
+    				Animation.getInstance().SaveToFile(chosenDir, false);
+    				Toast.makeText(MainActivity.this, getResources().getString(R.string.file_saved_to) + 
+    						chosenDir, Toast.LENGTH_LONG).show();
+    			}
+
+    		});
+    		
+    		//You can change the default filename using the public variable "Default_File_Name"
+    		File file = new File(GameData.mainActivity.getExternalFilesDir(null) + GameData.animFolder);
+ 		    file.mkdirs();
+    		FileOpenDialog.chooseFile_or_Dir(file.getAbsolutePath());
+    		FileOpenDialog.Default_File_Name = "";
+
+		}
+	}
+	
+	private void onLoadPressed() {
+		SimpleFileDialog FileOpenDialog =  new SimpleFileDialog(MainActivity.this, "FileOpen",
+    			new SimpleFileDialog.SimpleFileDialogListener()
+    	{
+    		@Override
+    		public void onChosenDir(String chosenDir) {
+    			// The code in this function will be executed when the dialog OK button is pushed 
+    			//m_chosen = chosenDir;
+    			synchronized (GameData.getLocker()) {
+    				try {
+    					Animation.getInstance().loadFromFile(chosenDir, false);
+    				} catch (IOException e) {
+    					e.printStackTrace();
+    					Animation.getInstance().clear();
+    				} catch (ClassNotFoundException e) {
+    					e.printStackTrace();
+    					Animation.getInstance().clear();
+    				}
+    			}
+    			Toast.makeText(MainActivity.this, getResources().getString(R.string.file_opened_from) + 
+    					chosenDir, Toast.LENGTH_LONG).show();
+    			m_gameView.updateUpperMenu();
+    		}
+    	});
+
+    	//You can change the default filename using the public variable "Default_File_Name"
+    	File file = new File(GameData.mainActivity.getExternalFilesDir(null) + GameData.animFolder);
+    	file.mkdirs();
+    	FileOpenDialog.chooseFile_or_Dir(file.getAbsolutePath());
+    	FileOpenDialog.Default_File_Name = "";
+	}
+	
+	private void onNewAnimationPressed() {
+		DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+    	    @Override
+    	    public void onClick(DialogInterface dialog, int which) {
+    	        switch (which){
+    	        case DialogInterface.BUTTON_POSITIVE:
+    	            onSavePressed();
+    	            break;
+
+    	        case DialogInterface.BUTTON_NEGATIVE:
+    	            break;
+    	        }
+    	        
+    	        Animation.getInstance().clear();
+    	    }
+    	    
+    	};
+    	AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    	builder.setMessage(getResources().getString(R.string.save_before_new)).setPositiveButton(getResources().getString(R.string.yes), dialogClickListener)
+    	    .setNegativeButton(getResources().getString(R.string.no), dialogClickListener).show();
+	}
+	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    // Handle item selection
@@ -268,63 +353,16 @@ public class MainActivity extends Activity {
 	    		setView(ViewType.VIEW_SETTINGS);
 	    		return true;
 	        case R.id.action_save:
-	        	synchronized (GameData.getLocker()) {
-	        		SimpleFileDialog FileOpenDialog =  new SimpleFileDialog(MainActivity.this, "FileSave",
-	        				new SimpleFileDialog.SimpleFileDialogListener()
-	        		{
-	        			@Override
-	        			public void onChosenDir(String chosenDir) {
-	        				// The code in this function will be executed when the dialog OK button is pushed 
-	        				//m_chosen = chosenDir;
-	        				Animation.getInstance().SaveToFile(chosenDir, false);
-	        				Toast.makeText(MainActivity.this, getResources().getString(R.string.file_saved_to) + 
-	        						chosenDir, Toast.LENGTH_LONG).show();
-	        			}
-	        		});
-	        		
-	        		//You can change the default filename using the public variable "Default_File_Name"
-	        		File file = new File(GameData.mainActivity.getExternalFilesDir(null) + GameData.animFolder);
-	     		    file.mkdirs();
-	        		FileOpenDialog.chooseFile_or_Dir(file.getAbsolutePath());
-	        		FileOpenDialog.Default_File_Name = "";
-
-				}
+	        	onSavePressed();
 	            return true;
 	        case R.id.action_load:	        		
-	        	SimpleFileDialog FileOpenDialog =  new SimpleFileDialog(MainActivity.this, "FileOpen",
-	        			new SimpleFileDialog.SimpleFileDialogListener()
-	        	{
-	        		@Override
-	        		public void onChosenDir(String chosenDir) 
-	        		{
-	        			// The code in this function will be executed when the dialog OK button is pushed 
-	        			//m_chosen = chosenDir;
-	        			synchronized (GameData.getLocker()) {
-	        				try {
-	        					Animation.getInstance().loadFromFile(chosenDir, false);
-	        				} catch (IOException e) {
-	        					e.printStackTrace();
-	        					Animation.getInstance().clear();
-	        				} catch (ClassNotFoundException e) {
-	        					e.printStackTrace();
-	        					Animation.getInstance().clear();
-	        				}
-	        			}
-	        			Toast.makeText(MainActivity.this, getResources().getString(R.string.file_opened_from) + 
-	        					chosenDir, Toast.LENGTH_LONG).show();
-	        			m_gameView.updateUpperMenu();
-	        		}
-	        	});
-
-	        	//You can change the default filename using the public variable "Default_File_Name"
-	        	File file = new File(GameData.mainActivity.getExternalFilesDir(null) + GameData.animFolder);
-	        	file.mkdirs();
-	        	FileOpenDialog.chooseFile_or_Dir(file.getAbsolutePath());
-	        	FileOpenDialog.Default_File_Name = "";
-	        		
+	        	onLoadPressed();
 	            return true;
 	        case R.id.action_help:
 	        	startActivity(new Intent(this, HelperActivity.class));
+	        	return true;
+	        case R.id.action_new_animation:
+	        	onNewAnimationPressed();
 	        	return true;
 	        default:
 	            return super.onOptionsItemSelected(item);
@@ -422,9 +460,10 @@ public class MainActivity extends Activity {
 			return;
 		
 		m_menu.getItem(0).setTitle(GameData.res.getString(R.string.action_settings));
-		m_menu.getItem(2).setTitle(GameData.res.getString(R.string.str_load));
-		m_menu.getItem(1).setTitle(GameData.res.getString(R.string.str_save));
-		m_menu.getItem(3).setTitle(GameData.res.getString(R.string.str_help));
+		m_menu.getItem(1).setTitle(GameData.res.getString(R.string.str_help));
+		m_menu.getItem(2).setTitle(GameData.res.getString(R.string.str_new_anim));
+		m_menu.getItem(3).setTitle(GameData.res.getString(R.string.str_save));
+		m_menu.getItem(4).setTitle(GameData.res.getString(R.string.str_load));
 		m_settingsView.UpdateTexts();
 	}
 

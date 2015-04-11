@@ -31,6 +31,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import com.autamncoding.stickman.R;
+import com.autumncoding.stickman.GameData;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -77,8 +80,7 @@ public class SimpleFileDialog
 		public void onChosenDir(String chosenDir);
 	}
 
-	public SimpleFileDialog(Context context, String file_select_type, SimpleFileDialogListener SimpleFileDialogListener)
-	{
+	public SimpleFileDialog(Context context, String file_select_type, SimpleFileDialogListener SimpleFileDialogListener) {
 		if (file_select_type.equals("FileOpen"))          Select_type = FileOpen;
 		else if (file_select_type.equals("FileSave"))     Select_type = FileSave;
 		else if (file_select_type.equals("FolderChoose")) Select_type = FolderChoose;
@@ -184,7 +186,7 @@ public class SimpleFileDialog
 					}
 				}
 			}
-		}).setNegativeButton("Cancel", null);
+		}).setNegativeButton(GameData.res.getString(R.string.cancel), null);
 
 		final AlertDialog dirsDialog = dialogBuilder.create();
 
@@ -255,9 +257,9 @@ public class SimpleFileDialog
 		//m_titleView1.setTextAppearance(m_context, android.R.style.TextAppearance_Large);
 		//m_titleView1.setTextColor( m_context.getResources().getColor(android.R.color.black) );
 				
-		if (Select_type == FileOpen    ) m_titleView1.setText("Open:");
-		if (Select_type == FileSave    ) m_titleView1.setText("Save As:");
-		if (Select_type == FolderChoose) m_titleView1.setText("Folder Select:");
+		if (Select_type == FileOpen    ) m_titleView1.setText(GameData.res.getString(R.string.open_anim));
+		if (Select_type == FileSave    ) m_titleView1.setText(GameData.res.getString(R.string.save_anim));
+		if (Select_type == FolderChoose) m_titleView1.setText(GameData.res.getString(R.string.folder_select));
 		
 		//need to make this a variable Save as, Open, Select Directory
 		m_titleView1.setGravity(Gravity.CENTER_VERTICAL);
@@ -277,7 +279,7 @@ public class SimpleFileDialog
 			///////////////////////////////
 			Button newDirButton = new Button(m_context);
 			newDirButton.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-			newDirButton.setText("New Folder");
+			newDirButton.setText(GameData.res.getString(R.string.new_folder));
 			newDirButton.setOnClickListener(new View.OnClickListener() 
 			{
 				@Override
@@ -287,7 +289,7 @@ public class SimpleFileDialog
 
 					// Show new folder name input dialog
 					new AlertDialog.Builder(m_context).
-					setTitle("New Folder Name").
+					setTitle(GameData.res.getString(R.string.new_folder_name)).
 					setView(input).setPositiveButton("OK", new DialogInterface.OnClickListener() 
 					{
 						public void onClick(DialogInterface dialog, int whichButton) 
@@ -303,11 +305,11 @@ public class SimpleFileDialog
 							}
 							else
 							{
-								Toast.makeText(	m_context, "Failed to create '" 
-										+ newDirName + "' folder", Toast.LENGTH_SHORT).show();
+								Toast.makeText(	m_context, GameData.res.getString(R.string.failed_to_create) + " '" 
+										+ newDirName + "'", Toast.LENGTH_SHORT).show();
 							}
 						}
-					}).setNegativeButton("Cancel", null).show(); 
+					}).setNegativeButton(GameData.res.getString(R.string.cancel), null).show(); 
 				}
 			}
 					);

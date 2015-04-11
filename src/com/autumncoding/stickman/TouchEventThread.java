@@ -9,6 +9,7 @@ import CircularList.CircularListReferenceBased;
 import CircularList.SwappingCircularList;
 import android.graphics.PointF;
 import android.os.CountDownTimer;
+import android.os.Looper;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -188,9 +189,8 @@ public class TouchEventThread extends Thread {
 	}
 	
 	private void processEvent() {		
-		if (events.size() > 0) {
+		if (!events.isEmpty()) {
 			synchronized (lock) {
-				
 				tempData = events.pop(tempData);
 			} 
 		} else
@@ -236,34 +236,41 @@ public class TouchEventThread extends Thread {
 					return;
 				switch (touchedMenuIndex) {
 				case 0:
+					GameData.mainActivity.runOnUiThread(new Runnable() {
+						
+						@Override
+						public void run() {
+							// TODO Auto-generated method stub
+							GameData.mainActivity.openMenu();
+						}
+					});
+					break;
+				case 1:
 					GameData.touchState = TouchState.DRAWING;
 					GameData.menuDrag.setUntouched();
 					GameData.menuPlay.setUntouched();
 					showPopupHint(TouchHelpType.ON_DRAW_PRESSED);
 					break;
-				case 1:
+				case 2:
 					GameData.touchState = TouchState.DRAGGING;
 					GameData.menuPencil.setUntouched();
 					GameData.menuPlay.setUntouched();
 					showPopupHint(TouchHelpType.ON_DRAG_PRESSED);
 					break;
-				case 2:
+				case 3:
 					Animation.getInstance().switchToPrevFrame();
-					lastTouchMenuIndex = 2;
 					showPopupHint(TouchHelpType.ON_PREV_PRESSED);
 					break;
-				case 3:
+				case 4:
 					Animation.getInstance().switchToNextFrame();
-					lastTouchMenuIndex = 3;
 					showPopupHint(TouchHelpType.ON_NEXT_PRESSED);
 					break;
-				case 4:
+				case 5:
 					Animation.getInstance().addFrame();
 					GameData.menuPrev.setActive();
-					lastTouchMenuIndex = 4;
 					showPopupHint(TouchHelpType.ON_NEW_PRESSED);
 					break;
-				case 5:
+				case 6:
 					//if (!Animation.getInstance().removeLastDrawn())
 					Animation.getInstance().removeFrame();
 					if (!Animation.getInstance().hasNextFrame())
@@ -271,16 +278,17 @@ public class TouchEventThread extends Thread {
 					if (!Animation.getInstance().hasPrevFrame())
 						GameData.menuPrev.setUnavailable();
 					showPopupHint(TouchHelpType.ON_DELETE_PRESSED);
-					lastTouchMenuIndex = 5;
 					break;
-				case 6:
+				case 7:
 					Animation.getInstance().Play(!Animation.getInstance().isPlaying());
 					showPopupHint(TouchHelpType.ON_PLAY_PRESSED);
 					break;
 				default:
-					lastTouchMenuIndex = touchedMenuIndex;
 					break;
 				}
+				
+				if (touchedMenuIndex != 1 && touchedMenuIndex != 2 && touchedMenuIndex != 7)
+					lastTouchMenuIndex = touchedMenuIndex;
 				break;
 			}
 
@@ -324,8 +332,8 @@ public class TouchEventThread extends Thread {
 					messages.add(GameData.res.getString(R.string.toast_help3));
 					break;
 				case ON_DRAW:
-					messages.add(GameData.res.getString(R.string.toast_help4));
-					messages.add(GameData.res.getString(R.string.toast_help17));
+					messages.push(GameData.res.getString(R.string.toast_help4));
+					messages.push(GameData.res.getString(R.string.toast_help17));
 					break;
 				case ON_ROTATE:
 					messages.add(GameData.res.getString(R.string.toast_help5));
@@ -519,6 +527,7 @@ public class TouchEventThread extends Thread {
 	
 		
 	
+	
 	private void processEventDragging(int eventType, float x, float y, long eventTime) {
 		if (Animation.getInstance().getState() == AnimationState.PLAY)
 			return;
@@ -622,15 +631,16 @@ public class TouchEventThread extends Thread {
 	
 	public void pushEvent(MotionEvent ev) {
 		long time = System.currentTimeMillis();
+		float x = ev.getX();
+		float y = ev.getY();
+		int eventType = ev.getAction();
 		
 		synchronized (lock) {
-			
 			try {				
-				tempData.x = ev.getX();
-				tempData.y = ev.getY();
+				tempData.x = x;
+				tempData.y = y;
+				tempData.eventType = eventType;
 				tempData.time = time;
-				tempData.eventType = ev.getAction();
-				
 				tempData = events.push(tempData);
 				Log.i("TOUCH", ev.toString());
 			}

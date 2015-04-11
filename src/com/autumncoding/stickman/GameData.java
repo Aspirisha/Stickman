@@ -91,7 +91,7 @@ public class GameData {
 	public static Paint blended_joint_paint;
 	
 	// menu info
-	public static final int numberOfMenuIcons = 7;
+	public static final int numberOfMenuIcons = 8;
 	public static final float menuIconsTop = 4f;
 	public static int topMenuHeight = 0;
 	
@@ -105,6 +105,7 @@ public class GameData {
 	public static MenuIcon menuNew = null;
 	public static MenuIcon menuPlay = null;
 	public static MenuIcon menuBin = null;
+	public static MenuIcon menuControl = null;
 	public static ArrayList<MenuIcon> menuIcons;
 	
 	public static MainActivity mainActivity;

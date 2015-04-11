@@ -11,6 +11,7 @@
     <string name="str_load">Загрузить</string>
     <string name="str_save">Сохранить</string>
     <string name="str_help">Помощь</string>
+    <string name="str_new_anim">Новая анимация</string>
     <string name="choose_language">Выберите язык</string>
     <string name="str_anim_fps">Частота кадров анимации:</string>
     <string name="str_lang_spinner">Язык:</string>
@@ -24,8 +25,20 @@
     <string name="enable_interpolation">Использовать интерполяцию между кадрами</string>
     <string name="loop_animation">Проигрывать анимацию в цикле</string>
     <string name="show_hints">Показывать всплывающие подсказки</string>
+    
+    <string name="save_before_new">Сохранить текущую анимацию?</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    
+    <string name="open_anim">Открыть файл:</string>
+    <string name="save_anim">Сохранить как:</string>
+    <string name="folder_select">Выбор папки:</string>
+    <string name="new_folder">Новая папка</string>
+    <string name="cancel">Отмена</string>
+    <string name="new_folder_name">Имя новой папки</string>
+    <string name="failed_to_create">Не удалось создать папку</string>
     <!-- Help strings -->
-    <string name="toast_help1">Нажмите на кнопку меню слева снизу экрана своего телефона для входа в меню.</string>
+    <string name="toast_help1">Вы можете изменить настройки приложения, сохранить или загрузить анимацию, а также открыть окно помощи, используя меню.</string>
     
     <string name="toast_help2">Эта кнопка нужна для начала и остановки проигрывания мультика.</string>
     <string name="toast_help3">Нажав эту кнопку, вы сможете перетаскивать объекты в кадре.</string>
@@ -44,7 +57,7 @@
     <string name="toast_help16">Объект, который ы перетаскиваете, частично вне кадра. Если вы его отпустите в таком состоянии, он будет удалён из текущего и всех последующих кадров мультика.</string>
     <string name="toast_help17">Если вы нарисуете линию с самопересечениями, то будет нарисован кружок, иначе появится палочка.</string>
     <string name="toast_help18">Чтобы отключить всплывающие подсказки, выберите соответствующий флажок в меню настроек.</string>
-    <string name="toast_help19"></string>
+    <string name="toast_help19">Чтобы открыть меню, нажмите самую левую кнопку сверху (с тремя полосками).</string>
     
     
     

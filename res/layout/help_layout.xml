@@ -26,32 +26,10 @@
         android:id="@+id/imageView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="70dp"
         android:layout_marginLeft="5dp"
         android:src="@drawable/quest" />
 
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/imageView2"
-        android:layout_marginBottom="14dp"
-        android:layout_marginLeft="10dp"
-        android:layout_toRightOf="@+id/imageView2"
-        android:text="@string/how1"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@color/label_color" />
-
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/imageView1"
-        android:layout_alignLeft="@+id/textView2"
-        android:layout_marginBottom="14dp"
-        android:text="@string/how2"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@color/label_color" />
 
     <ImageView
         android:id="@+id/ImageView01"
@@ -71,16 +49,6 @@
         android:layout_marginTop="5dp"
         android:src="@drawable/pult" />
 
-    <TextView
-        android:id="@+id/TextView03"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/ImageView02"
-        android:layout_alignLeft="@+id/TextView02"
-        android:layout_marginBottom="14dp"
-        android:text="@string/how5"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@color/label_color" />
 
     <ImageView
         android:id="@+id/ImageView04"
@@ -100,16 +68,6 @@
         android:layout_marginTop="5dp"
         android:src="@drawable/save1" />
 
-    <TextView
-        android:id="@+id/TextView04"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/ImageView04"
-        android:layout_alignLeft="@+id/TextView03"
-        android:layout_marginBottom="14dp"
-        android:text="@string/how6"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@color/label_color" />
 
     <ImageView
         android:id="@+id/imageView1"
@@ -120,16 +78,6 @@
         android:layout_marginTop="5dp"
         android:src="@drawable/pencil1" />
 
-    <TextView
-        android:id="@+id/TextView02"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/textView1"
-        android:layout_alignBottom="@+id/ImageView03"
-        android:layout_marginBottom="14dp"
-        android:text="@string/how4"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@color/label_color" />
 
     <ImageView
         android:id="@+id/ImageView03"
@@ -140,25 +88,116 @@
         android:layout_marginTop="5dp"
         android:src="@drawable/socket" />
 
-    <TextView
-        android:id="@+id/TextView01"
+    <Button
+        android:id="@+id/helpbtn6"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/textView1"
-        android:layout_alignBottom="@+id/ImageView01"
-        android:layout_marginBottom="14dp"
-        android:text="@string/how3"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@color/label_color" />
+        android:layout_alignBottom="@+id/ImageView04"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/ImageView04"
+        android:layout_marginBottom="@dimen/help_button_bottom_margin"
+        android:layout_marginRight="@dimen/help_button_right_margin"
+        android:layout_marginLeft="@dimen/help_button_left_margin"
+        android:layout_marginTop="@dimen/help_button_top_margin"
+        android:layout_toRightOf="@+id/ImageView04"
+         android:textColor="@color/label_color"
+        android:background="@drawable/my_button"
+        android:text="@string/how6" />
 
-    <TextView
-        android:id="@+id/TextView05"
-        android:layout_width="wrap_content"
+    <Button
+        android:id="@+id/helpbtn7"
+         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/ImageView05"
-        android:layout_alignLeft="@+id/TextView04"
-        android:text="@string/how7"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@color/label_color" />
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/ImageView05"
+        android:layout_marginBottom="@dimen/help_button_bottom_margin"
+        android:layout_marginRight="@dimen/help_button_right_margin"
+        android:layout_marginLeft="@dimen/help_button_left_margin"
+        android:layout_marginTop="@dimen/help_button_top_margin"
+        android:layout_toRightOf="@+id/ImageView05"
+        android:background="@drawable/my_button"
+         android:textColor="@color/label_color"
+        android:text="@string/how7"/>
+
+    <Button
+        android:id="@+id/helpbtn4"
+         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/ImageView03"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/ImageView03"
+        android:layout_marginBottom="@dimen/help_button_bottom_margin"
+        android:layout_marginRight="@dimen/help_button_right_margin"
+        android:layout_marginTop="@dimen/help_button_top_margin"
+        android:layout_marginLeft="@dimen/help_button_left_margin"
+        android:layout_toRightOf="@+id/ImageView03"
+        android:background="@drawable/my_button"
+         android:textColor="@color/label_color"
+        android:text="@string/how4" />
+
+    <Button
+        android:id="@+id/helpbtn2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/imageView1"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/imageView1"
+        android:layout_marginBottom="@dimen/help_button_bottom_margin"
+        android:layout_marginRight="@dimen/help_button_right_margin"
+        android:layout_marginTop="@dimen/help_button_top_margin"
+        android:layout_marginLeft="@dimen/help_button_left_margin"
+        android:layout_toRightOf="@+id/imageView1"
+        android:background="@drawable/my_button"
+         android:textColor="@color/label_color"
+        android:text="@string/how2" />
+
+    <Button
+        android:id="@+id/helpbtn1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/imageView2"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/imageView2"
+        android:layout_marginBottom="@dimen/help_button_bottom_margin"
+        android:layout_marginLeft="@dimen/help_button_left_margin"
+        android:layout_marginRight="@dimen/help_button_right_margin"
+        android:layout_marginTop="@dimen/help_button_top_margin"
+        android:layout_toRightOf="@+id/imageView2"
+        android:background="@drawable/my_button"
+         android:textColor="@color/label_color"
+        android:text="@string/how1" />
+
+    <Button
+        android:id="@+id/helpbtn5"
+ 		android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/ImageView02"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/ImageView02"
+        android:layout_marginBottom="@dimen/help_button_bottom_margin"
+        android:layout_marginRight="@dimen/help_button_right_margin"
+        android:layout_marginLeft="@dimen/help_button_left_margin"
+        android:layout_marginTop="@dimen/help_button_top_margin"
+        android:layout_toRightOf="@+id/ImageView02"
+        android:background="@drawable/my_button"
+         android:textColor="@color/label_color"
+        android:text="@string/how5"/>
+
+    <Button
+        android:id="@+id/helpbtn3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/ImageView01"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/ImageView01"
+        android:layout_marginBottom="@dimen/help_button_bottom_margin"
+        android:layout_marginRight="@dimen/help_button_right_margin"
+        android:layout_marginLeft="@dimen/help_button_left_margin"
+        android:layout_marginTop="@dimen/help_button_top_margin"
+        android:layout_toRightOf="@+id/ImageView01"
+        android:background="@drawable/my_button"
+         android:textColor="@color/label_color"
+        android:text="@string/how3"/>
 
 </RelativeLayout>

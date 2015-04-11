@@ -24,25 +24,25 @@ public class HelperActivity extends Activity implements OnClickListener {
 	public void onClick(View v) {
 		m_exitOnBack = false;
 		switch (v.getId()) {
-		case R.id.textView2:
+		case R.id.helpbtn1:
 			setContentView(R.layout.about_layout);
 			break;
-		case R.id.textView1:
+		case R.id.helpbtn2:
 			setContentView(R.layout.help_draw_layout);
 			break;
-		case R.id.TextView01:
+		case R.id.helpbtn3:
 			setContentView(R.layout.help_moving_layout);
 			break;
-		case R.id.TextView02:
+		case R.id.helpbtn4:
 			setContentView(R.layout.help_connection_layout);
 			break;
-		case R.id.TextView03:
+		case R.id.helpbtn5:
 			setContentView(R.layout.help_frames_layout);
 			break;
-		case R.id.TextView04:
+		case R.id.helpbtn6:
 			setContentView(R.layout.help_animation_layout);
 			break;
-		case R.id.TextView05:
+		case R.id.helpbtn7:
 			setContentView(R.layout.help_save_layout);
 			break;
 		default:

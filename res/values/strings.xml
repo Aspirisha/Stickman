@@ -11,6 +11,7 @@
     <string name="str_load">Load</string>
     <string name="str_save">Save</string>
     <string name="str_help">Help</string>
+    <string name="str_new_anim">New animation</string>
     <string name="choose_language">Choose language</string>
     <string name="str_anim_fps">Animation frames per second:</string>
     <string name="str_lang_spinner">Language:</string>
@@ -25,9 +26,21 @@
     <string name="loop_animation">Play animation in a loop</string>
     <string name="show_hints">Show popup hints</string>
     
+    <string name="save_before_new">Do you want to save current animation?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    
+    <string name="open_anim">Open File:</string>
+    <string name="save_anim">Save As:</string>
+    <string name="folder_select">Folder Select:</string>
+    <string name="new_folder">New Folder</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="new_folder_name">New folder name</string>
+    <string name="failed_to_create">Failed to create folder</string>
     
     <!-- Help strings -->
-    <string name="toast_help1">Press hardware settings button in the left bottom corner of your device screen to enter menu.</string>
+    <string name="toast_help1">You can change settings, load and save animations, or find help in game menu.</string>
     
     <string name="toast_help2">Press this button to start or stop playing animation.</string>
     <string name="toast_help3">You have pressed drag mode button. Now you can drag objects.</string>
@@ -46,7 +59,7 @@
     <string name="toast_help16">The object you are dragging is partly out of bounds. If you drop it now, it will be removed from current frame and all next frames.</string>
     <string name="toast_help17">Self-intersected lines gives circle, all other lines give sticks.</string>
     <string name="toast_help18">To turn off popup hints, select appropriate tick in settings menu.</string>
-    <string name="toast_help19"></string>
+    <string name="toast_help19">To open menu, press leftmost button above (the one with three stripes).</string>
     
     <string name="how1"><u>What is this app about?</u></string>
     <string name="how2"><u>How do I draw objects?</u></string>

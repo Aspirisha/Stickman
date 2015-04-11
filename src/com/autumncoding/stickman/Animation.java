@@ -537,7 +537,7 @@ public class Animation implements Serializable {
 		} finally{
 	        try {
 				input.close();
-			} catch (IOException e) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
